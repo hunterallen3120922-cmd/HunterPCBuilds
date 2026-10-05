@@ -1,6 +1,7 @@
 import type { FormValues, Option } from "../../types";
 
-export type FieldKind = "choice" | "select" | "pills" | "text" | "email" | "tel" | "textarea" | "windows";
+export type FieldKind = "choice" | "select" | "pills" | "text" | "email" | "tel" | "textarea" | "windows" | "static";
+// "static" shows a fixed value (defaultValue) that the customer can't edit, e.g. the chosen service
 
 export interface FieldDef {
   name: string;

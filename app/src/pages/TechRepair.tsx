@@ -1,13 +1,17 @@
+import { useState } from "react";
 import PageHero from "../components/PageHero";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
+import ServiceRequestDialog from "../components/ServiceRequestDialog";
 import RequestSection from "../components/RequestSection";
 import { useSeo } from "../lib/seo";
 import { repairForm } from "../forms/repairForm";
 import { backupNotice, devicesServed, repairNote, repairServices } from "../content/repairServices";
 import { site } from "../content/site";
+import type { RepairService } from "../types";
 
 export default function TechRepair() {
+  const [selected, setSelected] = useState<RepairService | null>(null);
   useSeo(`Computer Repair | ${site.name}`, "Laptop and PC repair, upgrades, virus removal and cleanups in York, PA. Firm quotes, 30-day labor guarantee.");
   return (
     <>
@@ -19,15 +23,17 @@ export default function TechRepair() {
 
       <section className="section alt">
         <div className="wrap">
-          <SectionHead title="Services & prices" sub="Starting prices. You always get a firm quote before I start." />
+          <SectionHead title="Services & prices" sub="Starting prices. Tap a service to request it. You always get a firm quote before I start." />
           <ul className="grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-[14px] p-0">
             {repairServices.map((s, i) => (
               <li key={s.name}>
                 <Reveal delay={(i % 3) * 60}>
-                  <div className="flex items-baseline justify-between gap-3 rounded-xl border border-line bg-card px-5 py-4 transition hover:-translate-y-0.5 hover:border-[#3a4c63]">
-                    <div><b className="font-semibold"><span aria-hidden>{s.icon} </span>{s.name}</b><small className="block text-[.85rem] text-muted">{s.description}</small></div>
-                    <span className="whitespace-nowrap font-heading font-bold text-accent">{s.price}{s.plusParts && " + parts"}</span>
-                  </div>
+                  <button type="button" onClick={() => setSelected(s)} aria-label={`Request ${s.name}`}
+                    className="group flex w-full cursor-pointer items-baseline justify-between gap-3 rounded-xl border border-line bg-card px-5 py-4 text-left text-ink transition hover:-translate-y-0.5 hover:border-accent">
+                    <span><b className="font-semibold"><span aria-hidden>{s.icon} </span>{s.name}</b><small className="block text-[.85rem] text-muted">{s.description}</small></span>
+                    <span className="text-right"><span className="whitespace-nowrap font-heading font-bold text-accent">{s.price}{s.plusParts && " + parts"}</span>
+                      <small className="block text-[.78rem] text-muted group-hover:text-accent">Request →</small></span>
+                  </button>
                 </Reveal>
               </li>
             ))}
@@ -49,6 +55,7 @@ export default function TechRepair() {
         </div>
       </section>
 
+      <ServiceRequestDialog service={selected} onClose={() => setSelected(null)} />
       <div className="alt"><RequestSection type="repair" config={repairForm} title="Start a repair request" /></div>
     </>
   );

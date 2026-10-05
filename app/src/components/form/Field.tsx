@@ -25,6 +25,9 @@ export default function Field({ def, value, error, onChange }: Props) {
 
   let control;
   switch (def.kind) {
+    case "static":
+      control = <p className="rounded-[10px] border border-accent/40 bg-accent/[.07] px-[14px] py-3 font-semibold">{def.defaultValue}</p>;
+      break;
     case "choice":
       control = (
         <div role="radiogroup" aria-labelledby={`${id}-l`} className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
@@ -81,7 +84,7 @@ export default function Field({ def, value, error, onChange }: Props) {
       );
   }
 
-  const isGroup = def.kind === "choice" || def.kind === "pills" || def.kind === "windows";
+  const isGroup = def.kind === "choice" || def.kind === "pills" || def.kind === "windows" || def.kind === "static";
   return (
     <div className="mb-[18px]">
       {isGroup ? <div id={`${id}-l`}>{label}</div> : <label htmlFor={id}>{label}</label>}

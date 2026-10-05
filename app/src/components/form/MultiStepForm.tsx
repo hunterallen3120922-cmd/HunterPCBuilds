@@ -9,6 +9,9 @@ import { Link } from "react-router-dom";
 interface Props {
   config: FormConfig;
   onSubmit: (values: FormValues) => Promise<void>;
+  /** Inside a popup: no card styling, and the success screen offers "Close" */
+  bare?: boolean;
+  onClose?: () => void;
 }
 
 function display(v: FieldValue | undefined): string {
@@ -20,7 +23,7 @@ function display(v: FieldValue | undefined): string {
 }
 
 /** Generic multi-step request form. What it asks is defined in src/forms/. */
-export default function MultiStepForm({ config, onSubmit }: Props) {
+export default function MultiStepForm({ config, onSubmit, bare = false, onClose }: Props) {
   const total = config.steps.length + 1; // + review step
   const initial = useMemo<FormValues>(() => {
     const v: FormValues = {};
@@ -70,19 +73,20 @@ export default function MultiStepForm({ config, onSubmit }: Props) {
 
   if (done) {
     return (
-      <div className="mx-auto max-w-[760px] rounded-[18px] border border-line bg-card p-8 text-center" role="status">
+      <div className={`mx-auto max-w-[760px] text-center ${bare ? "py-6" : "rounded-[18px] border border-line bg-card p-8"}`} role="status">
         <div className="text-5xl" aria-hidden>✅</div>
         <h3 className="mt-2 text-2xl font-bold">Request sent!</h3>
         <p className="mt-2 text-muted">Thanks! I'll reach out within 24 hours to confirm a time and quote.</p>
-        <button type="button" className="btn btn-ghost mt-5" onClick={() => { setValues(initial); setAgreed(false); setDone(false); setStep(0); }}>
-          Submit another
+        <button type="button" className="btn btn-ghost mt-5"
+          onClick={() => { if (onClose) return onClose(); setValues(initial); setAgreed(false); setDone(false); setStep(0); }}>
+          {onClose ? "Close" : "Submit another"}
         </button>
       </div>
     );
   }
 
   return (
-    <div ref={top} className="mx-auto max-w-[760px] scroll-mt-24 rounded-[18px] border border-line bg-card p-8 max-sm:p-[22px]">
+    <div ref={top} className={`mx-auto max-w-[760px] scroll-mt-24 ${bare ? "" : "rounded-[18px] border border-line bg-card p-8 max-sm:p-[22px]"}`}>
       <div className="mb-7 flex gap-2" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`}>
         {Array.from({ length: total }, (_, n) => (
           <div key={n} className={`h-[5px] flex-1 rounded-[5px] transition-colors duration-300 ${n <= step ? "bg-accent" : "bg-line"}`} />
