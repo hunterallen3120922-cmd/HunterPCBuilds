@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* Defaults match src/content/theme.ts, which overrides them at startup. */
+:root {
+  --bg: #0b0f14; --bg2: #111821; --card: #151e29; --line: #243142;
+  --text: #e6edf5; --muted: #8fa1b5; --accent: #2ee6a6; --accent2: #3aa0ff;
+  --danger: #ff6b6b; --radius: 14px;
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-body: Inter, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent2: var(--accent2);
+  --color-danger: var(--danger);
+  --font-heading: var(--font-heading);
+  --font-sans: var(--font-body);
+  --radius-card: var(--radius);
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.6; overflow-x: hidden; }
+  h1, h2, h3 { font-family: var(--font-heading); line-height: 1.15; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+}
+
+@layer components {
+  .wrap { @apply mx-auto w-full max-w-[1080px] px-5; }
+  .section { @apply py-[70px]; }
+  .alt { @apply border-y border-line bg-bg2; }
+  .card { @apply rounded-card border border-line bg-card p-6; }
+  .lift { @apply transition duration-200 hover:-translate-y-1 hover:border-[#3a4c63]; }
+  .btn { @apply inline-block cursor-pointer rounded-[10px] border-0 bg-accent px-5 py-[11px] text-[.95rem] font-semibold text-[#04130d] no-underline transition duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(46,230,166,.25)] disabled:cursor-not-allowed disabled:opacity-60; font-family: inherit; }
+  .btn-ghost { @apply border border-line bg-transparent text-ink hover:shadow-none; }
+  .tag { @apply mb-5 inline-block rounded-full border border-accent/35 px-3 py-[5px] text-[.8rem] text-accent; }
+  .grad-text { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .input { @apply w-full rounded-[10px] border-[1.5px] border-line bg-bg2 px-[14px] py-3 text-base text-ink; font-family: inherit; }
+  .input:focus { @apply outline-none border-accent2; }
+  .input[aria-invalid="true"] { @apply border-danger; }
+  .eyebrow { @apply font-heading text-[.9rem] font-bold text-accent; }
+}
+
+/* Scroll-in animation. Disabled for people who prefer reduced motion. */
+.reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+.step-in { animation: fade .3s; }
+
+dialog::backdrop { background: rgba(5, 8, 12, .85); }
