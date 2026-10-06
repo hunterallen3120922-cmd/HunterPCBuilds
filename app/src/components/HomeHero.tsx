@@ -48,7 +48,7 @@ export default function HomeHero() {
       <div className="wrap relative py-12 text-center">
         {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}
         <div className="hero-badge mx-auto mb-7 h-[104px] w-[104px] sm:h-[120px] sm:w-[120px]">
-          <div className="floaty relative h-full w-full drop-shadow-[0_0_44px_rgba(62,207,154,.22)]">
+          <div className="relative h-full w-full drop-shadow-[0_0_44px_rgba(62,207,154,.22)]">
             <img src={asset("badge-base.svg")} alt="" className="absolute inset-0 h-full w-full" />
             <img src={asset("badge-spin.svg")} alt="" className="hero-spin absolute inset-0 h-full w-full" />
             <img src={asset("badge-front.svg")} alt={`${site.name} logo`} className="absolute inset-0 h-full w-full" />
