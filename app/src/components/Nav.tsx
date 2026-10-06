@@ -7,13 +7,11 @@ const links = [
   { to: "/faq", label: "FAQ" },
 ];
 
-export function Logo() {
+/** Badge icon + wordmark. The badge files live in app/public/ (favicon.svg, logo.svg). */
+export function Logo({ badge = "favicon.svg", size = "h-10 w-10" }: { badge?: string; size?: string }) {
   return (
     <span className="flex items-center gap-[10px] font-heading text-[1.2rem] font-medium tracking-tight text-ink">
-      <svg viewBox="0 0 64 64" className="h-7 w-7" aria-hidden>
-        <rect width="64" height="64" rx="14" fill="var(--card)" stroke="var(--line)" strokeWidth="3" />
-        <path d="M17 47V17h8v10.5h14V17h8v30h-8V35H25v12z" fill="var(--accent)" />
-      </svg>
+      <img src={`${import.meta.env.BASE_URL}${badge}`} alt="" className={size} width={40} height={40} />
       <span>Hunter<span className="text-accent">PC</span>Builds</span>
     </span>
   );

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Logo } from "./Nav";
 import { site } from "../content/site";
 
 export default function Footer() {
@@ -9,7 +8,7 @@ export default function Footer() {
     <footer className="border-t border-line bg-bg2 pt-14 text-[.9rem] text-muted">
       <div className="wrap grid gap-10 pb-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <Logo />
+          <img src={`${import.meta.env.BASE_URL}logo.svg`} alt={`${site.name} logo`} width={112} height={112} className="h-28 w-28" loading="lazy" />
           <p className="mt-4 max-w-[34ch]">{site.tagline}.</p>
         </div>
         <div>
