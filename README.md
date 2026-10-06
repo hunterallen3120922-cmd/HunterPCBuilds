@@ -35,7 +35,7 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Home page carousel:** it shows the "At a glance" card, every build in `gallery.ts` with `featured: true`, and every repair in `repairServices.ts` with `featured: true`. Set `featured: true` on any entry to add it, remove the line to take it out. The glance rows are in `site.ts`. The carousel is centered, loops forever and rotates by itself; change the speed with `INTERVAL` at the top of `app/src/components/Carousel.tsx` (3500 = 3.5 seconds).
 
-**Home page opening:** as you scroll, the circuit traces in the badge turn and a faint circuit ring behind the headline turns the other way. Speeds are the `deg` numbers in the `.hero-spin` and `.hero-ring` rules in `app/src/index.css`. The artwork is in `app/public/hero/`. Visitors who turn on "reduce motion" see it still.
+**Home page opening:** a PC assembles as you scroll. The opening is a tall pinned stage: your scroll position flies each part (case, power supply, motherboard, CPU and cooler, RAM, SSD, graphics card) into place, draws the cables, and powers it on, while four captions walk through the process. The captions are `heroSteps` in `app/src/content/site.ts`. The drawing is `app/src/components/BuildScene.tsx` and the timing of each part is the `PARTS` list in `app/src/components/HomeHero.tsx`. The stage's length is `h-[380svh]` there (bigger = slower). The drawing scales to fit any screen shape. Visitors who turn on "reduce motion" see a still, one-screen opening instead.
 
 **Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
 

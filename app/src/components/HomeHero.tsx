@@ -1,27 +1,63 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import BuildScene from "./BuildScene";
 import Icon from "./Icon";
-import { site } from "../content/site";
+import { heroSteps, site } from "../content/site";
 
 const asset = (name: string) => `${import.meta.env.BASE_URL}hero/${name}`;
 
+const clamp = (v: number) => Math.min(1, Math.max(0, v));
+const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+
+/** When each part of the PC flies in, as [start, end] of the scroll through the opening (0 to 1). */
+const PARTS: Record<string, [number, number]> = {
+  case: [0.0, 0.16],
+  psu: [0.14, 0.28],
+  fans: [0.26, 0.34],
+  mb: [0.26, 0.42],
+  cpu: [0.4, 0.5],
+  cooler: [0.48, 0.58],
+  ram1: [0.56, 0.64],
+  ram2: [0.6, 0.68],
+  ssd: [0.64, 0.7],
+  gpu: [0.66, 0.8],
+  cables: [0.78, 0.88],
+  power: [0.88, 1],
+};
+/** When each of the four captions is on screen. */
+const STEPS: [number, number][] = [[0.22, 0.42], [0.42, 0.62], [0.62, 0.82], [0.82, 1.01]];
+
+/** Writes the scroll progress into CSS variables; all the motion itself is done in CSS. */
+function apply(stage: HTMLElement, p: number) {
+  const set = (k: string, v: number) => stage.style.setProperty(k, v.toFixed(4));
+  set("--p", p);
+  set("--t", clamp(p / 0.2));
+  for (const [k, [s, e]] of Object.entries(PARTS)) set(`--q-${k}`, ease(clamp((p - s) / (e - s))));
+  STEPS.forEach(([a, b], i) => {
+    const last = i === STEPS.length - 1;
+    set(`--c${i + 1}`, clamp((p - a) / 0.04) * (last ? 1 : clamp((b - p) / 0.04)));
+  });
+  stage.dataset.gone = String(p > 0.19);
+  stage.dataset.cta = String(p > 0.9);
+}
+
 /**
- * The big, minimal opening of the home page.
- * As you scroll, the circuit traces inside the badge turn while its icon and name stay upright,
- * and a large faint circuit ring behind the headline turns the other way.
- * (The scroll progress is written to the CSS variable --p; the motion itself lives in index.css.)
+ * The home page opening. It is a tall block with a pinned stage: scrolling through it assembles a PC
+ * (see BuildScene) while the opening text fades out and four captions walk through the process.
+ * Visitors who prefer reduced motion get just the opening text, with no pinning.
  */
 export default function HomeHero() {
-  const hero = useRef<HTMLElement>(null);
+  const wrap = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = hero.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const w = wrap.current, s = stage.current;
+    if (!w || !s || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let frame = 0;
     const update = () => {
       frame = 0;
-      const p = Math.min(1, Math.max(0, window.scrollY / Math.max(1, el.offsetHeight)));
-      el.style.setProperty("--p", p.toFixed(4));
+      const travel = Math.max(1, w.offsetHeight - window.innerHeight);
+      apply(s, clamp(-w.getBoundingClientRect().top / travel));
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
@@ -35,37 +71,62 @@ export default function HomeHero() {
   }, []);
 
   return (
-    <header ref={hero} className="relative isolate flex min-h-[100svh] items-center overflow-hidden border-b border-line pt-16">
-      <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
-      <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
+    <header ref={wrap} className="relative h-[380svh] border-b border-line motion-reduce:h-auto">
+      <div ref={stage} data-gone="false" data-cta="false"
+        className="sticky top-0 isolate flex h-[100svh] items-center overflow-hidden motion-reduce:static motion-reduce:min-h-[100svh]">
+        <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
+        <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
-      {/* Big circuit ring behind the headline, turns the opposite way */}
-      <div className="hero-ring pointer-events-none absolute left-1/2 top-1/2 -z-10 aspect-square w-[min(73.75rem,150vw)]" aria-hidden>
-        <img src={asset("ring.svg")} alt="" className="h-full w-full" />
-      </div>
+        {/* The PC. Sized to the space between the menu and the captions, so it fits any screen shape. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-[12.5rem] top-16 -z-10 px-4 motion-reduce:hidden sm:bottom-[13.5rem]">
+          <BuildScene />
+        </div>
 
-      <div className="wrap relative py-12 text-center">
-        {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}
-        <div className="hero-badge mx-auto mb-7 h-[6.5rem] w-[6.5rem] sm:h-[7.5rem] sm:w-[7.5rem]">
-          <div className="relative h-full w-full">
-            <img src={asset("badge-base.svg")} alt="" className="absolute inset-0 h-full w-full" />
-            <img src={asset("badge-spin.svg")} alt="" className="hero-spin absolute inset-0 h-full w-full" />
-            <img src={asset("badge-front.svg")} alt={`${site.name} logo`} className="absolute inset-0 h-full w-full" />
+        {/* Opening text. Fades out as the PC starts to assemble. */}
+        <div className="hero-text wrap relative w-full pt-16 text-center">
+          <div className="mx-auto mb-7 h-[6.5rem] w-[6.5rem] sm:h-[7.5rem] sm:w-[7.5rem]">
+            <div className="relative h-full w-full">
+              <img src={asset("badge-base.svg")} alt="" className="absolute inset-0 h-full w-full" />
+              <img src={asset("badge-spin.svg")} alt="" className="hero-spin absolute inset-0 h-full w-full" />
+              <img src={asset("badge-front.svg")} alt={`${site.name} logo`} className="absolute inset-0 h-full w-full" />
+            </div>
+          </div>
+          <p className="eyebrow mb-6 flex items-center justify-center gap-3 !text-[.66rem] sm:!text-[.72rem]">
+            <span className="hidden h-px w-8 bg-accent2/70 sm:block" aria-hidden />{site.localTag}<span className="hidden h-px w-8 bg-accent2/70 sm:block" aria-hidden />
+          </p>
+          <h1 className="text-[clamp(2.5rem,6.4vw,4.7rem)] leading-[1.06]">
+            <span className="block text-balance">Busted laptop? Dream PC?</span>
+            <em className="grad-text block text-balance">Let's fix it, or build it.</em>
+          </h1>
+          <p className="mx-auto mb-9 mt-6 max-w-[46ch] text-[1.1rem] text-muted">
+            Repairs, upgrades and custom PC builds for students and locals. Fair prices, explained in plain English.
+          </p>
+          <div className="mx-auto flex max-w-[18.75rem] flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+            <Link to="/pc-builds" className="btn !px-7 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
+            <Link to="/tech-repair" className="btn btn-ghost !px-7 !py-3.5">Fix my device</Link>
           </div>
         </div>
-        <p className="eyebrow mb-6 flex items-center justify-center gap-3 !text-[.66rem] sm:!text-[.72rem]">
-          <span className="hidden h-px w-8 bg-accent2/70 sm:block" aria-hidden />{site.localTag}<span className="hidden h-px w-8 bg-accent2/70 sm:block" aria-hidden />
-        </p>
-        <h1 className="text-[clamp(2.5rem,6.4vw,4.7rem)] leading-[1.06]">
-          <span className="block text-balance">Busted laptop? Dream PC?</span>
-          <em className="grad-text block text-balance">Let's fix it, or build it.</em>
-        </h1>
-        <p className="mx-auto mb-9 mt-6 max-w-[46ch] text-[1.1rem] text-muted">
-          Repairs, upgrades and custom PC builds for students and locals. Fair prices, explained in plain English.
-        </p>
-        <div className="mx-auto flex max-w-[18.75rem] flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-          <Link to="/pc-builds" className="btn !px-7 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
-          <Link to="/tech-repair" className="btn btn-ghost !px-7 !py-3.5">Fix my device</Link>
+
+        {/* Captions and the closing buttons, shown while and after the PC assembles */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-5 pb-7 text-center motion-reduce:hidden sm:pb-9">
+          <div className="grid" aria-hidden>
+            {heroSteps.map((s, i) => (
+              <div key={s.title} className="build-caption [grid-area:1/1]" style={{ opacity: `var(--c${i + 1}, 0)`, transform: `translateY(calc((1 - var(--c${i + 1}, 0)) * 14px))` }}>
+                <p className="eyebrow mb-2">0{i + 1} · {s.title}</p>
+                <p className="mx-auto max-w-[40ch] font-heading text-[1.35rem] leading-snug text-ink sm:text-[1.6rem]">{s.text}</p>
+              </div>
+            ))}
+          </div>
+          <div className="build-cta pointer-events-auto mt-5 flex flex-wrap justify-center gap-3">
+            <Link to="/pc-builds" className="btn !px-6 !py-3">Start your build <Icon name="arrow" className="h-4 w-4" /></Link>
+            <Link to="/tech-repair" className="btn btn-ghost !px-6 !py-3">Fix my device</Link>
+          </div>
+          <div className="mt-5 flex justify-center gap-2" aria-hidden>
+            {heroSteps.map((s, i) => (
+              <span key={s.title} className="h-[3px] rounded-full bg-accent transition-none"
+                style={{ width: `calc(.75rem + var(--c${i + 1}, 0) * 1.25rem)`, opacity: `calc(.25 + var(--c${i + 1}, 0) * .75)` }} />
+            ))}
+          </div>
         </div>
       </div>
     </header>

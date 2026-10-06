@@ -51,6 +51,14 @@ export const howItWorks = [
   },
 ];
 
+/** The four captions shown while the PC assembles in the home page opening. */
+export const heroSteps = [
+  { title: "Pick the parts", text: "Planned around your budget and what you'll use it for." },
+  { title: "Assemble", text: "Every part seated right, with clean cable management." },
+  { title: "Test", text: "Stress tests and temperature checks before it leaves." },
+  { title: "Hand it over", text: "Powered on, walked through, and ready to go." },
+];
+
 /** The trust strip on the home page. */
 export const trustPoints = [
   { icon: "graduation", title: "Student-run", text: "A real student who gets the budget. No upselling." },
