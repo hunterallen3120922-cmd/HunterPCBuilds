@@ -15,8 +15,8 @@ const LOOK = [
 /**
  * Centered, endlessly looping carousel that rotates by itself.
  * The middle card is full size; the cards beside it shrink and fade out toward the edges.
- * It pauses while hovered/focused or off-screen, restarts its timer after you use it, and
- * has a pause button. Visitors who prefer reduced motion start paused.
+ * It keeps rotating unless the mouse is on the middle card (or keyboard focus is inside it),
+ * pauses while off-screen, restarts its timer after you use it, and has a pause button. Visitors who prefer reduced motion start paused.
  */
 export default function Carousel({ label, items }: { label: string; items: ReactNode[] }) {
   // Need enough cards to fill both sides of the middle one
@@ -26,7 +26,9 @@ export default function Carousel({ label, items }: { label: string; items: React
   const root = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const [hold, setHold] = useState(false);
+  const [hovered, setHovered] = useState<number | null>(null); // card the mouse is on
+  const [focused, setFocused] = useState<number | null>(null); // card holding keyboard focus
+  const hold = hovered === active || focused === active; // only the middle card pauses it
   const [onScreen, setOnScreen] = useState(false);
   const [bump, setBump] = useState(0); // changes on every interaction, restarting the timer
   const touchX = useRef<number | null>(null);
@@ -53,8 +55,6 @@ export default function Carousel({ label, items }: { label: string; items: React
   const arrow = "grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-card text-ink transition hover:border-accent hover:text-accent";
   return (
     <section ref={root} aria-roledescription="carousel" aria-label={label}
-      onMouseEnter={() => setHold(true)} onMouseLeave={() => setHold(false)}
-      onFocus={() => setHold(true)} onBlur={() => setHold(false)}
       onKeyDown={(e) => { if (e.key === "ArrowLeft") manual(-1); if (e.key === "ArrowRight") manual(1); }}>
       {/* All cards share one grid cell and are slid left/right from the middle */}
       <div className="fade-edges grid overflow-hidden py-3 [--cw:min(82vw,340px)]"
@@ -75,6 +75,8 @@ export default function Carousel({ label, items }: { label: string; items: React
             <div key={i} role="group" aria-roledescription="slide" aria-label={`${(i % items.length) + 1} of ${items.length}`}
               aria-hidden={offset !== 0 || undefined} inert={!visible || undefined}
               // Clicking a side card brings it to the middle instead of opening it
+              onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
+              onFocus={() => setFocused(i)} onBlur={() => setFocused(null)}
               onClickCapture={(e) => { if (offset !== 0 && visible) { e.preventDefault(); e.stopPropagation(); goTo(i); } }}
               className="flex w-[var(--cw)] cursor-default justify-self-center [grid-area:1/1] motion-safe:transition-[transform,opacity] motion-safe:duration-[800ms] motion-safe:ease-[cubic-bezier(.4,0,.2,1)]"
               style={{
