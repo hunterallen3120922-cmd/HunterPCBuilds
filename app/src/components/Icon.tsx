@@ -29,6 +29,8 @@ const paths: Record<string, ReactNode> = {
   check: <path d="m5 12 5 5 9-10" />,
   arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  pause: <path d="M9 5v14M15 5v14" />,
+  play: <path d="M8 5.5v13l11-6.5z" />,
   mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>,
 };
 
