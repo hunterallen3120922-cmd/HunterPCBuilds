@@ -34,7 +34,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-line py-5">
         <div className="wrap flex flex-wrap justify-between gap-3 text-[.82rem]">
-          <span>© {new Date().getFullYear()} {site.fullName}</span>
+          <span>{site.name}</span>
           <span>{site.footerDisclaimer}</span>
         </div>
       </div>

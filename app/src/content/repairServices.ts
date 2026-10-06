@@ -15,7 +15,7 @@ export const repairServices: RepairService[] = [
 ];
 
 export const repairNote =
-  "Parts are charged at cost. Applicable PA sales tax is added to the total.";
+  "Parts are charged at cost.";
 
 /** "Devices I work on" list. */
 export const devicesServed = [

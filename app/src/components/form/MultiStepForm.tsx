@@ -126,7 +126,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
                 <span>
                   I'm 18 or older (or have a parent/guardian's permission). I understand HunterPCBuilds is an independent, student-run service.
                   I'm responsible for backing up my data, and HunterPCBuilds isn't responsible for data loss or pre-existing damage.
-                  Devices not picked up within 30 days of completion may be recycled. See the <Link to="/faq">terms</Link> and{" "}
+                  See the <Link to="/faq">terms</Link> and{" "}
                   <Link to="/privacy">privacy notice</Link>.
                 </span>
               </label>

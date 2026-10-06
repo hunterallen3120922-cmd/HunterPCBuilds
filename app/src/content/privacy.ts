@@ -15,7 +15,7 @@ export const privacy = [
   },
   {
     heading: "How I use it",
-    text: "Only to reply, give you a quote, schedule and do the work, and keep records I need for taxes and my 30-day guarantee. I don't sell your information or use it for advertising.",
+    text: "Only to reply, give you a quote, schedule and do the work, and keep my business records and honor my 30-day guarantee. I don't sell your information or use it for advertising.",
   },
   {
     heading: "Sharing",
