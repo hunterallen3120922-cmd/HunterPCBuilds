@@ -37,8 +37,7 @@ export default function HomeHero() {
   return (
     <header ref={hero} className="relative isolate flex min-h-[100svh] items-center overflow-hidden border-b border-line pt-16">
       <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
-      <div className="orb pointer-events-none absolute -left-24 top-[10%] -z-20 h-[420px] w-[420px] rounded-full bg-accent/[.09] blur-[100px]" aria-hidden />
-      <div className="orb pointer-events-none absolute -right-24 bottom-[5%] -z-20 h-[360px] w-[360px] rounded-full bg-accent2/[.07] blur-[110px] [animation-delay:-8s]" aria-hidden />
+      <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
       {/* Big circuit ring behind the headline, turns the opposite way */}
       <div className="hero-ring pointer-events-none absolute left-1/2 top-1/2 -z-10 aspect-square w-[min(1180px,150vw)]" aria-hidden>
@@ -48,7 +47,7 @@ export default function HomeHero() {
       <div className="wrap relative py-12 text-center">
         {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}
         <div className="hero-badge mx-auto mb-7 h-[104px] w-[104px] sm:h-[120px] sm:w-[120px]">
-          <div className="relative h-full w-full drop-shadow-[0_0_44px_rgba(62,207,154,.22)]">
+          <div className="relative h-full w-full">
             <img src={asset("badge-base.svg")} alt="" className="absolute inset-0 h-full w-full" />
             <img src={asset("badge-spin.svg")} alt="" className="hero-spin absolute inset-0 h-full w-full" />
             <img src={asset("badge-front.svg")} alt={`${site.name} logo`} className="absolute inset-0 h-full w-full" />
