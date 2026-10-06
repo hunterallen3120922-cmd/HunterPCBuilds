@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import HomeHero from "../components/HomeHero";
-import Carousel, { CarouselCard } from "../components/Carousel";
+import Carousel from "../components/Carousel";
 import { Photo } from "../components/Gallery";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
@@ -112,12 +112,9 @@ export default function Home() {
 
       <section className="section" >
         <div className="wrap">
-          <SectionHead eyebrow="Featured" title="Recent work & the basics" sub="Swipe through a few builds, popular repairs, and the quick facts." />
+          <SectionHead center eyebrow="Featured" title="Recent work & the basics" sub="A few builds, popular repairs, and the quick facts." />
         </div>
-        <Carousel label="Featured builds and repairs">
-          <CarouselCard><GlanceCard /></CarouselCard>
-          {featuredCards().map((c, i) => <CarouselCard key={i}>{c}</CarouselCard>)}
-        </Carousel>
+        <Carousel label="Featured builds and repairs" items={[<GlanceCard key="glance" />, ...featuredCards()]} />
       </section>
 
       <section className="section alt">

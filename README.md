@@ -33,7 +33,7 @@ text between the quotes, save. You never need to touch the other folders.
 | Add a FAQ question                 | `app/src/content/faq.ts`            |
 | Change dropdown / choice options in the forms | `app/src/content/formOptions.ts` |
 
-**Home page carousel:** it shows the "At a glance" card, every build in `gallery.ts` with `featured: true`, and every repair in `repairServices.ts` with `featured: true`. Set `featured: true` on any entry to add it, remove the line to take it out. The glance rows are in `site.ts`. The carousel rotates by itself; change the speed with `INTERVAL` at the top of `app/src/components/Carousel.tsx` (4500 = 4.5 seconds).
+**Home page carousel:** it shows the "At a glance" card, every build in `gallery.ts` with `featured: true`, and every repair in `repairServices.ts` with `featured: true`. Set `featured: true` on any entry to add it, remove the line to take it out. The glance rows are in `site.ts`. The carousel is centered, loops forever and rotates by itself; change the speed with `INTERVAL` at the top of `app/src/components/Carousel.tsx` (3500 = 3.5 seconds).
 
 **Adding something = copying one `{ ... }` block and pasting it right below.**
 Keep the commas. Example, a new repair service:

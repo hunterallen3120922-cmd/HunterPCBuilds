@@ -53,9 +53,12 @@
   .grad-text { font-style: italic; color: var(--accent); }
 }
 
-/* Carousel track: full width, but the first card lines up with the page content (max 1120px) */
-.carousel-track { --g: 1.25rem; padding-inline: max(var(--g), calc(50% - 560px + var(--g))); scroll-padding-inline: max(var(--g), calc(50% - 560px + var(--g))); }
-@media (min-width: 640px) { .carousel-track { --g: 2rem; } }
+/* Soft fade on the left and right edges of the carousel */
+.fade-edges {
+  --fade: min(22%, calc(50% - var(--cw) / 2)); /* never fade the middle card itself */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
+}
 
 /* Faint blueprint grid behind hero sections */
 .hero-grid {

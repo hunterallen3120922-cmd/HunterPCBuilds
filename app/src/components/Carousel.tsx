@@ -1,84 +1,99 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Icon from "./Icon";
 
-/** How long each card stays before the carousel moves on (milliseconds). */
-const INTERVAL = 4500;
+/** How long each card stays in the middle before the next one arrives (milliseconds). */
+const INTERVAL = 3500;
+
+/** Look of a card by how far it is from the middle: scale and opacity. Cards 3+ away are hidden. */
+const LOOK = [
+  { scale: 1, opacity: 1 },
+  { scale: 0.9, opacity: 0.55 },
+  { scale: 0.8, opacity: 0.18 },
+  { scale: 0.72, opacity: 0 },
+];
 
 /**
- * Swipeable carousel that rotates by itself.
- * It pauses while hovered/focused or off-screen, restarts its timer after you use it,
- * loops at the ends, and has a pause button. Visitors who prefer reduced motion start paused.
+ * Centered, endlessly looping carousel that rotates by itself.
+ * The middle card is full size; the cards beside it shrink and fade out toward the edges.
+ * It pauses while hovered/focused or off-screen, restarts its timer after you use it, and
+ * has a pause button. Visitors who prefer reduced motion start paused.
  */
-export default function Carousel({ label, children }: { label: string; children: ReactNode }) {
+export default function Carousel({ label, items }: { label: string; items: ReactNode[] }) {
+  // Need enough cards to fill both sides of the middle one
+  const slides = items.length >= 8 ? items : [...items, ...items];
+  const n = slides.length;
+
   const root = useRef<HTMLElement>(null);
-  const track = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
+  const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const [hold, setHold] = useState(false); // hovering or keyboard focus inside
+  const [hold, setHold] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
-  const [bump, setBump] = useState(0); // changes whenever the visitor interacts, restarting the timer
+  const [bump, setBump] = useState(0); // changes on every interaction, restarting the timer
+  const touchX = useRef<number | null>(null);
 
-  const update = useCallback(() => {
-    const el = track.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    setProgress(max > 0 ? el.scrollLeft / max : 1);
-  }, []);
-
-  const smooth = () => (window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth") as ScrollBehavior;
-
-  /** Move one card forward/back, looping around at the ends. */
-  const go = useCallback((dir: 1 | -1) => {
-    const el = track.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    const step = (el.querySelector<HTMLElement>("[data-card]")?.offsetWidth ?? 320) + 20;
-    if (dir === 1 && el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: smooth() });
-    else if (dir === -1 && el.scrollLeft <= 4) el.scrollTo({ left: max, behavior: smooth() });
-    else el.scrollBy({ left: dir * step, behavior: smooth() });
-  }, []);
-
-  useEffect(() => {
-    update();
-    const el = track.current;
-    if (!el) return;
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [update]);
+  const step = useCallback((dir: 1 | -1) => setActive((a) => (a + dir + n) % n), [n]);
 
   useEffect(() => {
     const el = root.current;
     if (!el || !("IntersectionObserver" in window)) { setOnScreen(true); return; }
-    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), { threshold: 0.35 });
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), { threshold: 0.3 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
   useEffect(() => {
     if (!playing || hold || !onScreen) return;
-    const id = window.setInterval(() => go(1), INTERVAL);
+    const id = window.setInterval(() => step(1), INTERVAL);
     return () => window.clearInterval(id);
-  }, [playing, hold, onScreen, bump, go]);
+  }, [playing, hold, onScreen, bump, step]);
 
-  const manual = (dir: 1 | -1) => { go(dir); setBump((b) => b + 1); };
-  const touched = () => setBump((b) => b + 1);
+  const manual = (dir: 1 | -1) => { step(dir); setBump((b) => b + 1); };
+  const goTo = (i: number) => { setActive(i); setBump((b) => b + 1); };
 
   const arrow = "grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-card text-ink transition hover:border-accent hover:text-accent";
   return (
     <section ref={root} aria-roledescription="carousel" aria-label={label}
       onMouseEnter={() => setHold(true)} onMouseLeave={() => setHold(false)}
-      onFocus={() => setHold(true)} onBlur={() => setHold(false)}>
-      {/* Full-width track whose padding lines the first card up with the page content */}
-      <div ref={track} onScroll={update} onTouchStart={touched} onWheel={touched} onKeyDown={touched}
+      onFocus={() => setHold(true)} onBlur={() => setHold(false)}
+      onKeyDown={(e) => { if (e.key === "ArrowLeft") manual(-1); if (e.key === "ArrowRight") manual(1); }}>
+      {/* All cards share one grid cell and are slid left/right from the middle */}
+      <div className="fade-edges grid overflow-hidden py-3 [--cw:min(82vw,340px)]"
         aria-live={playing && !hold ? "off" : "polite"}
-        className="carousel-track no-scrollbar flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2">
-        {children}
+        onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          if (touchX.current === null) return;
+          const dx = e.changedTouches[0].clientX - touchX.current;
+          touchX.current = null;
+          if (Math.abs(dx) > 40) manual(dx < 0 ? 1 : -1);
+        }}>
+        {slides.map((slide, i) => {
+          const half = Math.floor(n / 2);
+          const offset = ((i - active + n + half) % n) - half; // -half .. half-1, 0 = middle
+          const look = LOOK[Math.min(Math.abs(offset), 3)];
+          const visible = Math.abs(offset) <= 2;
+          return (
+            <div key={i} role="group" aria-roledescription="slide" aria-label={`${(i % items.length) + 1} of ${items.length}`}
+              aria-hidden={offset !== 0 || undefined} inert={!visible || undefined}
+              // Clicking a side card brings it to the middle instead of opening it
+              onClickCapture={(e) => { if (offset !== 0 && visible) { e.preventDefault(); e.stopPropagation(); goTo(i); } }}
+              className="flex w-[var(--cw)] cursor-default justify-self-center [grid-area:1/1] motion-safe:transition-[transform,opacity] motion-safe:duration-[800ms] motion-safe:ease-[cubic-bezier(.4,0,.2,1)]"
+              style={{
+                transform: `translateX(calc(${offset} * (var(--cw) + 1.5rem))) scale(${look.scale})`,
+                opacity: look.opacity,
+                zIndex: 10 - Math.abs(offset),
+                pointerEvents: visible ? "auto" : "none",
+                cursor: offset !== 0 && visible ? "pointer" : undefined,
+              }}>
+              {slide}
+            </div>
+          );
+        })}
       </div>
-      <div className="wrap mt-7 flex items-center gap-4">
+
+      <div className="wrap mt-8 flex max-w-[640px] items-center gap-4">
         <button type="button" className={arrow} onClick={() => manual(-1)} aria-label="Previous card"><Icon name="arrow" className="h-4 w-4 rotate-180" /></button>
         <div className="h-px flex-1 bg-line" aria-hidden>
-          <div className="h-[2px] -translate-y-px rounded-full bg-accent transition-[width] duration-300" style={{ width: `${Math.max(8, progress * 100)}%` }} />
+          <div className="h-[2px] -translate-y-px rounded-full bg-accent transition-[width] duration-500" style={{ width: `${((active % items.length) + 1) / items.length * 100}%` }} />
         </div>
         <button type="button" className={arrow} onClick={() => manual(1)} aria-label="Next card"><Icon name="arrow" className="h-4 w-4" /></button>
         <button type="button" onClick={() => setPlaying((p) => !p)} aria-pressed={!playing}
@@ -89,9 +104,4 @@ export default function Carousel({ label, children }: { label: string; children:
       </div>
     </section>
   );
-}
-
-/** Wrapper that gives every carousel card the same size and snap behavior. */
-export function CarouselCard({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div data-card className={`flex w-[82vw] max-w-[340px] shrink-0 snap-start sm:w-[340px] ${className}`}>{children}</div>;
 }
