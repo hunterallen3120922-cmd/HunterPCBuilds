@@ -18,7 +18,12 @@ export default function Privacy() {
               <p className="text-muted">{p.text}</p>
             </div>
           ))}
-          <p className="text-muted">Questions or deletion requests: <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a></p>
+          <p className="text-muted">
+            Questions or deletion requests:{" "}
+            {site.contactEmail
+              ? <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
+              : "send me a request through the forms on this site and mention it in your message."}
+          </p>
         </div>
       </section>
     </>

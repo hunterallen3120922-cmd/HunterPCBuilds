@@ -66,7 +66,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
       await onSubmit(values);
       setDone(true);
     } catch {
-      setFormError(`Something went wrong sending your request. Please try again, or email ${site.contactEmail}.`);
+      setFormError(`Something went wrong sending your request. Please try again in a few minutes${site.contactEmail ? `, or email ${site.contactEmail}` : ""}.`);
     } finally {
       setSending(false);
     }

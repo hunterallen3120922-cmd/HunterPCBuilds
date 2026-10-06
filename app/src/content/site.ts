@@ -5,8 +5,8 @@ export const site = {
   name: "HunterPCBuilds",
   fullName: "HunterPCBuilds Tech Repair",
   tagline: "Student-run computer repair & custom PC builds in York, PA",
-  /** Where request emails are described to customers (the real inbox is set in Web3Forms) */
-  contactEmail: "hunterpcbuilds@example.com",
+  /** Public contact email shown to customers. Leave "" to hide it everywhere. (Request emails go to the inbox set in Web3Forms.) */
+  contactEmail: "",
   serviceArea: "York, PA and the York College of Pennsylvania area",
   paymentMethods: ["Cash", "Zelle"],
   social: {
