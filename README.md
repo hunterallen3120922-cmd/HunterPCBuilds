@@ -1,6 +1,6 @@
 # HunterPCBuilds Tech Repair
 
-Website for a student-run PC repair and build service in York, PA.
+Website for a student-run PC repair and build service.
 Built with Vite + React + TypeScript + Tailwind.
 
 ## How the folders work

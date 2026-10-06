@@ -62,7 +62,7 @@ export default function HomeHero() {
           <em className="grad-text block text-balance">Let's fix it, or build it.</em>
         </h1>
         <p className="mx-auto mb-9 mt-6 max-w-[46ch] text-[1.1rem] text-muted">
-          Repairs, upgrades and custom PC builds for the York area. Fair prices, explained in plain English.
+          Repairs, upgrades and custom PC builds for students and locals. Fair prices, explained in plain English.
         </p>
         <div className="mx-auto flex max-w-[300px] flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
           <Link to="/pc-builds" className="btn !px-7 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>

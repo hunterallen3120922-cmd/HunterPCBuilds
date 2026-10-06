@@ -11,7 +11,7 @@ import { gallery } from "../content/gallery";
 import { site } from "../content/site";
 
 export default function PcBuilds() {
-  useSeo(`Custom PC Builds | ${site.name}`, "Custom gaming, school and workstation PC builds in York, PA. Free consultation, parts at cost, 30-day labor guarantee.");
+  useSeo(`Custom PC Builds | ${site.name}`, "Custom gaming, school and workstation PC builds. Free consultation, parts at cost, 30-day labor guarantee.");
   return (
     <>
       <PageHero tag="Custom PC builds"

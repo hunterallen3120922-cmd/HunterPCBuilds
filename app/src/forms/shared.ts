@@ -7,7 +7,7 @@ export const meetingStep: StepDef = {
   sub: "Pick what works for you. I'll confirm the exact time.",
   fields: [
     { name: "meeting", label: "Meeting method", kind: "choice", options: meetingMethods, required: true, requiredMessage: "Pick how you'd like to meet." },
-    { name: "location", label: "Where?", hint: "(dorm/building, or area of York)", kind: "text", placeholder: "e.g. near the library" },
+    { name: "location", label: "Where?", hint: "(dorm/building, or general area)", kind: "text", placeholder: "e.g. near the library" },
     { name: "availability", label: "Preferred date & time", hint: "(suggest up to 3, I'll confirm one)", kind: "windows", required: true, requiredMessage: "Suggest at least one date and time that works for you." },
   ],
 };

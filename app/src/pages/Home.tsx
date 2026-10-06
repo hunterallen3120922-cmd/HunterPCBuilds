@@ -67,7 +67,7 @@ function featuredCards() {
 }
 
 export default function Home() {
-  useSeo(`${site.fullName} | York, PA`, "Student-run computer repair and custom PC builds in York, PA. Submit a request and get a quote fast.");
+  useSeo(site.fullName, "Student-run computer repair and custom PC builds. Submit a request and get a quote fast.");
   return (
     <>
       <HomeHero />
@@ -138,7 +138,7 @@ export default function Home() {
             <p className="eyebrow mb-3">Local</p>
             <h2 className="text-[clamp(1.8rem,3.6vw,2.6rem)]">{site.localTitle}</h2>
             <p className="mt-4 max-w-[52ch] text-muted">{site.localText}</p>
-            <p className="mt-4 text-[.9rem] text-muted">Serving {site.serviceArea}.</p>
+            {site.serviceArea && <p className="mt-4 text-[.9rem] text-muted">Serving {site.serviceArea}.</p>}
           </div>
           <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card">
             {meetingMethods.map((m) => (

@@ -4,10 +4,10 @@
 export const site = {
   name: "HunterPCBuilds",
   fullName: "HunterPCBuilds Tech Repair",
-  tagline: "Student-run computer repair & custom PC builds in York, PA",
+  tagline: "Student-run computer repair & custom PC builds",
   /** Public contact email shown to customers. Leave "" to hide it everywhere. (Request emails go to the inbox set in Web3Forms.) */
   contactEmail: "",
-  serviceArea: "York, PA and the York College of Pennsylvania area",
+  serviceArea: "", // e.g. "Your city and the nearby campus". Leave "" to hide it everywhere.
   paymentMethods: ["Cash", "Zelle"],
   social: {
     // Leave a value as "" to hide that link.
@@ -16,19 +16,19 @@ export const site = {
     facebook: "",
   },
   footerDisclaimer:
-    "Independent student service · Not affiliated with York College of Pennsylvania",
+    "Independent student service · Not affiliated with any college or university",
   responseTime: "I aim to reply within 24 hours.",
   /** Small line above the hero headline */
-  localTag: "York, PA · The White Rose City",
+  localTag: "Student-run · Repairs & custom builds",
   /** The "Local, not a call center" section on the home page */
   localTitle: "Local, not a call center.",
   localText:
-    "I'm a student in York, so repairs happen close to home: at your place, on or near campus, or at a quick drop-off. You get a real person who answers your texts, explains what's wrong, and doesn't upsell.",
+    "I'm a local student, so repairs happen close by: at your place, on or near campus, or at a quick drop-off. You get a real person who answers your texts, explains what's wrong, and doesn't upsell.",
 };
 
 /** The "at a glance" card in the home page hero. Add or remove rows freely. */
 export const glance = [
-  { label: "Based in", value: "York, PA" },
+  { label: "Run by", value: "A local student" },
   { label: "Reply time", value: "Usually within 24 hours" },
   { label: "Diagnostics", value: "Free" },
   { label: "Labor guarantee", value: "30 days" },

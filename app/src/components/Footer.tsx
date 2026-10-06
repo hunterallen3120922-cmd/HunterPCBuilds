@@ -23,7 +23,7 @@ export default function Footer() {
         <div>
           <p className="eyebrow mb-4">Details</p>
           <ul className="space-y-2">
-            <li>{site.serviceArea}</li>
+            {site.serviceArea && <li>{site.serviceArea}</li>}
             <li>Pay by {site.paymentMethods.join(" or ")}</li>
             {socials.map(([name, url]) => (
               <li key={name}><a href={url} className={`${col} capitalize`} rel="noopener noreferrer" target="_blank">{name}</a></li>

@@ -35,13 +35,13 @@ export const faq: FaqItem[] = [
     preview: true,
   },
   {
-    question: "Are you affiliated with York College?",
+    question: "Are you affiliated with a college?",
     answer:
-      "No. HunterPCBuilds is an independent, student-run service and is not affiliated with, endorsed by, or operated by York College of Pennsylvania.",
+      "No. HunterPCBuilds is an independent, student-run service and is not affiliated with, endorsed by, or operated by any college or university.",
   },
   {
     question: "Terms",
     answer:
-      "HunterPCBuilds is an independent, student-run service and is not affiliated with, endorsed by, or operated by York College of Pennsylvania. You are responsible for backing up your data before service. To the extent the law allows, HunterPCBuilds is not responsible for data loss, pre-existing damage, or failures of third-party parts, and total liability for any job is limited to the amount you paid for that job. Nothing here limits rights you have under Pennsylvania or federal law. Requests are for people 18 or older, or with a parent or guardian's permission. See also the Privacy notice.",
+      "HunterPCBuilds is an independent, student-run service and is not affiliated with, endorsed by, or operated by any college or university. You are responsible for backing up your data before service. To the extent the law allows, HunterPCBuilds is not responsible for data loss, pre-existing damage, or failures of third-party parts, and total liability for any job is limited to the amount you paid for that job. Nothing here limits rights you have under Pennsylvania or federal law. Requests are for people 18 or older, or with a parent or guardian's permission. See also the Privacy notice.",
   },
 ];

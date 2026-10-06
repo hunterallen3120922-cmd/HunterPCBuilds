@@ -13,7 +13,7 @@ import type { RepairService } from "../types";
 
 export default function TechRepair() {
   const [selected, setSelected] = useState<RepairService | null>(null);
-  useSeo(`Computer Repair | ${site.name}`, "Laptop and PC repair, upgrades, virus removal and cleanups in York, PA. Firm quotes, 30-day labor guarantee.");
+  useSeo(`Computer Repair | ${site.name}`, "Laptop and PC repair, upgrades, virus removal and cleanups. Firm quotes, 30-day labor guarantee.");
   return (
     <>
       <PageHero tag="Tech repair"
