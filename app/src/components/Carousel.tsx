@@ -16,45 +16,36 @@ const LOOK = [
  * Centered, endlessly looping carousel that rotates by itself.
  * The middle card is full size; the cards beside it shrink and fade out toward the edges.
  * It keeps rotating unless the mouse is on the middle card (or keyboard focus is inside it),
- * pauses while off-screen, restarts its timer after you use it, and has a pause button. Visitors who prefer reduced motion start paused.
+ * and restarts its timer after you use it. Visitors who prefer reduced motion get no auto-rotation
+ * (the arrows still work).
  */
 export default function Carousel({ label, items }: { label: string; items: ReactNode[] }) {
   // Need enough cards to fill both sides of the middle one
   const slides = items.length >= 8 ? items : [...items, ...items];
   const n = slides.length;
 
-  const root = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
-  const [playing, setPlaying] = useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const playing = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const [hovered, setHovered] = useState<number | null>(null); // card the mouse is on
   const [focused, setFocused] = useState<number | null>(null); // card holding keyboard focus
   const hold = hovered === active || focused === active; // only the middle card pauses it
-  const [onScreen, setOnScreen] = useState(false);
   const [bump, setBump] = useState(0); // changes on every interaction, restarting the timer
   const touchX = useRef<number | null>(null);
 
   const step = useCallback((dir: 1 | -1) => setActive((a) => (a + dir + n) % n), [n]);
 
   useEffect(() => {
-    const el = root.current;
-    if (!el || !("IntersectionObserver" in window)) { setOnScreen(true); return; }
-    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), { threshold: 0.3 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!playing || hold || !onScreen) return;
+    if (!playing || hold) return;
     const id = window.setInterval(() => step(1), INTERVAL);
     return () => window.clearInterval(id);
-  }, [playing, hold, onScreen, bump, step]);
+  }, [playing, hold, bump, step]);
 
   const manual = (dir: 1 | -1) => { step(dir); setBump((b) => b + 1); };
   const goTo = (i: number) => { setActive(i); setBump((b) => b + 1); };
 
   const arrow = "grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-card text-ink transition hover:border-accent hover:text-accent";
   return (
-    <section ref={root} aria-roledescription="carousel" aria-label={label}
+    <section aria-roledescription="carousel" aria-label={label}
       onKeyDown={(e) => { if (e.key === "ArrowLeft") manual(-1); if (e.key === "ArrowRight") manual(1); }}>
       {/* All cards share one grid cell and are slid left/right from the middle */}
       <div className="fade-edges grid overflow-hidden py-3 [--cw:min(82vw,340px)]"
@@ -98,11 +89,6 @@ export default function Carousel({ label, items }: { label: string; items: React
           <div className="h-[2px] -translate-y-px rounded-full bg-accent transition-[width] duration-500" style={{ width: `${((active % items.length) + 1) / items.length * 100}%` }} />
         </div>
         <button type="button" className={arrow} onClick={() => manual(1)} aria-label="Next card"><Icon name="arrow" className="h-4 w-4" /></button>
-        <button type="button" onClick={() => setPlaying((p) => !p)} aria-pressed={!playing}
-          aria-label={playing ? "Pause automatic rotation" : "Start automatic rotation"}
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted transition hover:text-accent">
-          <Icon name={playing ? "pause" : "play"} className="h-4 w-4" />
-        </button>
       </div>
     </section>
   );
