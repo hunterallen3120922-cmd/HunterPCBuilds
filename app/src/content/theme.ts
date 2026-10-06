@@ -4,21 +4,22 @@
  */
 export const theme = {
   colors: {
-    bg: "#0b0f14", // page background
-    bg2: "#111821", // alternate section background
-    card: "#151e29", // cards
-    line: "#243142", // borders
-    text: "#e6edf5",
-    muted: "#8fa1b5",
-    accent: "#2ee6a6", // green
-    accent2: "#3aa0ff", // blue
-    danger: "#ff6b6b",
+    bg: "#0b1017", // page background
+    bg2: "#0f1621", // alternate section background
+    card: "#121a26", // cards
+    line: "#1e2938", // hairline borders
+    text: "#eceff4",
+    muted: "#8e9bad",
+    accent: "#3ecf9a", // main accent (buttons, highlights) - emerald
+    accent2: "#d6b370", // small details (labels, numbers) - brass
+    danger: "#ff7a7a",
   },
   fonts: {
-    heading: '"Space Grotesk", sans-serif',
+    heading: '"Fraunces", Georgia, serif',
     body: 'Inter, system-ui, sans-serif',
+    mono: '"JetBrains Mono", ui-monospace, monospace',
   },
-  radius: "14px",
+  radius: "12px",
 };
 
 /** Copies the theme into CSS variables. Called once at startup. */
@@ -27,5 +28,6 @@ export function applyTheme() {
   for (const [k, v] of Object.entries(theme.colors)) root.style.setProperty(`--${k}`, v);
   root.style.setProperty("--font-heading", theme.fonts.heading);
   root.style.setProperty("--font-body", theme.fonts.body);
+  root.style.setProperty("--font-mono", theme.fonts.mono);
   root.style.setProperty("--radius", theme.radius);
 }

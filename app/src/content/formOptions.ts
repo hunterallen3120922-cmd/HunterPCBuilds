@@ -6,12 +6,12 @@ import type { Option } from "../types";
  * (If you leave out `label`, the `value` is shown.)
  */
 export const deviceTypes: Option[] = [
-  { value: "Windows laptop", icon: "💻", description: "HP, Dell, Lenovo, ASUS…" },
-  { value: "MacBook", icon: "🍎", description: "Software issues mostly" },
-  { value: "Desktop PC", icon: "🖥️", description: "Tower or all-in-one" },
-  { value: "Gaming console", icon: "🎮", description: "Cleaning & basic repair" },
-  { value: "Phone / tablet", icon: "📱", description: "Ask first, limited" },
-  { value: "Other", icon: "❓", description: "Tell me about it" },
+  { value: "Windows laptop", icon: "laptop", description: "HP, Dell, Lenovo, ASUS…" },
+  { value: "MacBook", icon: "laptop", description: "Software issues mostly" },
+  { value: "Desktop PC", icon: "desktop", description: "Tower or all-in-one" },
+  { value: "Gaming console", icon: "gamepad", description: "Cleaning & basic repair" },
+  { value: "Phone / tablet", icon: "phone", description: "Ask first, limited" },
+  { value: "Other", icon: "help", description: "Tell me about it" },
 ];
 
 export const budgets: Option[] = [
@@ -44,9 +44,9 @@ export const backupOptions: Option[] = [
 ];
 
 export const meetingMethods: Option[] = [
-  { value: "Hunter comes to me", label: "Come to me", icon: "🚶", description: "On or near campus" },
-  { value: "Drop-off", label: "Drop-off", icon: "📦", description: "Hand it over, pick it up later" },
-  { value: "Call / video chat first", label: "Call first", icon: "📞", description: "Plan it out together" },
+  { value: "Hunter comes to me", label: "Come to me", icon: "pin", description: "On or near campus" },
+  { value: "Drop-off", label: "Drop-off", icon: "box", description: "Hand it over, pick it up later" },
+  { value: "Call / video chat first", label: "Call first", icon: "video", description: "Plan it out together" },
 ];
 
 export const contactPreferences: Option[] = [

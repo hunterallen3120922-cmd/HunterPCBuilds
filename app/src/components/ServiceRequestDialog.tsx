@@ -20,7 +20,7 @@ export default function ServiceRequestDialog({ service, onClose }: { service: Re
     <dialog ref={dialog} onClose={onClose}
       onClick={(e) => { if (e.target === dialog.current) onClose(); }}
       aria-label={service ? `Request ${service.name}` : undefined}
-      className="m-auto max-h-[92vh] w-[min(94vw,760px)] overflow-y-auto rounded-2xl border border-line bg-card p-0 text-ink">
+      className="m-auto max-h-[92vh] w-[min(94vw,760px)] overflow-y-auto rounded-card border border-line bg-card p-0 text-ink">
       {service && config && (
         <div className="p-6 max-sm:p-4">
           <div className="mb-4 flex justify-end">

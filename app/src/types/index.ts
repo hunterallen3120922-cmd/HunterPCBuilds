@@ -5,7 +5,7 @@ export interface RepairService {
   price: string;
   /** true adds a "+ parts" label next to the price */
   plusParts?: boolean;
-  /** An emoji works great */
+  /** An icon name, e.g. "shield" (list in app/src/components/Icon.tsx) */
   icon: string;
 }
 

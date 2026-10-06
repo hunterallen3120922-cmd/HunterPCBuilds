@@ -23,7 +23,7 @@ export default function App() {
   return (
     <>
       <a href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-3 focus:py-2 focus:text-[#04130d]">
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-3 focus:py-2 focus:text-[#06140e]">
         Skip to content
       </a>
       <ScrollManager />

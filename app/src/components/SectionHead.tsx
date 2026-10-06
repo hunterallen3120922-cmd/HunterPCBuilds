@@ -1,8 +1,9 @@
-export default function SectionHead({ title, sub, center = false }: { title: string; sub?: string; center?: boolean }) {
+export default function SectionHead({ title, sub, eyebrow, center = false }: { title: string; sub?: string; eyebrow?: string; center?: boolean }) {
   return (
-    <div className={`mb-9 ${center ? "text-center" : ""}`}>
-      <h2 className="text-[clamp(1.7rem,3.5vw,2.3rem)] font-bold">{title}</h2>
-      {sub && <p className="mt-2 text-muted">{sub}</p>}
+    <div className={`mb-10 ${center ? "text-center" : ""}`}>
+      {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
+      <h2 className="text-[clamp(1.8rem,3.6vw,2.6rem)]">{title}</h2>
+      {sub && <p className={`mt-3 max-w-[56ch] text-muted ${center ? "mx-auto" : ""}`}>{sub}</p>}
     </div>
   );
 }

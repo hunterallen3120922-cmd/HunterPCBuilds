@@ -2,6 +2,7 @@ import { useId } from "react";
 import type { FieldDef } from "./types";
 import type { FieldValue, PreferredWindow } from "../../types";
 import DateWindowPicker from "./DateWindowPicker";
+import Icon from "../Icon";
 
 interface Props {
   def: FieldDef;
@@ -26,7 +27,7 @@ export default function Field({ def, value, error, onChange }: Props) {
   let control;
   switch (def.kind) {
     case "static":
-      control = <p className="rounded-[10px] border border-accent/40 bg-accent/[.07] px-[14px] py-3 font-semibold">{def.defaultValue}</p>;
+      control = <p className="rounded-lg border border-accent/40 bg-accent/[.07] px-[14px] py-3 font-medium">{def.defaultValue}</p>;
       break;
     case "choice":
       control = (
@@ -35,8 +36,8 @@ export default function Field({ def, value, error, onChange }: Props) {
             <label key={o.value} className="relative block cursor-pointer">
               <input type="radio" name={def.name} value={o.value} checked={str === o.value}
                 onChange={() => onChange(o.value)} className="peer absolute opacity-0" />
-              <span className="block h-full rounded-xl border-[1.5px] border-line bg-bg2 p-4 transition hover:border-[#3a4c63] peer-checked:border-accent peer-checked:bg-accent/[.07] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent2">
-                {o.icon && <span className="block text-2xl" aria-hidden>{o.icon}</span>}
+              <span className="block h-full rounded-lg border border-line bg-bg2 p-4 transition hover:border-ink/30 peer-checked:border-accent peer-checked:bg-accent/[.07] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                {o.icon && <Icon name={o.icon} className="mb-1 h-6 w-6 text-accent" />}
                 <strong className="mt-[6px] block">{o.label ?? o.value}</strong>
                 {o.description && <span className="text-[.85rem] text-muted">{o.description}</span>}
               </span>
@@ -53,7 +54,7 @@ export default function Field({ def, value, error, onChange }: Props) {
             <label key={o.value} className="relative cursor-pointer">
               <input type="checkbox" checked={arr.includes(o.value)} className="peer absolute opacity-0"
                 onChange={(e) => onChange(e.target.checked ? [...arr, o.value] : arr.filter((x) => x !== o.value))} />
-              <span className="inline-block rounded-full border-[1.5px] border-line bg-bg2 px-[14px] py-2 text-[.9rem] peer-checked:border-accent peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent2">
+              <span className="inline-block rounded-full border border-line bg-bg2 px-[14px] py-2 text-[.9rem] peer-checked:border-accent peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
                 {o.label ?? o.value}
               </span>
             </label>

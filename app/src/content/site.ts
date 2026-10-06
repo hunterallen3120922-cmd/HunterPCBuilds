@@ -18,7 +18,22 @@ export const site = {
   footerDisclaimer:
     "Independent student service · Not affiliated with York College of Pennsylvania",
   responseTime: "I'll get back to you within 24 hours.",
+  /** Small line above the hero headline */
+  localTag: "York, PA · The White Rose City",
+  /** The "Local, not a call center" section on the home page */
+  localTitle: "Local, not a call center.",
+  localText:
+    "I'm a student in York, so repairs happen close to home: at your place, on or near campus, or at a quick drop-off. You get a real person who answers your texts, explains what's wrong, and doesn't upsell.",
 };
+
+/** The "at a glance" card in the home page hero. Add or remove rows freely. */
+export const glance = [
+  { label: "Based in", value: "York, PA" },
+  { label: "Reply time", value: "Within 24 hours" },
+  { label: "Diagnostics", value: "Free" },
+  { label: "Labor guarantee", value: "30 days" },
+  { label: "Payment", value: "Cash · Venmo · Zelle" },
+];
 
 /** "How it works" cards on the home page. */
 export const howItWorks = [
@@ -38,8 +53,8 @@ export const howItWorks = [
 
 /** The trust strip on the home page. */
 export const trustPoints = [
-  { icon: "🎓", title: "Student-run", text: "A real student who gets the budget. No upselling." },
-  { icon: "💵", title: "Fair prices", text: "Parts at cost, a firm quote before I start." },
-  { icon: "💬", title: "Plain English", text: "I explain what's wrong and what it'll take to fix." },
-  { icon: "🛡️", title: "30-day labor guarantee", text: "Same issue comes back? I fix it free." },
+  { icon: "graduation", title: "Student-run", text: "A real student who gets the budget. No upselling." },
+  { icon: "tag", title: "Fair prices", text: "Parts at cost, a firm quote before I start." },
+  { icon: "chat", title: "Plain English", text: "I explain what's wrong and what it'll take to fix." },
+  { icon: "shield-check", title: "30-day labor guarantee", text: "Same issue comes back? I fix it free." },
 ];

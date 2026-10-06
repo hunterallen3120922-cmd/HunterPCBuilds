@@ -5,6 +5,7 @@ import { validateStep } from "./validate";
 import Field from "./Field";
 import { site } from "../../content/site";
 import { Link } from "react-router-dom";
+import Icon from "../Icon";
 
 interface Props {
   config: FormConfig;
@@ -73,9 +74,9 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
 
   if (done) {
     return (
-      <div className={`mx-auto max-w-[760px] text-center ${bare ? "py-6" : "rounded-[18px] border border-line bg-card p-8"}`} role="status">
-        <div className="text-5xl" aria-hidden>✅</div>
-        <h3 className="mt-2 text-2xl font-bold">Request sent!</h3>
+      <div className={`mx-auto max-w-[760px] text-center ${bare ? "py-6" : "rounded-card border border-line bg-card p-8"}`} role="status">
+        <span className="icon-tile mx-auto h-14 w-14 rounded-full"><Icon name="check" className="h-7 w-7" /></span>
+        <h3 className="mt-4 text-3xl">Request sent!</h3>
         <p className="mt-2 text-muted">Thanks! I'll reach out within 24 hours to confirm a time and quote.</p>
         <button type="button" className="btn btn-ghost mt-5"
           onClick={() => { if (onClose) return onClose(); setValues(initial); setAgreed(false); setDone(false); setStep(0); }}>
@@ -86,7 +87,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
   }
 
   return (
-    <div ref={top} className={`mx-auto max-w-[760px] scroll-mt-24 ${bare ? "" : "rounded-[18px] border border-line bg-card p-8 max-sm:p-[22px]"}`}>
+    <div ref={top} className={`mx-auto max-w-[760px] scroll-mt-24 ${bare ? "" : "rounded-card border border-line bg-card p-8 max-sm:p-[22px]"}`}>
       <div className="mb-7 flex gap-2" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`}>
         {Array.from({ length: total }, (_, n) => (
           <div key={n} className={`h-[5px] flex-1 rounded-[5px] transition-colors duration-300 ${n <= step ? "bg-accent" : "bg-line"}`} />
@@ -100,7 +101,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
         <div key={step} className="step-in">
           {!isReview ? (
             <>
-              <h3 className="mb-1 text-[1.4rem] font-bold">{current.title}</h3>
+              <h3 className="mb-1 text-[1.6rem]">{current.title}</h3>
               {current.sub && <p className="mb-[22px] text-[.95rem] text-muted">{current.sub}</p>}
               {current.fields.map((f) => (
                 <Field key={f.name} def={f} value={values[f.name]} error={errors[f.name]}
@@ -109,9 +110,9 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
             </>
           ) : (
             <>
-              <h3 className="mb-1 text-[1.4rem] font-bold">{config.reviewTitle ?? "Look good?"}</h3>
+              <h3 className="mb-1 text-[1.6rem]">{config.reviewTitle ?? "Look good?"}</h3>
               <p className="mb-[22px] text-[.95rem] text-muted">Check your details, then send.</p>
-              <dl className="rounded-xl border border-line bg-bg2 px-[18px] py-4 text-[.92rem]">
+              <dl className="rounded-lg border border-line bg-bg2 px-[18px] py-4 text-[.92rem]">
                 {config.steps.flatMap((s) => s.fields).map((f) => (
                   <div key={f.name} className="flex gap-[10px] border-b border-dashed border-line py-[6px] last:border-0 max-sm:flex-col max-sm:gap-0">
                     <dt className="min-w-[170px] text-muted">{f.label}</dt>
@@ -119,7 +120,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
                   </div>
                 ))}
               </dl>
-              <label className="mt-[18px] flex items-start gap-[10px] rounded-[10px] border border-line bg-bg2 p-[14px] text-[.9rem] text-muted">
+              <label className="mt-[18px] flex items-start gap-[10px] rounded-lg border border-line bg-bg2 p-[14px] text-[.9rem] text-muted">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
                   className="mt-1 h-[18px] w-[18px] shrink-0 accent-accent" />
                 <span>

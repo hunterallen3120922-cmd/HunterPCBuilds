@@ -8,11 +8,11 @@ export default function Faq() {
   useSeo(`FAQ & Terms | ${site.name}`, "Answers about payment, warranty, timing and data, plus terms of service for HunterPCBuilds Tech Repair.");
   return (
     <>
-      <PageHero tag="FAQ & terms" title={<>Questions? <em className="grad-text not-italic">Answered.</em></>}>
+      <PageHero tag="FAQ & terms" title={<>Questions? <em className="grad-text">Answered.</em></>}>
         Payment, timing, warranty and the fine print, in plain English.
       </PageHero>
-      <section className="section pt-0">
-        <div className="wrap max-w-[800px]"><FaqList items={faq} /></div>
+      <section className="section">
+        <div className="wrap max-w-[820px]"><FaqList items={faq} /></div>
       </section>
     </>
   );

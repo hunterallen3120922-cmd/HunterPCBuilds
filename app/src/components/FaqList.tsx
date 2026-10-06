@@ -2,15 +2,14 @@ import type { FaqItem } from "../types";
 
 export default function FaqList({ items }: { items: FaqItem[] }) {
   return (
-    <div>
+    <div className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card">
       {items.map((f) => (
-        <details key={f.question} className="group mb-[10px] rounded-xl border border-line bg-card px-5 py-4">
-          <summary className="cursor-pointer list-none font-semibold">
+        <details key={f.question} className="group px-6 py-5">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
             {f.question}
-            <span aria-hidden className="float-right text-accent group-open:hidden">+</span>
-            <span aria-hidden className="float-right hidden text-accent group-open:inline">–</span>
+            <span aria-hidden className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-line text-accent transition-transform group-open:rotate-45">+</span>
           </summary>
-          <p className="mt-[10px] text-[.95rem] text-muted">{f.answer}</p>
+          <p className="mt-3 max-w-[70ch] text-[.95rem] text-muted">{f.answer}</p>
         </details>
       ))}
     </div>
