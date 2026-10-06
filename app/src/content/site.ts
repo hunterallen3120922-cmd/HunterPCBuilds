@@ -8,7 +8,7 @@ export const site = {
   /** Where request emails are described to customers (the real inbox is set in Web3Forms) */
   contactEmail: "hunterpcbuilds@example.com",
   serviceArea: "York, PA and the York College of Pennsylvania area",
-  paymentMethods: ["Cash", "Venmo", "Zelle"],
+  paymentMethods: ["Cash", "Zelle"],
   social: {
     // Leave a value as "" to hide that link.
     instagram: "",
@@ -17,7 +17,7 @@ export const site = {
   },
   footerDisclaimer:
     "Independent student service · Not affiliated with York College of Pennsylvania",
-  responseTime: "I'll get back to you within 24 hours.",
+  responseTime: "I aim to reply within 24 hours.",
   /** Small line above the hero headline */
   localTag: "York, PA · The White Rose City",
   /** The "Local, not a call center" section on the home page */
@@ -29,10 +29,10 @@ export const site = {
 /** The "at a glance" card in the home page hero. Add or remove rows freely. */
 export const glance = [
   { label: "Based in", value: "York, PA" },
-  { label: "Reply time", value: "Within 24 hours" },
+  { label: "Reply time", value: "Usually within 24 hours" },
   { label: "Diagnostics", value: "Free" },
   { label: "Labor guarantee", value: "30 days" },
-  { label: "Payment", value: "Cash · Venmo · Zelle" },
+  { label: "Payment", value: "Cash or Zelle" },
 ];
 
 /** "How it works" cards on the home page. */

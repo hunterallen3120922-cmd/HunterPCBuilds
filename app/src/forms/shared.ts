@@ -17,7 +17,7 @@ const nameField: FieldDef = { name: "name", label: "Name", kind: "text", require
 /** Contact step, shared by both forms. */
 export const contactStep: StepDef = {
   title: "How do I reach you?",
-  sub: "Only used to reply about your request.",
+  sub: "Used to reply about and schedule your request. See the privacy notice.",
   fields: [
     nameField,
     { name: "email", label: "Email", kind: "email", required: true, requiredMessage: "Enter a valid email." },

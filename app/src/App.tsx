@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import PcBuilds from "./pages/PcBuilds";
 import TechRepair from "./pages/TechRepair";
 import Faq from "./pages/Faq";
+import Privacy from "./pages/Privacy";
 
 /** Scrolls to top on page change, or to an element id passed as router state. */
 function ScrollManager() {
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/pc-builds" element={<PcBuilds />} />
           <Route path="/tech-repair" element={<TechRepair />} />
           <Route path="/faq" element={<Faq />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

@@ -77,7 +77,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
       <div className={`mx-auto max-w-[760px] text-center ${bare ? "py-6" : "rounded-card border border-line bg-card p-8"}`} role="status">
         <span className="icon-tile mx-auto h-14 w-14 rounded-full"><Icon name="check" className="h-7 w-7" /></span>
         <h3 className="mt-4 text-3xl">Request sent!</h3>
-        <p className="mt-2 text-muted">Thanks! I'll reach out within 24 hours to confirm a time and quote.</p>
+        <p className="mt-2 text-muted">Thanks! I aim to reach out within 24 hours to confirm a time and quote.</p>
         <button type="button" className="btn btn-ghost mt-5"
           onClick={() => { if (onClose) return onClose(); setValues(initial); setAgreed(false); setDone(false); setStep(0); }}>
           {onClose ? "Close" : "Submit another"}
@@ -124,9 +124,10 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
                   className="mt-1 h-[18px] w-[18px] shrink-0 accent-accent" />
                 <span>
-                  I understand HunterPCBuilds is an independent, student-run service. I'm responsible for backing up my data,
-                  and HunterPCBuilds isn't liable for data loss or pre-existing damage. Devices not picked up within 30 days of
-                  completion may be recycled. See the <Link to="/faq">terms</Link>.
+                  I'm 18 or older (or have a parent/guardian's permission). I understand HunterPCBuilds is an independent, student-run service.
+                  I'm responsible for backing up my data, and HunterPCBuilds isn't responsible for data loss or pre-existing damage.
+                  Devices not picked up within 30 days of completion may be recycled. See the <Link to="/faq">terms</Link> and{" "}
+                  <Link to="/privacy">privacy notice</Link>.
                 </span>
               </label>
             </>

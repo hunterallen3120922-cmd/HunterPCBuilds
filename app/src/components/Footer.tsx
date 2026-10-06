@@ -18,13 +18,14 @@ export default function Footer() {
             <li><Link to="/pc-builds" className={col}>PC Builds</Link></li>
             <li><Link to="/tech-repair" className={col}>Tech Repair</Link></li>
             <li><Link to="/faq" className={col}>FAQ & Terms</Link></li>
+            <li><Link to="/privacy" className={col}>Privacy</Link></li>
           </ul>
         </div>
         <div>
           <p className="eyebrow mb-4">Details</p>
           <ul className="space-y-2">
             <li>{site.serviceArea}</li>
-            <li>Pay by {site.paymentMethods.join(", ")}</li>
+            <li>Pay by {site.paymentMethods.join(" or ")}</li>
             {socials.map(([name, url]) => (
               <li key={name}><a href={url} className={`${col} capitalize`} rel="noopener noreferrer" target="_blank">{name}</a></li>
             ))}

@@ -42,7 +42,7 @@ export default function TechRepair() {
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-[.9rem] text-muted">{repairNote} {site.paymentMethods.join(", ")} accepted.</p>
+          <p className="mt-6 text-[.9rem] text-muted">{repairNote} {site.paymentMethods.join(" or ")} accepted.</p>
         </div>
       </section>
 

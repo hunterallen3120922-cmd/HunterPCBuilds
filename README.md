@@ -6,7 +6,6 @@ Built with Vite + React + TypeScript + Tailwind.
 ## How the folders work
 - **Root folder** = the finished website (`index.html`, `assets/`, `gallery/`). GitHub Pages serves this, so don't edit these files by hand.
 - **`app/`** = the source code. All your edits happen here.
-- `legacy/` = your original single-file site, for reference.
 
 ## After you edit anything, rebuild
 ```
@@ -46,8 +45,6 @@ Keep the commas. Example, a new repair service:
 **Look & feel:** colors, fonts and corner roundness are all in `app/src/content/theme.ts`. The home page "at a glance" card and the "Local, not a call center" text are in `app/src/content/site.ts`.
 
 Questions asked in the forms live in `app/src/forms/` (`repairForm.ts`, `buildForm.ts`).
-
-The original single-file version of the site is kept in `legacy/index.html` for reference.
 
 ## Status
 - [x] Phase 2: public site (all pages, forms validate)
