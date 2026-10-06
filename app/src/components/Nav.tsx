@@ -10,7 +10,7 @@ const links = [
 /** Badge icon + wordmark. The badge files live in app/public/ (favicon.svg, logo.svg). */
 export function Logo({ badge = "favicon.svg", size = "h-10 w-10" }: { badge?: string; size?: string }) {
   return (
-    <span className="flex items-center gap-[10px] font-heading text-[1.2rem] font-medium tracking-tight text-ink">
+    <span className="flex items-center gap-[0.625rem] font-heading text-[1.2rem] font-medium tracking-tight text-ink">
       <img src={`${import.meta.env.BASE_URL}${badge}`} alt="" className={size} width={40} height={40} />
       <span>Hunter<span className="text-accent">PC</span>Builds</span>
     </span>
@@ -40,8 +40,8 @@ export default function Nav() {
       <nav aria-label="Main"
         className={`pointer-events-auto mx-auto flex h-14 w-full items-center justify-between gap-3 border transition-all duration-500 ease-out motion-reduce:transition-none ${
           pill
-            ? "max-w-[720px] rounded-[28px] border-line bg-bg/80 pl-4 pr-2 shadow-[0_14px_44px_-14px_rgba(0,0,0,.75)] backdrop-blur-xl"
-            : "max-w-[1120px] rounded-[28px] border-transparent bg-transparent px-1 sm:px-8"
+            ? "max-w-[45rem] rounded-[1.75rem] border-line bg-bg/80 pl-4 pr-2 shadow-[0_14px_44px_-14px_rgba(0,0,0,.75)] backdrop-blur-xl"
+            : "max-w-[70rem] rounded-[1.75rem] border-transparent bg-transparent px-1 sm:px-8"
         }`}>
         <Link to="/" onClick={() => setOpen(false)} className="no-underline" aria-label="HunterPCBuilds home"><Logo /></Link>
 
@@ -65,7 +65,7 @@ export default function Nav() {
       </nav>
 
       {open && (
-        <div id="mobile-menu" className="pointer-events-auto mx-auto mt-2 flex max-w-[720px] flex-col gap-1 rounded-[24px] border border-line bg-bg/90 p-3 shadow-[0_14px_44px_-14px_rgba(0,0,0,.75)] backdrop-blur-xl md:hidden">
+        <div id="mobile-menu" className="pointer-events-auto mx-auto mt-2 flex max-w-[45rem] flex-col gap-1 rounded-[1.5rem] border border-line bg-bg/90 p-3 shadow-[0_14px_44px_-14px_rgba(0,0,0,.75)] backdrop-blur-xl md:hidden">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} onClick={() => setOpen(false)}
               className={({ isActive }) => `rounded-2xl px-4 py-3 no-underline ${isActive ? "bg-card text-ink" : "text-muted"}`}>

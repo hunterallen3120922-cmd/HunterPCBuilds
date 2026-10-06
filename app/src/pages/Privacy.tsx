@@ -11,7 +11,7 @@ export default function Privacy() {
         What I collect, why, and who sees it. Last updated {privacyUpdated}.
       </PageHero>
       <section className="section">
-        <div className="wrap max-w-[820px] space-y-8">
+        <div className="wrap max-w-[51.25rem] space-y-8">
           {privacy.map((p) => (
             <div key={p.heading}>
               <h2 className="mb-2 text-2xl">{p.heading}</h2>

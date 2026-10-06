@@ -40,13 +40,13 @@ export default function HomeHero() {
       <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
       {/* Big circuit ring behind the headline, turns the opposite way */}
-      <div className="hero-ring pointer-events-none absolute left-1/2 top-1/2 -z-10 aspect-square w-[min(1180px,150vw)]" aria-hidden>
+      <div className="hero-ring pointer-events-none absolute left-1/2 top-1/2 -z-10 aspect-square w-[min(73.75rem,150vw)]" aria-hidden>
         <img src={asset("ring.svg")} alt="" className="h-full w-full" />
       </div>
 
       <div className="wrap relative py-12 text-center">
         {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}
-        <div className="hero-badge mx-auto mb-7 h-[104px] w-[104px] sm:h-[120px] sm:w-[120px]">
+        <div className="hero-badge mx-auto mb-7 h-[6.5rem] w-[6.5rem] sm:h-[7.5rem] sm:w-[7.5rem]">
           <div className="relative h-full w-full">
             <img src={asset("badge-base.svg")} alt="" className="absolute inset-0 h-full w-full" />
             <img src={asset("badge-spin.svg")} alt="" className="hero-spin absolute inset-0 h-full w-full" />
@@ -63,7 +63,7 @@ export default function HomeHero() {
         <p className="mx-auto mb-9 mt-6 max-w-[46ch] text-[1.1rem] text-muted">
           Repairs, upgrades and custom PC builds for students and locals. Fair prices, explained in plain English.
         </p>
-        <div className="mx-auto flex max-w-[300px] flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+        <div className="mx-auto flex max-w-[18.75rem] flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
           <Link to="/pc-builds" className="btn !px-7 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
           <Link to="/tech-repair" className="btn btn-ghost !px-7 !py-3.5">Fix my device</Link>
         </div>

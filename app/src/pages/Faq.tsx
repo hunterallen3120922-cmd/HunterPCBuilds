@@ -12,7 +12,7 @@ export default function Faq() {
         Payment, timing, warranty and the fine print, in plain English.
       </PageHero>
       <section className="section">
-        <div className="wrap max-w-[820px]"><FaqList items={faq} /></div>
+        <div className="wrap max-w-[51.25rem]"><FaqList items={faq} /></div>
       </section>
     </>
   );

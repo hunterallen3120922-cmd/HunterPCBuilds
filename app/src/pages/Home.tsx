@@ -152,7 +152,7 @@ export default function Home() {
       </section>
 
       <section className="section alt">
-        <div className="wrap max-w-[820px]">
+        <div className="wrap max-w-[51.25rem]">
           <SectionHead eyebrow="FAQ" title="Quick answers" />
           <FaqList items={faq.filter((f) => f.preview)} />
           <p className="mt-6"><Link to="/faq" className="inline-flex items-center gap-2 font-medium">All FAQ & terms <Icon name="arrow" className="h-4 w-4" /></Link></p>

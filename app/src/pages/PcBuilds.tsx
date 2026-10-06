@@ -62,7 +62,7 @@ export default function PcBuilds() {
           </div>
           <div>
             <SectionHead eyebrow="Process" title="How a build goes" />
-            <ol className="relative space-y-6 before:absolute before:bottom-2 before:left-[15px] before:top-2 before:w-px before:bg-line">
+            <ol className="relative space-y-6 before:absolute before:bottom-2 before:left-[0.9375rem] before:top-2 before:w-px before:bg-line">
               {buildProcess.map((p, i) => (
                 <li key={p.title} className="relative flex gap-5">
                   <span className="relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line bg-card font-mono text-[.72rem] text-accent2">{i + 1}</span>

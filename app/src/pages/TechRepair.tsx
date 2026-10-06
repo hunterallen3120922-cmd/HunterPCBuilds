@@ -25,7 +25,7 @@ export default function TechRepair() {
       <section className="section">
         <div className="wrap">
           <SectionHead eyebrow="Pricing" title="Services & prices" sub="Starting prices. Tap a service to request it. You always get a firm quote before I start." />
-          <ul className="grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,440px),1fr))] gap-4 p-0">
+          <ul className="grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,27.5rem),1fr))] gap-4 p-0">
             {repairServices.map((s, i) => (
               <li key={s.name}>
                 <Reveal delay={(i % 2) * 60} className="h-full">

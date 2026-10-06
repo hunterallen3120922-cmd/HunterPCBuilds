@@ -39,6 +39,8 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
 
+**Overall size:** the whole site is sized in `rem`, so one number scales everything. It's the `html { font-size }` rules at the top of `app/src/index.css`: 90% on laptop-sized windows (1024 to 1599px wide), 100% on phones, tablets and big monitors. Make 90% smaller or larger to taste.
+
 **Adding something = copying one `{ ... }` block and pasting it right below.**
 Keep the commas. Example, a new repair service:
 

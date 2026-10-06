@@ -48,7 +48,7 @@ export default function Carousel({ label, items }: { label: string; items: React
     <section aria-roledescription="carousel" aria-label={label}
       onKeyDown={(e) => { if (e.key === "ArrowLeft") manual(-1); if (e.key === "ArrowRight") manual(1); }}>
       {/* All cards share one grid cell and are slid left/right from the middle */}
-      <div className="fade-edges grid overflow-hidden py-3 [--cw:min(82vw,340px)]"
+      <div className="fade-edges grid overflow-hidden py-3 [--cw:min(82vw,21.25rem)]"
         aria-live={playing && !hold ? "off" : "polite"}
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
         onTouchEnd={(e) => {
@@ -83,7 +83,7 @@ export default function Carousel({ label, items }: { label: string; items: React
         })}
       </div>
 
-      <div className="wrap mt-8 flex max-w-[640px] items-center gap-4">
+      <div className="wrap mt-8 flex max-w-[40rem] items-center gap-4">
         <button type="button" className={arrow} onClick={() => manual(-1)} aria-label="Previous card"><Icon name="arrow" className="h-4 w-4 rotate-180" /></button>
         <div className="h-px flex-1 bg-line" aria-hidden>
           <div className="h-[2px] -translate-y-px rounded-full bg-accent transition-[width] duration-500" style={{ width: `${((active % items.length) + 1) / items.length * 100}%` }} />

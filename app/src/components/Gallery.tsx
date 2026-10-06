@@ -24,7 +24,7 @@ export default function Gallery({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <ul className="grid list-none grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-[18px] p-0">
+      <ul className="grid list-none grid-cols-[repeat(auto-fit,minmax(16.25rem,1fr))] gap-[1.125rem] p-0">
         {items.map((g) => (
           <li key={g.title}>
             <button type="button" onClick={() => setActive(g)}
@@ -40,7 +40,7 @@ export default function Gallery({ items }: { items: GalleryItem[] }) {
       </ul>
       <dialog ref={dialog} onClose={() => setActive(null)}
         onClick={(e) => { if (e.target === dialog.current) setActive(null); }}
-        className="m-auto w-[min(92vw,720px)] rounded-card border border-line bg-card p-0 text-ink">
+        className="m-auto w-[min(92vw,45rem)] rounded-card border border-line bg-card p-0 text-ink">
         {active && (
           <div>
             <Photo item={active} className="max-h-[60vh] w-full" />

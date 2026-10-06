@@ -74,7 +74,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
 
   if (done) {
     return (
-      <div className={`mx-auto max-w-[760px] text-center ${bare ? "py-6" : "rounded-card border border-line bg-card p-8"}`} role="status">
+      <div className={`mx-auto max-w-[47.5rem] text-center ${bare ? "py-6" : "rounded-card border border-line bg-card p-8"}`} role="status">
         <span className="icon-tile mx-auto h-14 w-14 rounded-full"><Icon name="check" className="h-7 w-7" /></span>
         <h3 className="mt-4 text-3xl">Request sent!</h3>
         <p className="mt-2 text-muted">Thanks! I aim to reach out within 24 hours to confirm a time and quote.</p>
@@ -87,7 +87,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
   }
 
   return (
-    <div ref={top} className={`mx-auto max-w-[760px] scroll-mt-24 ${bare ? "" : "rounded-card border border-line bg-card p-8 max-sm:p-[22px]"}`}>
+    <div ref={top} className={`mx-auto max-w-[47.5rem] scroll-mt-24 ${bare ? "" : "rounded-card border border-line bg-card p-8 max-sm:p-[1.375rem]"}`}>
       <div className="mb-7 flex gap-2" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`}>
         {Array.from({ length: total }, (_, n) => (
           <div key={n} className={`h-[5px] flex-1 rounded-[5px] transition-colors duration-300 ${n <= step ? "bg-accent" : "bg-line"}`} />
@@ -102,7 +102,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
           {!isReview ? (
             <>
               <h3 className="mb-1 text-[1.6rem]">{current.title}</h3>
-              {current.sub && <p className="mb-[22px] text-[.95rem] text-muted">{current.sub}</p>}
+              {current.sub && <p className="mb-[1.375rem] text-[.95rem] text-muted">{current.sub}</p>}
               {current.fields.map((f) => (
                 <Field key={f.name} def={f} value={values[f.name]} error={errors[f.name]}
                   onChange={(v) => { setValues((p) => ({ ...p, [f.name]: v })); if (errors[f.name]) setErrors((p) => ({ ...p, [f.name]: "" })); }} />
@@ -111,18 +111,18 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
           ) : (
             <>
               <h3 className="mb-1 text-[1.6rem]">{config.reviewTitle ?? "Look good?"}</h3>
-              <p className="mb-[22px] text-[.95rem] text-muted">Check your details, then send.</p>
-              <dl className="rounded-lg border border-line bg-bg2 px-[18px] py-4 text-[.92rem]">
+              <p className="mb-[1.375rem] text-[.95rem] text-muted">Check your details, then send.</p>
+              <dl className="rounded-lg border border-line bg-bg2 px-[1.125rem] py-4 text-[.92rem]">
                 {config.steps.flatMap((s) => s.fields).map((f) => (
-                  <div key={f.name} className="flex gap-[10px] border-b border-dashed border-line py-[6px] last:border-0 max-sm:flex-col max-sm:gap-0">
-                    <dt className="min-w-[170px] text-muted">{f.label}</dt>
+                  <div key={f.name} className="flex gap-[0.625rem] border-b border-dashed border-line py-[0.375rem] last:border-0 max-sm:flex-col max-sm:gap-0">
+                    <dt className="min-w-[10.625rem] text-muted">{f.label}</dt>
                     <dd className="break-words">{display(values[f.name])}</dd>
                   </div>
                 ))}
               </dl>
-              <label className="mt-[18px] flex items-start gap-[10px] rounded-lg border border-line bg-bg2 p-[14px] text-[.9rem] text-muted">
+              <label className="mt-[1.125rem] flex items-start gap-[0.625rem] rounded-lg border border-line bg-bg2 p-[0.875rem] text-[.9rem] text-muted">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1 h-[18px] w-[18px] shrink-0 accent-accent" />
+                  className="mt-1 h-[1.125rem] w-[1.125rem] shrink-0 accent-accent" />
                 <span>
                   I'm 18 or older (or have a parent/guardian's permission). I understand HunterPCBuilds is an independent, student-run service.
                   I'm responsible for backing up my data, and HunterPCBuilds isn't responsible for data loss or pre-existing damage.
@@ -134,8 +134,8 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
           )}
         </div>
 
-        <p role="alert" className="mt-[10px] min-h-[1.2em] text-[.9rem] text-danger">{formError}</p>
-        <div className="mt-[26px] flex justify-between gap-[10px]">
+        <p role="alert" className="mt-[0.625rem] min-h-[1.2em] text-[.9rem] text-danger">{formError}</p>
+        <div className="mt-[1.625rem] flex justify-between gap-[0.625rem]">
           <button type="button" className={`btn btn-ghost ${step === 0 ? "invisible" : ""}`} onClick={() => go(step - 1)} disabled={sending}>Back</button>
           <button type="submit" className="btn" disabled={sending}>
             {sending ? "Sending…" : isReview ? "Send request" : "Next"}
