@@ -72,7 +72,7 @@ export default function Home() {
     <>
       <HomeHero />
 
-      <section id="paths" className="section scroll-mt-16">
+      <section id="paths" className="section scroll-mt-20">
         <div className="wrap">
           <SectionHead eyebrow="Get started" title="What do you need?" />
           <div className="grid gap-5 md:grid-cols-2">

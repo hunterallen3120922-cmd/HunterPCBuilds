@@ -15,7 +15,7 @@ function ScrollManager() {
     const id = (state as { scrollTo?: string } | null)?.scrollTo;
     const el = id ? document.getElementById(id) : null;
     if (el) el.scrollIntoView();
-    else window.scrollTo(0, 0);
+    else window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname, state]);
   return null;
 }

@@ -37,6 +37,8 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Home page opening:** as you scroll, the circuit traces in the badge turn and a faint circuit ring behind the headline turns the other way. Speeds are the `deg` numbers in the `.hero-spin` and `.hero-ring` rules in `app/src/index.css`. The artwork is in `app/public/hero/`. Visitors who turn on "reduce motion" see it still.
 
+**Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
+
 **Adding something = copying one `{ ... }` block and pasting it right below.**
 Keep the commas. Example, a new repair service:
 

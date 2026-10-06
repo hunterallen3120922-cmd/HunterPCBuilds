@@ -35,7 +35,7 @@ export default function HomeHero() {
   }, []);
 
   return (
-    <header ref={hero} className="relative isolate flex min-h-[calc(100svh-4rem)] items-center overflow-hidden border-b border-line">
+    <header ref={hero} className="relative isolate flex min-h-[100svh] items-center overflow-hidden border-b border-line pt-16">
       <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
       <div className="orb pointer-events-none absolute -left-24 top-[10%] -z-20 h-[420px] w-[420px] rounded-full bg-accent/[.09] blur-[100px]" aria-hidden />
       <div className="orb pointer-events-none absolute -right-24 bottom-[5%] -z-20 h-[360px] w-[360px] rounded-full bg-accent2/[.07] blur-[110px] [animation-delay:-8s]" aria-hidden />

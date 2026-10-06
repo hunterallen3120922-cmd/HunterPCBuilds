@@ -7,7 +7,7 @@ import { site } from "../content/site";
 
 export default function RequestSection({ type, config, title }: { type: "build" | "repair"; config: FormConfig; title: string }) {
   return (
-    <section id="request" className="section scroll-mt-16">
+    <section id="request" className="section scroll-mt-20">
       <div className="wrap">
         <SectionHead center eyebrow="Request" title={title} sub={site.responseTime} />
         <MultiStepForm config={config} onSubmit={(v: FormValues) => submitRequest(type, config, v)} />
