@@ -35,6 +35,8 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Home page carousel:** it shows the "At a glance" card, every build in `gallery.ts` with `featured: true`, and every repair in `repairServices.ts` with `featured: true`. Set `featured: true` on any entry to add it, remove the line to take it out. The glance rows are in `site.ts`. The carousel is centered, loops forever and rotates by itself; change the speed with `INTERVAL` at the top of `app/src/components/Carousel.tsx` (3500 = 3.5 seconds).
 
+**Home page opening:** as you scroll, the circuit traces in the badge turn and a faint circuit ring behind the headline turns the other way. Speeds are the `deg` numbers in the `.hero-spin` and `.hero-ring` rules in `app/src/index.css`. The artwork is in `app/public/hero/`. Visitors who turn on "reduce motion" see it still.
+
 **Adding something = copying one `{ ... }` block and pasting it right below.**
 Keep the commas. Example, a new repair service:
 

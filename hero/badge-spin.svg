@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" aria-hidden="true">
+<defs><clipPath id="c"><circle cx="512" cy="512" r="432"/></clipPath></defs>
+<g clip-path="url(#c)" fill="none" stroke="#3ecf9a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".6">
+<path d="M100 470 L150 420 V334"/>
+<path d="M924.0 470 L874.0 420 V 334"/>
+<path d="M200 270 L260 210 H340"/>
+<path d="M824.0 270 L764.0 210 H 684.0"/>
+<path d="M404 138 V178 L440 214 H468"/>
+<path d="M620.0 138 V 178 L584.0 214 H 556.0"/>
+<path d="M118 566 H182 L240 624 H300"/>
+<path d="M906.0 566 H 842.0 L784.0 624 H 724.0"/>
+<path d="M512 166 V222"/>
+<circle cx="150" cy="318" r="15" fill="#0c141f"/>
+<circle cx="874" cy="318" r="15" fill="#0c141f"/>
+<circle cx="362" cy="210" r="15" fill="#0c141f"/>
+<circle cx="662" cy="210" r="15" fill="#0c141f"/>
+<circle cx="404" cy="122" r="15" fill="#0c141f"/>
+<circle cx="620" cy="122" r="15" fill="#0c141f"/>
+<circle cx="322" cy="624" r="15" fill="#0c141f"/>
+<circle cx="702" cy="624" r="15" fill="#0c141f"/>
+<circle cx="512" cy="150" r="15" fill="#0c141f"/>
+</g>
+</svg>

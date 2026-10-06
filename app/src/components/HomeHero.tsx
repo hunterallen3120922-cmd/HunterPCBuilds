@@ -1,18 +1,59 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import { site } from "../content/site";
 
-/** The big, minimal opening of the home page. */
-export default function HomeHero() {
-  return (
-    <header className="relative isolate flex min-h-[calc(100svh-4rem)] items-center overflow-hidden border-b border-line">
-      <div className="hero-grid pointer-events-none absolute inset-0 -z-10" aria-hidden />
-      <div className="orb pointer-events-none absolute -left-24 top-[10%] -z-10 h-[420px] w-[420px] rounded-full bg-accent/[.09] blur-[100px]" aria-hidden />
-      <div className="orb pointer-events-none absolute -right-24 bottom-[5%] -z-10 h-[360px] w-[360px] rounded-full bg-accent2/[.07] blur-[110px] [animation-delay:-8s]" aria-hidden />
+const asset = (name: string) => `${import.meta.env.BASE_URL}hero/${name}`;
 
-      <div className="wrap py-12 text-center">
-        <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" width={132} height={132}
-          className="floaty mx-auto mb-7 h-[104px] w-[104px] drop-shadow-[0_0_44px_rgba(62,207,154,.22)] sm:h-[120px] sm:w-[120px]" />
+/**
+ * The big, minimal opening of the home page.
+ * As you scroll, the circuit traces inside the badge turn while its icon and name stay upright,
+ * and a large faint circuit ring behind the headline turns the other way.
+ * (The scroll progress is written to the CSS variable --p; the motion itself lives in index.css.)
+ */
+export default function HomeHero() {
+  const hero = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = hero.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const p = Math.min(1, Math.max(0, window.scrollY / Math.max(1, el.offsetHeight)));
+      el.style.setProperty("--p", p.toFixed(4));
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return (
+    <header ref={hero} className="relative isolate flex min-h-[calc(100svh-4rem)] items-center overflow-hidden border-b border-line">
+      <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
+      <div className="orb pointer-events-none absolute -left-24 top-[10%] -z-20 h-[420px] w-[420px] rounded-full bg-accent/[.09] blur-[100px]" aria-hidden />
+      <div className="orb pointer-events-none absolute -right-24 bottom-[5%] -z-20 h-[360px] w-[360px] rounded-full bg-accent2/[.07] blur-[110px] [animation-delay:-8s]" aria-hidden />
+
+      {/* Big circuit ring behind the headline, turns the opposite way */}
+      <div className="hero-ring pointer-events-none absolute left-1/2 top-1/2 -z-10 aspect-square w-[min(1180px,150vw)]" aria-hidden>
+        <img src={asset("ring.svg")} alt="" className="h-full w-full" />
+      </div>
+
+      <div className="wrap relative py-12 text-center">
+        {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}
+        <div className="hero-badge mx-auto mb-7 h-[104px] w-[104px] sm:h-[120px] sm:w-[120px]">
+          <div className="floaty relative h-full w-full drop-shadow-[0_0_44px_rgba(62,207,154,.22)]">
+            <img src={asset("badge-base.svg")} alt="" className="absolute inset-0 h-full w-full" />
+            <img src={asset("badge-spin.svg")} alt="" className="hero-spin absolute inset-0 h-full w-full" />
+            <img src={asset("badge-front.svg")} alt={`${site.name} logo`} className="absolute inset-0 h-full w-full" />
+          </div>
+        </div>
         <p className="eyebrow mb-6 flex items-center justify-center gap-3 !text-[.66rem] sm:!text-[.72rem]">
           <span className="hidden h-px w-8 bg-accent2/70 sm:block" aria-hidden />{site.localTag}<span className="hidden h-px w-8 bg-accent2/70 sm:block" aria-hidden />
         </p>
