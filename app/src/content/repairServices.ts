@@ -6,12 +6,12 @@ import type { RepairService } from "../types";
  */
 export const repairServices: RepairService[] = [
   { icon: "search", name: "Diagnostic", description: "Figure out what's wrong", price: "Free" },
-  { icon: "shield-check", name: "Virus / malware cleanup", description: "Remove junk, speed it up", price: "$40" },
+  { icon: "shield-check", name: "Virus / malware cleanup", description: "Remove junk, speed it up", price: "$40", featured: true },
   { icon: "disc", name: "Windows reinstall", description: "Fresh install + drivers", price: "$40" },
   { icon: "chip", name: "SSD or RAM upgrade", description: "Install + data transfer", price: "$25", plusParts: true },
-  { icon: "battery", name: "Laptop battery swap", description: "Most models", price: "$30", plusParts: true },
-  { icon: "monitor", name: "Laptop screen replacement", description: "Most models", price: "$50", plusParts: true },
-  { icon: "fan", name: "Deep clean + thermal paste", description: "Fix overheating & fan noise", price: "$30" },
+  { icon: "battery", name: "Laptop battery swap", description: "Most models", price: "$30", plusParts: true, featured: true },
+  { icon: "monitor", name: "Laptop screen replacement", description: "Most models", price: "$50", plusParts: true, featured: true },
+  { icon: "fan", name: "Deep clean + thermal paste", description: "Fix overheating & fan noise", price: "$30", featured: true },
 ];
 
 export const repairNote =

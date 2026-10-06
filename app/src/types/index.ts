@@ -5,6 +5,8 @@ export interface RepairService {
   price: string;
   /** true adds a "+ parts" label next to the price */
   plusParts?: boolean;
+  /** true = also shown in the home page carousel */
+  featured?: boolean;
   /** An icon name, e.g. "shield" (list in app/src/components/Icon.tsx) */
   icon: string;
 }

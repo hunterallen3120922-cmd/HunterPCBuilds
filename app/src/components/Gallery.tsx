@@ -4,7 +4,7 @@ import Icon from "./Icon";
 
 const src = (photo: string) => `${import.meta.env.BASE_URL}gallery/${photo}`;
 
-function Photo({ item, className = "" }: { item: GalleryItem; className?: string }) {
+export function Photo({ item, className = "" }: { item: GalleryItem; className?: string }) {
   const [broken, setBroken] = useState(false);
   if (broken) return <div className={`grid place-items-center bg-bg2 ${className}`} role="img" aria-label={item.title}><Icon name="desktop" className="h-10 w-10 text-muted" /></div>;
   return <img src={src(item.photo)} alt={item.title} loading="lazy" onError={() => setBroken(true)} className={`object-cover ${className}`} />;

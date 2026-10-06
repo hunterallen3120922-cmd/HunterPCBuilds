@@ -53,6 +53,10 @@
   .grad-text { font-style: italic; color: var(--accent); }
 }
 
+/* Carousel track: full width, but the first card lines up with the page content (max 1120px) */
+.carousel-track { --g: 1.25rem; padding-inline: max(var(--g), calc(50% - 560px + var(--g))); scroll-padding-inline: max(var(--g), calc(50% - 560px + var(--g))); }
+@media (min-width: 640px) { .carousel-track { --g: 2rem; } }
+
 /* Faint blueprint grid behind hero sections */
 .hero-grid {
   background-image:
@@ -65,12 +69,22 @@
 }
 .hero-glow { background: radial-gradient(50% 60% at 85% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%); }
 
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Slow ambient motion in the home hero (disabled for reduced motion below) */
+@keyframes drift { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(3%,4%,0) scale(1.08); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.orb { animation: drift 16s ease-in-out infinite; }
+.floaty { animation: float 7s ease-in-out infinite; }
+
 /* Scroll-in animation. Disabled for people who prefer reduced motion. */
 .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
+  .orb, .floaty { animation: none; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 

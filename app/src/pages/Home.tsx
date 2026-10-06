@@ -1,44 +1,76 @@
 import { Link } from "react-router-dom";
-import PageHero from "../components/PageHero";
+import HomeHero from "../components/HomeHero";
+import Carousel, { CarouselCard } from "../components/Carousel";
+import { Photo } from "../components/Gallery";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
-import Gallery from "../components/Gallery";
 import FaqList from "../components/FaqList";
 import Icon, { IconTile } from "../components/Icon";
 import { useSeo } from "../lib/seo";
 import { glance, howItWorks, site, trustPoints } from "../content/site";
 import { gallery } from "../content/gallery";
+import { repairServices } from "../content/repairServices";
 import { faq } from "../content/faq";
 import { meetingMethods } from "../content/formOptions";
 
-function Glance() {
+function GlanceCard() {
   return (
-    <aside className="rounded-card border border-line bg-card/80 p-6 backdrop-blur" aria-label="At a glance">
-      <p className="eyebrow mb-4">At a glance</p>
-      <dl>
+    <div className="card flex w-full flex-col p-7">
+      <p className="eyebrow mb-1">At a glance</p>
+      <h3 className="mb-4 text-[1.5rem]">The quick version</h3>
+      <dl className="mt-auto">
         {glance.map((g) => (
-          <div key={g.label} className="flex items-baseline justify-between gap-6 border-b border-line py-3 last:border-0">
-            <dt className="text-[.9rem] text-muted">{g.label}</dt>
-            <dd className="text-right font-mono text-[.85rem] text-ink">{g.value}</dd>
+          <div key={g.label} className="flex items-baseline justify-between gap-4 border-t border-line py-3">
+            <dt className="whitespace-nowrap text-[.9rem] text-muted">{g.label}</dt>
+            <dd className="text-right font-mono text-[.78rem] text-ink sm:text-[.82rem]">{g.value}</dd>
           </div>
         ))}
       </dl>
-    </aside>
+    </div>
   );
+}
+
+/** Builds and repairs, alternating, so the carousel stays varied. */
+function featuredCards() {
+  const builds = gallery.filter((g) => g.featured).map((g) => (
+    <Link key={`b-${g.title}`} to="/pc-builds" className="card lift group flex w-full flex-col overflow-hidden p-0 no-underline">
+      <Photo item={g} className="aspect-[4/3] w-full" />
+      <div className="flex flex-1 flex-col p-5">
+        <p className="eyebrow mb-2">Build</p>
+        <h3 className="text-[1.25rem] text-ink">{g.title}</h3>
+        <p className="mb-4 mt-2 text-[.88rem] text-muted">{g.specs[0]}</p>
+        <p className="mt-auto flex items-center justify-between border-t border-line pt-4 text-[.85rem]">
+          <span className="font-mono text-accent">{g.price ?? "Custom quote"}</span>
+          <span className="inline-flex items-center gap-1 text-muted transition-colors group-hover:text-accent">See builds <Icon name="arrow" className="h-3.5 w-3.5" /></span>
+        </p>
+      </div>
+    </Link>
+  ));
+  const repairs = repairServices.filter((r) => r.featured).map((r) => (
+    <Link key={`r-${r.name}`} to="/tech-repair" className="card lift group flex w-full flex-col p-7 no-underline">
+      <IconTile name={r.icon} size="h-12 w-12" />
+      <p className="eyebrow mb-2 mt-6">Repair</p>
+      <h3 className="text-[1.45rem] text-ink">{r.name}</h3>
+      <p className="mt-2 text-[.92rem] text-muted">{r.description}</p>
+      <p className="mt-auto flex items-center justify-between border-t border-line pt-4 text-[.85rem]">
+        <span className="font-mono text-accent">{r.price}{r.plusParts && <span className="text-muted"> + parts</span>}</span>
+        <span className="inline-flex items-center gap-1 text-muted transition-colors group-hover:text-accent">Request <Icon name="arrow" className="h-3.5 w-3.5" /></span>
+      </p>
+    </Link>
+  ));
+  const mixed = [];
+  for (let i = 0; i < Math.max(builds.length, repairs.length); i++) {
+    if (builds[i]) mixed.push(builds[i]);
+    if (repairs[i]) mixed.push(repairs[i]);
+  }
+  return mixed;
 }
 
 export default function Home() {
   useSeo(`${site.fullName} | York, PA`, "Student-run computer repair and custom PC builds in York, PA. Submit a request and get a quote fast.");
   return (
     <>
-      <PageHero tag={site.localTag} aside={<Glance />}
-        title={<>Busted laptop? Dream PC? <em className="grad-text">Let's fix it, or build it.</em></>}
-        actions={<>
-          <Link to="/pc-builds" className="btn">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
-          <Link to="/tech-repair" className="btn btn-ghost">Fix my device</Link>
-        </>}>
-        Repairs, upgrades and custom PC builds for college students and the York area. Fair prices, cash-friendly, and I'll explain everything in plain English.
-      </PageHero>
+      <HomeHero />
 
       <section id="paths" className="section scroll-mt-16">
         <div className="wrap">
@@ -78,15 +110,15 @@ export default function Home() {
         </div>
       </section>
 
-      {gallery.some((g) => g.featured) && (
-        <section className="section">
-          <div className="wrap">
-            <SectionHead eyebrow="Portfolio" title="Recent builds" sub="A few PCs I've put together." />
-            <Gallery items={gallery.filter((g) => g.featured).slice(0, 3)} />
-            <p className="mt-8"><Link to="/pc-builds" className="inline-flex items-center gap-2 font-medium">See all builds <Icon name="arrow" className="h-4 w-4" /></Link></p>
-          </div>
-        </section>
-      )}
+      <section className="section" >
+        <div className="wrap">
+          <SectionHead eyebrow="Featured" title="Recent work & the basics" sub="Swipe through a few builds, popular repairs, and the quick facts." />
+        </div>
+        <Carousel label="Featured builds and repairs">
+          <CarouselCard><GlanceCard /></CarouselCard>
+          {featuredCards().map((c, i) => <CarouselCard key={i}>{c}</CarouselCard>)}
+        </Carousel>
+      </section>
 
       <section className="section alt">
         <div className="wrap">
