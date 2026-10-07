@@ -2,9 +2,11 @@
 
 /* Defaults match src/content/theme.ts, which overrides them at startup. */
 :root {
-  --bg: #eaede2; --bg2: #e0e5d2; --card: #f4f6eb; --line: #c6cdb2;
-  --text: #22261b; --muted: #5d6450; --accent: #cf2e50; --accent2: #6f7a56;
-  --danger: #b3273c; --success: #3d8a5a; --radius: 3px;
+  --bg: #0b1017; --bg2: #0f1621; --card: #121a26; --line: #1e2938;
+  --text: #eceff4; --muted: #8e9bad; --accent: #3ecf9a; --accent2: #d6b370;
+  --danger: #ff7a7a; --success: #3ecf9a;
+  /* hard offset shadow under buttons and hovered cards (dark mode) */
+  --shadow-hard: color-mix(in srgb, var(--accent) 28%, #02060a); --radius: 3px;
   --font-heading: "Inter Tight", Inter, system-ui, sans-serif;
   --font-body: Inter, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -20,7 +22,7 @@
   --color-accent: var(--accent);
   --color-accent2: var(--accent2);
   --color-danger: var(--danger);
-  --color-onaccent: #fdf9f2;
+  --color-onaccent: #06140e;
   --font-heading: var(--font-heading);
   --font-sans: var(--font-body);
   --font-mono: var(--font-mono);
@@ -50,10 +52,10 @@
   .card { @apply rounded-card border border-line bg-card p-6; }
   /* Print-style hover: the card lifts and drops a hard, flat shadow */
   .lift { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
-  .lift:hover { transform: translate(-2px, -2px); border-color: color-mix(in srgb, var(--text) 55%, var(--line)); box-shadow: 5px 5px 0 color-mix(in srgb, var(--text) 13%, transparent); }
-  .btn { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-card border border-transparent bg-accent px-5 py-[.6875rem] text-[.95rem] font-semibold text-onaccent no-underline transition-[transform,box-shadow,background-color] duration-150 hover:-translate-x-px hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60; font-family: inherit; box-shadow: 3px 3px 0 color-mix(in srgb, var(--text) 85%, transparent); }
-  .btn:hover { box-shadow: 4px 4px 0 color-mix(in srgb, var(--text) 85%, transparent); }
-  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 color-mix(in srgb, var(--text) 85%, transparent); }
+  .lift:hover { transform: translate(-2px, -2px); border-color: color-mix(in srgb, var(--text) 55%, var(--line)); box-shadow: 5px 5px 0 rgb(0 0 0 / .45); }
+  .btn { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-card border border-transparent bg-accent px-5 py-[.6875rem] text-[.95rem] font-semibold text-onaccent no-underline transition-[transform,box-shadow,background-color] duration-150 hover:-translate-x-px hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60; font-family: inherit; box-shadow: 3px 3px 0 var(--shadow-hard); }
+  .btn:hover { box-shadow: 4px 4px 0 var(--shadow-hard); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow-hard); }
   .btn-ghost { @apply border-ink/60 bg-transparent text-ink hover:bg-ink hover:text-bg; box-shadow: none; }
   .btn-ghost:hover { box-shadow: none; }
   .input { @apply w-full rounded-card border border-line bg-bg px-[.875rem] py-3 text-base text-ink transition-colors; font-family: inherit; }
@@ -71,8 +73,8 @@
  * Utilities resolve through --color-*, so redefining them here recolors the whole subtree.
  */
 .theme-dark {
-  --bg: #1a1e12; --bg2: #21261a; --card: #272c1f; --line: #3d4430;
-  --text: #eceee0; --muted: #9ba186; --accent: #e0496a; --accent2: #a9b184;
+  --bg: #070b10; --bg2: #0b1017; --card: #0f1621; --line: #1a2431;
+  --text: #eceff4; --muted: #8e9bad; --accent: #3ecf9a; --accent2: #d6b370;
   --color-bg: var(--bg); --color-bg2: var(--bg2); --color-card: var(--card);
   --color-line: var(--line); --color-ink: var(--text); --color-muted: var(--muted);
   --color-accent: var(--accent); --color-accent2: var(--accent2);
@@ -86,12 +88,12 @@
   mask-image: linear-gradient(to right, transparent 0%, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
 }
 
-/* Faint paper grain, tiled over hero sections to keep flat color from looking digital */
+/* Faint grain over the glows: it breaks up color banding in dark gradients */
 :root {
-  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .35 0 0 0 0 .3 0 0 0 .04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .6 0 0 0 0 .6 0 0 0 0 .6 0 0 0 .03 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
-/* Ruled drafting-paper grid behind hero sections, fading out smoothly */
+/* Faint blueprint grid behind hero sections, fading out smoothly */
 .hero-grid {
   background-image:
     linear-gradient(var(--line) 1px, transparent 1px),
@@ -99,26 +101,40 @@
   background-size: 3.5rem 3.5rem;
   -webkit-mask-image: radial-gradient(ellipse 75% 85% at 70% 0%, #000 0%, rgb(0 0 0 / .8) 22%, rgb(0 0 0 / .5) 45%, rgb(0 0 0 / .22) 65%, rgb(0 0 0 / .06) 82%, transparent 100%);
   mask-image: radial-gradient(ellipse 75% 85% at 70% 0%, #000 0%, rgb(0 0 0 / .8) 22%, rgb(0 0 0 / .5) 45%, rgb(0 0 0 / .22) 65%, rgb(0 0 0 / .06) 82%, transparent 100%);
-  opacity: .55;
+  opacity: .45;
 }
 
 /* Page heroes and the closing call to action: grain plus one broad, quiet tonal wash */
 .hero-glow {
   background:
     var(--grain),
-    linear-gradient(180deg,
-      transparent 0%,
-      color-mix(in srgb, var(--bg2) 55%, transparent) 100%);
+    radial-gradient(75% 80% at 88% 0%,
+      color-mix(in srgb, var(--accent) 8%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 6.2%, transparent) 14%,
+      color-mix(in srgb, var(--accent) 4.4%, transparent) 30%,
+      color-mix(in srgb, var(--accent) 2.6%, transparent) 48%,
+      color-mix(in srgb, var(--accent) 1.2%, transparent) 66%,
+      color-mix(in srgb, var(--accent) .4%, transparent) 82%,
+      transparent 100%);
 }
 
-/* Home hero: paper grain and a faint sage tint top-left, like aged stock */
+/* Home and animated heroes: a gentle emerald wash top-left and a whisper of brass bottom-right */
 .hero-ambient {
   background:
     var(--grain),
-    radial-gradient(70% 70% at 12% 12%,
-      color-mix(in srgb, var(--bg2) 65%, transparent) 0%,
-      color-mix(in srgb, var(--bg2) 30%, transparent) 45%,
-      transparent 78%);
+    radial-gradient(60% 65% at 8% 18%,
+      color-mix(in srgb, var(--accent) 6%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 4.6%, transparent) 16%,
+      color-mix(in srgb, var(--accent) 3.2%, transparent) 34%,
+      color-mix(in srgb, var(--accent) 1.8%, transparent) 54%,
+      color-mix(in srgb, var(--accent) .7%, transparent) 76%,
+      transparent 100%),
+    radial-gradient(55% 60% at 95% 100%,
+      color-mix(in srgb, var(--accent2) 4.5%, transparent) 0%,
+      color-mix(in srgb, var(--accent2) 3.4%, transparent) 18%,
+      color-mix(in srgb, var(--accent2) 2.2%, transparent) 38%,
+      color-mix(in srgb, var(--accent2) 1.1%, transparent) 60%,
+      transparent 100%);
 }
 
 /* Animated page openings (see AnimatedHero.tsx); data-phase flips to "done"
@@ -159,4 +175,4 @@
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
 .step-in { animation: fade .3s; }
 
-dialog::backdrop { background: rgb(26 30 18 / .6); }
+dialog::backdrop { background: rgba(4, 7, 11, .85); backdrop-filter: blur(3px); }

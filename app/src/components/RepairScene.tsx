@@ -128,7 +128,7 @@ export default function RepairScene() {
       {/* LAPTOP */}
       <Layer style={{ opacity: `calc(.08 + .92 * ${q("laptop")})`, transform: `translateY(calc(${inv("laptop")} * 24px))` }}>
         {/* shadow and glow on the desk */}
-        <ellipse cx="430" cy="488" rx="300" ry="22" fill="#000" opacity=".22" />
+        <ellipse cx="430" cy="488" rx="300" ry="22" fill="#000" opacity=".55" />
         <ellipse cx="430" cy="488" rx="280" ry="20" fill="url(#rs-glow)" style={{ opacity: q("ready") }} />
 
         {/* base: right side, front edge, top deck */}
