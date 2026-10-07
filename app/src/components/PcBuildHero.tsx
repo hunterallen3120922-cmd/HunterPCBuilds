@@ -120,7 +120,7 @@ export default function PcBuildHero() {
           </div>
         </div>
         <button type="button" onClick={() => skip.current()}
-          className="build-ui absolute bottom-5 right-5 z-20 rounded-full px-3 py-1.5 text-[.8rem] text-muted transition-colors hover:text-ink">
+          className="build-ui absolute bottom-5 right-5 z-20 rounded-card border border-ink/30 px-3 py-1.5 font-mono text-[.72rem] uppercase tracking-[.12em] text-muted transition-colors hover:border-ink hover:text-ink">
           Skip intro
         </button>
       </div>
