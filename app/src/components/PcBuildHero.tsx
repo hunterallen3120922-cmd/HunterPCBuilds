@@ -87,7 +87,7 @@ export default function PcBuildHero() {
           <div className="lg:max-w-[28rem]">
             {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
             <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">
-              hunter<span className="text-accent">PC</span>Builder
+              Hunter<span className="text-accent">PC</span>Builder
             </p>
             <p className="eyebrow mb-5 flex items-center gap-2"><span className="h-px w-6 bg-accent2" aria-hidden />Custom PC builds</p>
             <h1 className="text-[clamp(2.4rem,5.6vw,4.2rem)] lg:text-[clamp(2rem,3.5vw,3.6rem)]">
