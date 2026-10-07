@@ -35,7 +35,12 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Home page carousel:** it shows the "At a glance" card, every build in `gallery.ts` with `featured: true`, and every repair in `repairServices.ts` with `featured: true`. Set `featured: true` on any entry to add it, remove the line to take it out. The glance rows are in `site.ts`. The carousel is centered, loops forever and rotates by itself; change the speed with `INTERVAL` at the top of `app/src/components/Carousel.tsx` (3500 = 3.5 seconds).
 
-**Home page opening:** a PC assembles as you scroll. The opening is a tall pinned stage: your scroll position flies each part (case, power supply, motherboard, CPU and cooler, RAM, SSD, graphics card) into place, draws the cables, and powers it on, while four captions walk through the process. The captions are `heroSteps` in `app/src/content/site.ts`. The drawing is `app/src/components/BuildScene.tsx` and the timing of each part is the `PARTS` list in `app/src/components/HomeHero.tsx`. The stage's length is `h-[380svh]` there (bigger = slower). The drawing scales to fit any screen shape. Visitors who turn on "reduce motion" see a still, one-screen opening instead.
+**Home page opening:** a modern glass-panel PC case assembles as you scroll. The opening is a pinned stage: your scroll flies each part (power supply, motherboard, pump and tubes, RAM, graphics card, radiator and front fans) into the case, slides the glass on, and powers it on with a glow, while four captions walk through the process. The animation glides toward your scroll position so it stays smooth with a mouse wheel. Tweak it here:
+- Captions: `heroSteps` in `app/src/content/site.ts`.
+- The drawing (colors, parts, shapes): `app/src/components/BuildScene.tsx`. The glow uses your accent color from `theme.ts`.
+- Timing of each part (`PARTS`), and how smooth/fast it glides (`0.16` in the `tick` function): `app/src/components/HomeHero.tsx`.
+- Scroll length: `h-[250svh]` in `HomeHero.tsx` (smaller = quicker, bigger = slower).
+Visitors who turn on "reduce motion" see a still, one-screen opening instead.
 
 **Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
 

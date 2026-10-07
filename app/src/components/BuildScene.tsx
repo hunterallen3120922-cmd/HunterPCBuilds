@@ -1,15 +1,25 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /**
- * Line-art PC that assembles as you scroll. Every part reads its own progress from a CSS variable
- * (--q-<name>, 0 to 1) that HomeHero updates while scrolling; --p (0 to 1) is the overall progress.
- * The drawing uses a fixed coordinate space and scales to fit any box ("meet"), so it never crops.
+ * A modern glass-panel PC case in three-quarter view that assembles as you scroll.
+ * Every part reads its own progress from a CSS variable (--q-<name>, 0 to 1) that HomeHero updates while
+ * scrolling; --p (0 to 1) is the overall progress. The drawing uses a fixed coordinate space and scales to fit
+ * any box ("meet"), so it never crops.
+ *
+ * Geometry: three faces of the case share the near vertical edge B-C.
+ *   side face  A B C D   (large glass panel, shows the parts)
+ *   front face B E F C   (three fans)
+ *   top face   A B E G   (radiator fans)
+ * Each face has an affine "matrix" that maps flat local coordinates onto it, so parts are drawn flat and
+ * come out in perspective-style skew automatically.
  */
 
-/** A part that slides in from an offset (dx, dy) with a slight tilt (rot) and fades up. */
+const GLOW = "var(--accent)";
+
+/** A part that slides in from an offset (dx, dy) in its face's local units, with a slight tilt, and fades up. */
 const fly = (id: string, dx: number, dy: number, rot = 0): CSSProperties => ({
   transform: `translate(calc((1 - var(--q-${id}, 0)) * ${dx}px), calc((1 - var(--q-${id}, 0)) * ${dy}px)) rotate(calc((1 - var(--q-${id}, 0)) * ${rot}deg))`,
-  opacity: `calc(.1 + .9 * var(--q-${id}, 0))`,
+  opacity: `calc(.07 + .93 * var(--q-${id}, 0))`,
   transformBox: "fill-box",
   transformOrigin: "center",
 });
@@ -20,100 +30,182 @@ const draw = (id: string): CSSProperties => ({
   strokeDashoffset: `calc((1 - var(--q-${id}, 0)) * 1px)`,
 });
 
-/** A case/cooler fan whose blades turn with the scroll. */
-function Fan({ cx, cy, r }: { cx: number; cy: number; r: number }) {
-  const blades = Array.from({ length: 7 }, (_, k) => (k * 360) / 7);
+const power = (mult: number, base = 0): string => `calc(${base} + var(--q-power, 0) * ${mult})`;
+
+/** An RGB case fan: glow halo, lit ring, blades that turn with the scroll, hub. */
+function Fan({ cx, cy, r, blades = 9 }: { cx: number; cy: number; r: number; blades?: number }) {
   return (
     <g>
-      <circle cx={cx} cy={cy} r={r} className="fill-bg stroke-accent" strokeWidth={3} />
-      <g style={{ transform: "rotate(calc(var(--p, 0) * 1800deg))", transformBox: "fill-box", transformOrigin: "center" }}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="none" />
-        {blades.map((a) => (
-          <path key={a} transform={`translate(${cx} ${cy}) rotate(${a})`}
-            d={`M0 0 C ${r * 0.2} ${-r * 0.05} ${r * 0.75} ${-r * 0.1} ${r * 0.82} ${-r * 0.5} C ${r * 0.5} ${-r * 0.5} ${r * 0.2} ${-r * 0.35} 0 0Z`}
-            className="fill-accent/30 stroke-accent" strokeWidth={1.5} strokeLinejoin="round" />
+      <circle cx={cx} cy={cy} r={r * 1.95} fill="url(#bs-glow)" style={{ opacity: power(1) }} />
+      <circle cx={cx} cy={cy} r={r} fill="#04070b" stroke="#1b2735" strokeWidth={r * 0.1} />
+      <circle cx={cx} cy={cy} r={r * 0.92} fill="none" stroke={GLOW} strokeWidth={r * 0.15} style={{ opacity: power(0.85, 0.15) }} />
+      <circle cx={cx} cy={cy} r={r * 0.74} fill="none" stroke={GLOW} strokeWidth={r * 0.03} style={{ opacity: power(0.5, 0.15) }} />
+      <g style={{ transform: "rotate(calc(var(--p, 0) * 1500deg))", transformBox: "fill-box", transformOrigin: "center" }}>
+        <circle cx={cx} cy={cy} r={r * 0.72} fill="none" stroke="none" />
+        {Array.from({ length: blades }, (_, k) => (
+          <path key={k} transform={`translate(${cx} ${cy}) rotate(${(k * 360) / blades})`}
+            d={`M0 0 C ${r * 0.12} ${-r * 0.1} ${r * 0.5} ${-r * 0.1} ${r * 0.66} ${-r * 0.42} C ${r * 0.4} ${-r * 0.5} ${r * 0.14} ${-r * 0.36} 0 0Z`}
+            fill={GLOW} style={{ opacity: power(0.36, 0.1) }} />
         ))}
       </g>
-      <circle cx={cx} cy={cy} r={r * 0.16} className="fill-accent" />
+      <circle cx={cx} cy={cy} r={r * 0.24} fill="#070b10" stroke={GLOW} strokeWidth={r * 0.05} style={{ opacity: power(0.6, 0.4) }} />
     </g>
   );
 }
 
+/** Wraps flat parts so they sit on one face of the case. */
+function Face({ matrix, clip, children }: { matrix: string; clip: string; children: ReactNode }) {
+  return (
+    <g clipPath={`url(#${clip})`}>
+      <g transform={matrix}>{children}</g>
+    </g>
+  );
+}
+
+// Faces: A(150,110) B(470,140) C(470,570) D(150,540) E(620,120) F(620,550) G(300,90)
+const SIDE = "matrix(1 .09375 0 1 150 110)"; // local u 0..320, v 0..430
+const FRONT = "matrix(.6 -.08 0 1 470 140)"; // local u 0..250, v 0..430
+const TOP = "matrix(1 .09375 .5769 -.0769 150 110)"; // local x 0..320, y 0..260
+
 export default function BuildScene() {
   return (
-    <svg viewBox="180 20 640 700" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden="true"
+    <svg viewBox="110 56 550 548" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden="true"
       fill="none" strokeLinecap="round" strokeLinejoin="round">
-      {/* soft floor shadow */}
-      <ellipse cx="500" cy="690" rx="215" ry="13" className="fill-accent" style={{ opacity: "calc(var(--q-power, 0) * .14)" }} />
+      <defs>
+        <radialGradient id="bs-glow">
+          <stop offset="0" style={{ stopColor: GLOW, stopOpacity: 0.8 }} />
+          <stop offset="0.4" style={{ stopColor: GLOW, stopOpacity: 0.3 }} />
+          <stop offset="1" style={{ stopColor: GLOW, stopOpacity: 0 }} />
+        </radialGradient>
+        <radialGradient id="bs-floor">
+          <stop offset="0" style={{ stopColor: GLOW, stopOpacity: 0.28 }} />
+          <stop offset="1" style={{ stopColor: GLOW, stopOpacity: 0 }} />
+        </radialGradient>
+        <linearGradient id="bs-inside" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#0b141e" />
+          <stop offset="1" stopColor="#04070b" />
+        </linearGradient>
+        <linearGradient id="bs-glass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.12" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="0.02" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0.07" />
+        </linearGradient>
+        <linearGradient id="bs-shade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#000" stopOpacity="0.55" />
+          <stop offset="0.6" stopColor="#000" stopOpacity="0" />
+        </linearGradient>
+        <clipPath id="bs-clip-side"><polygon points="150,110 470,140 470,570 150,540" /></clipPath>
+        <clipPath id="bs-clip-front"><polygon points="470,140 620,120 620,550 470,570" /></clipPath>
+        <clipPath id="bs-clip-top"><polygon points="150,110 470,140 620,120 300,90" /></clipPath>
+      </defs>
 
-      {/* case: outline draws itself, glows when powered on */}
-      <g style={{ filter: "drop-shadow(0 0 calc(var(--q-power, 0) * 16px) rgba(62,207,154,.55))" }}>
-        <rect x="300" y="60" width="400" height="600" rx="26" className="fill-card" style={{ opacity: "calc(.25 + .75 * var(--q-case, 0))" }} />
-        <rect x="300" y="60" width="400" height="600" rx="26" pathLength={1} className="stroke-accent" strokeWidth={6} style={draw("case")} />
-        <rect x="316" y="76" width="368" height="568" rx="16" className="fill-bg stroke-line" strokeWidth={2} style={{ opacity: "var(--q-case, 0)" }} />
-        <rect x="316" y="76" width="368" height="568" rx="16" className="fill-accent" style={{ opacity: "calc(var(--q-power, 0) * .07)" }} />
+      {/* floor shadow and glow */}
+      <ellipse cx="395" cy="580" rx="290" ry="22" fill="#000" opacity=".55" />
+      <ellipse cx="395" cy="580" rx="260" ry="20" fill="url(#bs-floor)" style={{ opacity: power(1) }} />
+
+      {/* feet */}
+      <path d="M170 540 L222 545 L220 562 L172 556Z M430 568 L500 566 L498 586 L432 588Z M585 548 L620 546 L618 562 L585 564Z" fill="#05080c" style={{ opacity: "var(--q-case, 0)" }} />
+
+      {/* TOP FACE: radiator fans */}
+      <g style={{ opacity: "calc(.15 + .85 * var(--q-case, 0))" }}>
+        <Face matrix={TOP} clip="bs-clip-top">
+          <rect x="-20" y="-20" width="380" height="300" fill="#080d13" />
+          <rect x="8" y="14" width="304" height="232" rx="16" stroke="#1b2634" strokeWidth="3" />
+          <g style={fly("topfans", 0, -300)}>
+            {[55, 160, 265].map((x) => <Fan key={x} cx={x} cy={130} r={46} />)}
+          </g>
+        </Face>
       </g>
 
-      {/* front fans */}
-      {[170, 262, 354].map((y, i) => (
-        <g key={y} style={fly("fans", -220 - i * 40, 0)}><Fan cx={344} cy={y} r={22} /></g>
-      ))}
-
-      {/* power supply */}
-      <g style={fly("psu", 0, 380)}>
-        <rect x="324" y="548" width="352" height="88" rx="10" className="fill-card stroke-accent" strokeWidth={4} />
-        <Fan cx={392} cy={592} r={30} />
-        <path d="M456 568 H650 M456 592 H650 M456 616 H610" className="stroke-line" strokeWidth={3} />
+      {/* FRONT FACE: three fans behind glass */}
+      <g style={{ opacity: "calc(.15 + .85 * var(--q-case, 0))" }}>
+        <Face matrix={FRONT} clip="bs-clip-front">
+          <rect x="-10" y="-10" width="270" height="450" fill="#05080c" />
+          <rect x="16" y="14" width="218" height="402" rx="10" stroke="#16212d" strokeWidth="3" />
+          <g style={fly("front", 260, 0)}>
+            {[72, 214, 356].map((v) => <Fan key={v} cx={125} cy={v} r={56} />)}
+          </g>
+          <polygon points="30,0 90,0 -20,430 -80,430" fill="#fff" opacity=".05" />
+        </Face>
       </g>
 
-      {/* motherboard */}
-      <g style={fly("mb", -520, -40, -10)}>
-        <rect x="392" y="96" width="268" height="380" rx="8" className="fill-bg2 stroke-accent/70" strokeWidth={3} />
-        <path d="M392 300 H430 L450 280 H540 M660 200 H620 L600 180 M420 440 H520 L540 420 H640 M470 230 V300"
-          className="stroke-line" strokeWidth={2.5} />
-        <rect x="426" y="138" width="74" height="74" rx="6" className="stroke-line" strokeWidth={2} strokeDasharray="6 6" />
-        <circle cx="620" cy="450" r="5" className="fill-accent2" />
+      {/* SIDE FACE: the glass panel and everything inside it */}
+      <g style={{ opacity: "calc(.15 + .85 * var(--q-case, 0))" }}>
+        <Face matrix={SIDE} clip="bs-clip-side">
+          <rect x="-10" y="-10" width="340" height="450" fill="url(#bs-inside)" />
+
+          {/* power supply shroud with two intake fans */}
+          <g style={fly("psu", 0, 260)}>
+            <rect x="0" y="336" width="320" height="100" fill="#05080c" />
+            <path d="M0 336 H320" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.12) }} />
+            <path d="M10 360 H60 M10 372 H60 M260 360 H312 M260 372 H312" stroke="#16212d" strokeWidth="3" />
+            {[100, 215].map((x) => <Fan key={x} cx={x} cy={392} r={24} />)}
+          </g>
+
+          {/* motherboard with VRM armor and chipset block */}
+          <g style={fly("board", -260, -20, -6)}>
+            <rect x="68" y="26" width="220" height="256" rx="7" fill="#0a121b" stroke="#1a2735" strokeWidth="2.5" />
+            <path d="M80 160 H130 L150 140 H230 M170 258 H250 L270 238 M120 60 V110 M240 60 V120" stroke={GLOW} strokeWidth="1.5" style={{ opacity: power(0.2, 0.1) }} />
+            <rect x="14" y="22" width="76" height="136" rx="7" fill="#0d1620" stroke="#1d2a38" strokeWidth="2.5" />
+            {[40, 56, 72, 88, 104, 120, 136].map((y) => <path key={y} d={`M24 ${y} H80`} stroke="#18232f" strokeWidth="2.5" />)}
+            <rect x="196" y="196" width="74" height="58" rx="5" fill="#101a24" stroke="#1d2a38" strokeWidth="2.5" />
+            <path d="M206 214 H258 M206 228 H240" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.15) }} />
+          </g>
+
+          {/* CPU pump head */}
+          <g style={fly("pump", 0, -300)}>
+            <circle cx="152" cy="104" r="32" fill="#05080c" stroke="#1d2a38" strokeWidth="4" />
+            <circle cx="152" cy="104" r="26" fill="none" stroke={GLOW} strokeWidth="3.5" style={{ opacity: power(0.7, 0.3) }} />
+            <circle cx="152" cy="104" r="15" fill="#0a1017" stroke="#1d2a38" strokeWidth="2" />
+            <circle cx="152" cy="104" r="5" fill={GLOW} style={{ opacity: power(0.7, 0.3) }} />
+          </g>
+          {/* AIO tubes up to the top radiator */}
+          <g strokeLinecap="round">
+            <path d="M130 88 C108 50 92 22 66 -12" pathLength={1} stroke="#04070a" strokeWidth="15" style={draw("tubes")} />
+            <path d="M130 88 C108 50 92 22 66 -12" pathLength={1} stroke="#233140" strokeWidth="3" transform="translate(-3 0)" style={draw("tubes")} />
+            <path d="M176 88 C196 54 214 30 240 -12" pathLength={1} stroke="#04070a" strokeWidth="15" style={draw("tubes")} />
+            <path d="M176 88 C196 54 214 30 240 -12" pathLength={1} stroke="#233140" strokeWidth="3" transform="translate(-3 0)" style={draw("tubes")} />
+          </g>
+
+          {/* RAM with light strips */}
+          <g style={fly("ram", 0, -260)}>
+            {[218, 240].map((x) => (
+              <g key={x}>
+                <rect x={x} y="44" width="15" height="96" rx="2.5" fill="#0c131b" stroke="#1c2937" strokeWidth="2" />
+                <rect x={x + 2} y="46" width="3.5" height="92" rx="1.5" fill={GLOW} style={{ opacity: power(0.75, 0.25) }} />
+              </g>
+            ))}
+          </g>
+
+          {/* graphics card */}
+          <g style={fly("gpu", 420, 10, 3)}>
+            <rect x="22" y="246" width="284" height="76" rx="9" fill="#07090d" stroke="#1f2c3a" strokeWidth="3" />
+            <path d="M34 252 H294" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.6, 0.15) }} />
+            <rect x="12" y="240" width="11" height="88" rx="2" fill="#1b2633" />
+            <rect x="294" y="242" width="9" height="84" rx="2" fill="#121b25" />
+            {[82, 164, 246].map((x) => <Fan key={x} cx={x} cy={286} r={27} />)}
+          </g>
+
+          {/* glass: sheen and reflections slide on last */}
+          <g style={{ opacity: "var(--q-glass, 0)", transform: "translateX(calc((1 - var(--q-glass, 0)) * -24px))" }}>
+            <rect x="-10" y="-10" width="340" height="450" fill="url(#bs-glass)" />
+            <polygon points="40,0 120,0 -10,430 -90,430" fill="#fff" opacity=".055" />
+            <polygon points="170,0 196,0 66,430 40,430" fill="#fff" opacity=".035" />
+          </g>
+          <rect x="-10" y="-10" width="340" height="450" fill="url(#bs-shade)" />
+          <rect x="7" y="7" width="306" height="416" rx="8" stroke="#0e1721" strokeWidth="3" />
+        </Face>
       </g>
 
-      {/* M.2 SSD */}
-      <g style={fly("ssd", 300, 40, 8)}>
-        <rect x="430" y="258" width="92" height="18" rx="4" className="fill-card stroke-accent2" strokeWidth={3} />
-        <rect x="498" y="262" width="16" height="10" rx="2" className="fill-accent2/40" />
-      </g>
-
-      {/* CPU, then cooler on top of it */}
-      <g style={fly("cpu", 0, -440)}>
-        <rect x="438" y="150" width="50" height="50" rx="6" className="fill-accent/20 stroke-accent" strokeWidth={4} />
-        <rect x="452" y="164" width="22" height="22" rx="3" className="stroke-accent" strokeWidth={2} />
-      </g>
-      <g style={fly("cooler", 0, -480)}>
-        <rect x="418" y="130" width="90" height="90" rx="14" className="fill-card stroke-accent" strokeWidth={5} />
-        <Fan cx={463} cy={175} r={32} />
-      </g>
-
-      {/* RAM sticks */}
-      {[
-        { id: "ram1", x: 548 },
-        { id: "ram2", x: 578 },
-      ].map(({ id, x }) => (
-        <g key={id} style={fly(id, 0, -460)}>
-          <rect x={x} y="112" width="20" height="152" rx="4" className="fill-card stroke-accent2" strokeWidth={4} />
-          {[128, 158, 188, 218].map((y) => <rect key={y} x={x + 5} y={y} width="10" height="18" rx="2" className="fill-accent2/35" />)}
-        </g>
-      ))}
-
-      {/* graphics card */}
-      <g style={fly("gpu", 520, 40, 6)}>
-        <rect x="380" y="330" width="290" height="78" rx="10" className="fill-card stroke-accent" strokeWidth={5} />
-        <rect x="370" y="326" width="9" height="86" rx="2" className="fill-accent" />
-        {[440, 515, 590].map((x) => <Fan key={x} cx={x} cy={369} r={26} />)}
-        <path d="M650 344 V394" className="stroke-line" strokeWidth={3} />
-      </g>
-
-      {/* cables */}
-      <g className="stroke-accent2" strokeWidth={5} fill="none">
-        <path d="M440 548 V524 H372 V300 H392" pathLength={1} style={draw("cables")} />
-        <path d="M630 548 V524 H672 V400 H660" pathLength={1} style={draw("cables")} />
+      {/* case edges and glints */}
+      <g style={{ opacity: "var(--q-case, 0)" }}>
+        <polygon points="150,110 470,140 470,570 150,540" stroke="#0c131b" strokeWidth="5" />
+        <polygon points="470,140 620,120 620,550 470,570" stroke="#0c131b" strokeWidth="5" />
+        <polygon points="150,110 470,140 620,120 300,90" stroke="#0c131b" strokeWidth="5" />
+        <path d="M470 140 V570" stroke="#9fb3c8" strokeWidth="3" opacity=".55" />
+        <path d="M150 110 L470 140 L620 120" stroke="#7e93a8" strokeWidth="2" opacity=".4" />
+        <path d="M150 540 L470 570 L620 550" stroke="#5f7388" strokeWidth="2" opacity=".35" />
+        <path d="M150 110 V540" stroke="#4d6073" strokeWidth="2" opacity=".35" />
       </g>
     </svg>
   );

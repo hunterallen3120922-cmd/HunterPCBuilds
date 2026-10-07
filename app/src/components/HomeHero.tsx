@@ -11,34 +11,33 @@ const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /** When each part of the PC flies in, as [start, end] of the scroll through the opening (0 to 1). */
 const PARTS: Record<string, [number, number]> = {
-  case: [0.0, 0.16],
-  psu: [0.14, 0.28],
-  fans: [0.26, 0.34],
-  mb: [0.26, 0.42],
-  cpu: [0.4, 0.5],
-  cooler: [0.48, 0.58],
-  ram1: [0.56, 0.64],
-  ram2: [0.6, 0.68],
-  ssd: [0.64, 0.7],
-  gpu: [0.66, 0.8],
-  cables: [0.78, 0.88],
-  power: [0.88, 1],
+  case: [0.0, 0.14],
+  psu: [0.1, 0.22],
+  board: [0.14, 0.3],
+  pump: [0.26, 0.38],
+  tubes: [0.34, 0.44],
+  ram: [0.36, 0.44],
+  gpu: [0.38, 0.54],
+  topfans: [0.3, 0.46],
+  front: [0.46, 0.6],
+  glass: [0.58, 0.7],
+  power: [0.68, 0.86],
 };
 /** When each of the four captions is on screen. */
-const STEPS: [number, number][] = [[0.22, 0.42], [0.42, 0.62], [0.62, 0.82], [0.82, 1.01]];
+const STEPS: [number, number][] = [[0.12, 0.42], [0.38, 0.64], [0.6, 0.88], [0.84, 1.01]]; // overlap so captions crossfade
 
 /** Writes the scroll progress into CSS variables; all the motion itself is done in CSS. */
 function apply(stage: HTMLElement, p: number) {
   const set = (k: string, v: number) => stage.style.setProperty(k, v.toFixed(4));
   set("--p", p);
-  set("--t", clamp(p / 0.2));
+  set("--t", clamp(p / 0.12));
   for (const [k, [s, e]] of Object.entries(PARTS)) set(`--q-${k}`, ease(clamp((p - s) / (e - s))));
   STEPS.forEach(([a, b], i) => {
     const last = i === STEPS.length - 1;
     set(`--c${i + 1}`, clamp((p - a) / 0.04) * (last ? 1 : clamp((b - p) / 0.04)));
   });
-  stage.dataset.gone = String(p > 0.19);
-  stage.dataset.cta = String(p > 0.9);
+  stage.dataset.gone = String(p > 0.115);
+  stage.dataset.cta = String(p > 0.88);
 }
 
 /**
@@ -53,14 +52,19 @@ export default function HomeHero() {
   useEffect(() => {
     const w = wrap.current, s = stage.current;
     if (!w || !s || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let frame = 0;
-    const update = () => {
+    // The scroll position sets a target; the drawing glides toward it, so wheel notches feel fluid.
+    let target = 0, current = 0, frame = 0;
+    const read = () => clamp(-w.getBoundingClientRect().top / Math.max(1, w.offsetHeight - window.innerHeight));
+    const tick = () => {
       frame = 0;
-      const travel = Math.max(1, w.offsetHeight - window.innerHeight);
-      apply(s, clamp(-w.getBoundingClientRect().top / travel));
+      current += (target - current) * 0.16;
+      if (Math.abs(target - current) < 0.0005) current = target;
+      apply(s, current);
+      if (current !== target) frame = requestAnimationFrame(tick);
     };
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
-    update();
+    const onScroll = () => { target = read(); if (!frame) frame = requestAnimationFrame(tick); };
+    target = current = read();
+    apply(s, current);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
@@ -71,7 +75,7 @@ export default function HomeHero() {
   }, []);
 
   return (
-    <header ref={wrap} className="relative h-[380svh] border-b border-line motion-reduce:h-auto">
+    <header ref={wrap} className="relative h-[250svh] border-b border-line motion-reduce:h-auto">
       <div ref={stage} data-gone="false" data-cta="false"
         className="sticky top-0 isolate flex h-[100svh] items-center overflow-hidden motion-reduce:static motion-reduce:min-h-[100svh]">
         <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
