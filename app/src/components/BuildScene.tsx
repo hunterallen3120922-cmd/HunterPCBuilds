@@ -244,6 +244,10 @@ export default function BuildScene() {
             <polygon points="14,214 254,214 312,201 72,201" fill="#0e1620" stroke="#1f2c3a" strokeWidth="2" />
             <path d="M40 210 H262 M64 205 H286" stroke="#18222e" strokeWidth="1.5" />
             <rect x="14" y="214" width="240" height="54" rx="5" fill="#07090d" stroke="#1f2c3a" strokeWidth="2.5" />
+            {/* the card's front end, facing the front of the case */}
+            <polygon points="254,214 312,201 312,255 254,268" fill="#0b121a" stroke="#1f2c3a" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M262 226 L304 216 M262 238 L304 228 M262 250 L304 240" stroke="#151f2a" strokeWidth="2" />
+            <path d="M256 220 L310 208" stroke={GLOW} strokeWidth="1.5" style={{ opacity: power(0.6, 0.1) }} />
             <path d="M28 224 H190 L204 236 H240" stroke={GLOW} strokeWidth="2.5" style={{ opacity: power(0.85, 0.15) }} />
             <path d="M28 256 H120 L132 246 H240" stroke="#151f2a" strokeWidth="2.5" />
             {Array.from({ length: 36 }, (_, k) => 24 + k * 6).map((x) => <path key={x} d={`M${x} 262 V267`} stroke="#121a24" strokeWidth="2" />)}
