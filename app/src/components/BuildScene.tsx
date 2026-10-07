@@ -149,9 +149,13 @@ export default function BuildScene() {
       </defs>
 
       {/* floor shadow and glow */}
-      <ellipse cx="395" cy="580" rx="290" ry="22" fill="#000" opacity=".55" />
-      <ellipse cx="395" cy="580" rx="260" ry="20" fill="url(#bs-floor)" style={{ opacity: power(1) }} />
+      <g style={{ transform: "scale(calc(1 + var(--bounce, 0) * .006))", transformOrigin: "395px 580px" }}>
+        <ellipse cx="395" cy="580" rx="290" ry="22" fill="#000" opacity=".55" />
+        <ellipse cx="395" cy="580" rx="260" ry="20" fill="url(#bs-floor)" style={{ opacity: power(1) }} />
+      </g>
 
+      {/* the PC itself; it bounces when the parts land (--bounce / --squash, see PcBuildHero) */}
+      <g style={{ transform: "translateY(calc(var(--bounce, 0) * 1px)) scaleY(var(--squash, 1))", transformOrigin: "395px 575px" }}>
       {/* feet */}
       <path d="M170 540 L222 545 L220 562 L172 556Z M430 568 L500 566 L498 586 L432 588Z M585 548 L620 546 L618 562 L585 564Z" fill="#05080c" style={{ opacity: "var(--q-case, 0)" }} />
 
@@ -245,6 +249,7 @@ export default function BuildScene() {
         <path d="M150 110 L470 140 L620 120" stroke="#7e93a8" strokeWidth="2" opacity=".4" />
         <path d="M150 540 L470 570 L620 550" stroke="#5f7388" strokeWidth="2" opacity=".35" />
         <path d="M150 110 V540" stroke="#4d6073" strokeWidth="2" opacity=".35" />
+      </g>
       </g>
 
       {/* the parts floating around the case before they fly in */}

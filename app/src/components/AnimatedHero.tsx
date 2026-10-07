@@ -1,7 +1,11 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
-const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+const EASE = {
+  out: (t: number) => 1 - Math.pow(1 - t, 3), // fast start, gentle landing (the default)
+  in: (t: number) => t * t, // speeds up the whole way, so it lands with a thud
+};
+export type Part = [start: number, end: number, easing?: keyof typeof EASE];
 
 /** Short pause before an animation starts, in milliseconds. */
 const START_DELAY = 150;
@@ -10,7 +14,9 @@ export interface AnimatedHeroProps {
   /** The drawing. Its parts read --q-<name> (0 to 1) and --p (overall 0 to 1) from CSS. */
   scene: ReactNode;
   /** When each part animates, as [start, end] fractions of the duration. Becomes --q-<name>. */
-  parts: Record<string, [number, number]>;
+  parts: Record<string, Part>;
+  /** Extra CSS variables worked out from the overall progress p (0 to 1), e.g. a bounce. */
+  extra?: (p: number) => Record<string, number>;
   /** How long the animation takes, in milliseconds. */
   duration?: number;
   /** Fraction of the way through when data-spin turns on (used by spinning fans). Omit if not needed. */
@@ -29,7 +35,7 @@ export interface AnimatedHeroProps {
  * doesn't depend on scrolling. When it finishes, the drawing slides to the right (or above the text on phones and
  * tablets) and the page text fades in. Visitors who prefer reduced motion get the finished layout straight away.
  */
-export default function AnimatedHero({ scene, parts, duration = 2500, spinAt, hold = 0, doneMobileClass, children }: AnimatedHeroProps) {
+export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, hold = 0, doneMobileClass, children }: AnimatedHeroProps) {
   const stage = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -39,7 +45,8 @@ export default function AnimatedHero({ scene, parts, duration = 2500, spinAt, ho
     const apply = (p: number) => {
       set("--p", p);
       if (spinAt !== undefined) s.dataset.spin = String(p >= spinAt);
-      for (const [k, [a, b]] of Object.entries(parts)) set(`--q-${k}`, ease(clamp((p - a) / (b - a))));
+      for (const [k, [a, b, e = "out"]] of Object.entries(parts)) set(`--q-${k}`, EASE[e](clamp((p - a) / (b - a))));
+      if (extra) for (const [k, v] of Object.entries(extra(p))) set(k, v);
     };
     const finish = () => { apply(1); s.dataset.phase = "done"; if (spinAt !== undefined) s.dataset.spin = "true"; };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }

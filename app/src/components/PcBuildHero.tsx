@@ -1,20 +1,32 @@
-import AnimatedHero from "./AnimatedHero";
+import AnimatedHero, { type Part } from "./AnimatedHero";
 import BuildScene from "./BuildScene";
 import Icon from "./Icon";
 
-/** When each floating part flies into the PC, as [start, end] fractions of the duration (before that they float around it). */
-const PARTS: Record<string, [number, number]> = {
-  case: [0.0, 0.12],
-  board: [0.16, 0.34],
-  psu: [0.2, 0.36],
-  cooler: [0.3, 0.46],
-  ram: [0.36, 0.5],
-  topfans: [0.4, 0.54],
-  gpu: [0.44, 0.6],
-  front: [0.5, 0.66],
-  glass: [0.64, 0.74],
-  power: [0.72, 0.9],
+/**
+ * The timeline, as [start, end] fractions of the duration. The case appears, the parts float around it, then they all
+ * fly in together ("in" = they speed up and land with a thud), the PC bounces from the impact, and it powers on.
+ */
+const LAND = 0.5; // when the parts hit the case
+const FLY: Part = [0.22, LAND, "in"];
+const PARTS: Record<string, Part> = {
+  case: [0.0, 0.14],
+  board: FLY, psu: FLY, cooler: FLY, ram: FLY, topfans: FLY, gpu: FLY, front: FLY,
+  glass: [0.56, 0.7],
+  power: [0.62, 0.86],
 };
+
+/**
+ * The PC's bounce after the parts land, as --bounce (pixels down; negative is up) and --squash (1 = normal height).
+ * A short dip from the impact, then it springs up and settles with a smaller rebound.
+ */
+function bounce(p: number) {
+  const t = Math.min(1, Math.max(0, (p - LAND) / 0.32));
+  if (t === 0 || t === 1) return { "--bounce": 0, "--squash": 1 };
+  if (t < 0.12) { const d = Math.sin((Math.PI * t) / 0.12); return { "--bounce": 9 * d, "--squash": 1 - 0.035 * d }; }
+  const u = (t - 0.12) / 0.88;
+  const y = -30 * Math.sin(2.5 * Math.PI * u) * Math.pow(1 - u, 1.6);
+  return { "--bounce": y, "--squash": 1 - y * 0.0007 };
+}
 
 /**
  * The PC builds page opening: a PC builds itself (see BuildScene), then the page text fades in beside it and the
@@ -22,7 +34,7 @@ const PARTS: Record<string, [number, number]> = {
  */
 export default function PcBuildHero() {
   return (
-    <AnimatedHero scene={<BuildScene />} parts={PARTS} duration={3200} spinAt={0.68}
+    <AnimatedHero scene={<BuildScene />} parts={PARTS} extra={bounce} duration={3000} spinAt={0.62}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[27rem]">
       {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
       <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">
