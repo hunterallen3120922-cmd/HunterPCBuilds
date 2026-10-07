@@ -54,7 +54,7 @@ export default function Nav() {
               <span aria-hidden className="absolute inset-x-4 bottom-1 h-px origin-left scale-x-0 bg-accent transition-transform duration-300 group-hover:scale-x-100 group-aria-[current=page]:scale-x-100" />
             </NavLink>
           ))}
-          <Link to="/" state={{ scrollTo: "paths" }} className="btn ml-2 !px-5 !py-2">Get a quote</Link>
+          <Link to="/" state={{ scrollTo: "paths" }} className={`btn ml-2 !px-5 !py-2 transition-[border-radius,box-shadow] duration-500 ${pill ? "!rounded-full !shadow-none" : ""}`}>Get a quote</Link>
         </div>
 
         <button type="button"
@@ -72,7 +72,7 @@ export default function Nav() {
               {l.label}
             </NavLink>
           ))}
-          <Link to="/" state={{ scrollTo: "paths" }} className="btn mt-1" onClick={() => setOpen(false)}>Get a quote</Link>
+          <Link to="/" state={{ scrollTo: "paths" }} className="btn mt-1 !rounded-2xl !shadow-none" onClick={() => setOpen(false)}>Get a quote</Link>
         </div>
       )}
     </header>
