@@ -5,7 +5,7 @@ export default function Footer() {
   const socials = Object.entries(site.social).filter(([, url]) => url);
   const col = "text-[.9rem] text-muted no-underline hover:text-ink";
   return (
-    <footer className="border-t border-line bg-bg2 pt-14 text-[.9rem] text-muted">
+    <footer className="theme-dark border-t border-line bg-bg pt-14 text-[.9rem] text-muted">
       <div className="wrap grid gap-10 pb-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <img src={`${import.meta.env.BASE_URL}logo.svg`} alt={`${site.name} logo`} width={112} height={112} className="h-28 w-28" loading="lazy" />
