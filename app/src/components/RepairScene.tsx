@@ -81,7 +81,10 @@ function PartBattery({ color }: { color: string }) {
 /** A diagnostic readout: label, a red value that flips to a green one, and a leader line to the laptop. */
 function Tag({ x, y, label, bad, good, show, fix, to }: { x: number; y: number; label: string; bad: string; good: string; show: string; fix: string; to: [number, number] }) {
   const side = to[0] > x ? x + 160 : x;
+  // Once the repair is done, each readout tucks in toward its dot on the laptop (see .diag-tag in index.css).
+  const tuck = { "--tx": `${(to[0] - (x + 80)) * 0.5}px`, "--ty": `${(to[1] - (y + 25)) * 0.5}px`, "--td": `${(y / 120) * 0.06}s` } as CSSProperties;
   return (
+    <g className="diag-tag" style={tuck}>
     <g style={{ opacity: q(show), transform: `translateY(calc(${inv(show)} * 10px))` }}>
       <path d={`M${side} ${y + 25} L${to[0]} ${to[1]}`} stroke="var(--line)" strokeWidth="1.5" strokeDasharray="4 5" />
       <circle cx={to[0]} cy={to[1]} r="4" fill={BAD} style={{ opacity: inv(fix) }} />
@@ -94,6 +97,7 @@ function Tag({ x, y, label, bad, good, show, fix, to }: { x: number; y: number; 
       <text x={x + 16} y={y + 39} fontSize="16" fill={OK} style={{ fontFamily: "var(--font-mono)", opacity: q(fix) }}>{good}</text>
       <circle cx={x + 142} cy={y + 25} r="5" fill={BAD} style={{ opacity: inv(fix) }} />
       <circle cx={x + 142} cy={y + 25} r="5" fill={OK} style={{ opacity: q(fix) }} />
+    </g>
     </g>
   );
 }

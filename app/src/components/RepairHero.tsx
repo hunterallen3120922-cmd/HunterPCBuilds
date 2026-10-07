@@ -25,11 +25,13 @@ const PARTS: Record<string, [number, number]> = {
 };
 /**
  * The Tech Repair page opening: a broken laptop gets diagnosed and repaired (see RepairScene), then the page text
- * fades in beside it. How long it takes is `duration` below, in milliseconds.
+ * fades in beside it. How long it takes is `duration` below, in milliseconds. `hold` is how long the finished laptop
+ * shows its all-green readouts before they tuck away and the text arrives.
  */
 export default function RepairHero() {
   return (
     <AnimatedHero scene={<RepairScene />} parts={PARTS} duration={3400}
+      hold={window.matchMedia("(max-width: 639px)").matches ? 250 : 1100}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[23rem]">
       <p className="eyebrow mb-5 flex items-center gap-2"><span className="h-px w-6 bg-accent2" aria-hidden />Tech repair</p>
       <h1 className="text-[clamp(2.4rem,5.6vw,4.2rem)] lg:text-[clamp(2rem,3.5vw,3.6rem)]">

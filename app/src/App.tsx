@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
+import ScrollMotion from "./components/ScrollMotion";
 import Home from "./pages/Home";
 import PcBuilds from "./pages/PcBuilds";
 import TechRepair from "./pages/TechRepair";
@@ -28,6 +29,7 @@ export default function App() {
         Skip to content
       </a>
       <ScrollManager />
+      <ScrollMotion />
       <Nav />
       <main id="main" tabIndex={-1} className="outline-none">
         <Routes>

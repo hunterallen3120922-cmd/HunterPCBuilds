@@ -38,12 +38,12 @@ export default function TechRepair() {
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-[.9rem] text-muted">{repairNote} {site.paymentMethods.join(" or ")} accepted.</p>
+          <p data-reveal="up" className="mt-6 text-[.9rem] text-muted">{repairNote} {site.paymentMethods.join(" or ")} accepted.</p>
         </div>
       </section>
 
       <section className="section alt">
-        <div className="wrap grid gap-5 md:grid-cols-2">
+        <div data-reveal-group="zoom" className="wrap grid gap-5 md:grid-cols-2">
           <div className="card p-7">
             <p className="eyebrow mb-3">Devices</p>
             <h2 className="text-2xl">Devices I work on</h2>

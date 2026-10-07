@@ -141,6 +141,11 @@
    afterwards, which slides the drawing aside and fades the page text in. */
 .anim-text { opacity: 0; visibility: hidden; transform: translateY(1rem); transition: opacity .6s ease .15s, transform .6s ease .15s, visibility 0s linear .15s; }
 [data-phase="done"] .anim-text { opacity: 1; visibility: visible; transform: none; }
+/* Repair readouts: a quick "all clear" pop while the finished laptop holds, then they tuck into it and disappear. */
+.diag-tag { transform-box: fill-box; transform-origin: center; transition: opacity .45s ease-in, transform .5s cubic-bezier(.5,0,.75,0); }
+[data-hold="true"] .diag-tag { animation: tagpop .55s cubic-bezier(.3,1.6,.5,1) var(--td, 0s) both; }
+[data-phase="done"] .diag-tag { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) scale(.55); animation: none; }
+@keyframes tagpop { 40% { transform: scale(1.08); } }
 
 /* The PC's fans: they start turning shortly before power-on (data-spin is set on the stage) and never stop. */
 @keyframes spin360 { to { transform: rotate(360deg); } }
@@ -167,11 +172,28 @@
   will-change: transform;
 }
 
-/* Scroll-in animation. Disabled for people who prefer reduced motion. */
-.reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
-.reveal.in { opacity: 1; transform: none; }
+/* Scroll motion (see ScrollMotion.tsx): things pop in as they scroll into view and back out as they leave. */
+html.rv-on [data-reveal][data-rv="in"] {
+  transition: opacity .8s cubic-bezier(.2,.65,.2,1), transform .9s cubic-bezier(.2,.65,.2,1), filter .8s ease;
+  transition-delay: var(--rd, 0ms);
+}
+html.rv-on [data-reveal][data-rv="below"],
+html.rv-on [data-reveal][data-rv="above"] {
+  opacity: 0;
+  transition: opacity .4s ease-in, transform .45s ease-in, filter .4s ease-in;
+}
+html.rv-on [data-reveal][data-rv="below"] { transform: translate3d(0, 2.5rem, 0) scale(.98); }
+html.rv-on [data-reveal][data-rv="above"] { transform: translate3d(0, -2rem, 0) scale(.98); }
+html.rv-on [data-reveal="zoom"][data-rv="below"] { transform: translate3d(0, 1.5rem, 0) scale(.9); }
+html.rv-on [data-reveal="zoom"][data-rv="above"] { transform: translate3d(0, -1rem, 0) scale(.92); }
+html.rv-on [data-reveal="blur"]:not([data-rv="in"]) { filter: blur(8px); }
+@media (min-width: 1024px) {
+  html.rv-on [data-reveal="left"]:not([data-rv="in"]) { transform: translate3d(-3rem, 0, 0); }
+  html.rv-on [data-reveal="right"]:not([data-rv="in"]) { transform: translate3d(3rem, 0, 0); }
+}
+@media print { html.rv-on [data-reveal] { opacity: 1 !important; transform: none !important; filter: none !important; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

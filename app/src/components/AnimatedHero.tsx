@@ -15,6 +15,9 @@ export interface AnimatedHeroProps {
   duration?: number;
   /** Fraction of the way through when data-spin turns on (used by spinning fans). Omit if not needed. */
   spinAt?: number;
+  /** Pause on the finished drawing before it slides aside and the text arrives, in milliseconds. During the pause
+   *  the stage has data-hold="true", so the drawing can do something (see the repair readouts in index.css). */
+  hold?: number;
   /** Where the drawing sits above the text on phones/tablets once done, e.g. "max-lg:group-data-[phase=done]:bottom-[27rem]". */
   doneMobileClass: string;
   /** The page's heading, text and buttons. They fade in once the animation is done. */
@@ -26,7 +29,7 @@ export interface AnimatedHeroProps {
  * doesn't depend on scrolling. When it finishes, the drawing slides to the right (or above the text on phones and
  * tablets) and the page text fades in. Visitors who prefer reduced motion get the finished layout straight away.
  */
-export default function AnimatedHero({ scene, parts, duration = 2500, spinAt, doneMobileClass, children }: AnimatedHeroProps) {
+export default function AnimatedHero({ scene, parts, duration = 2500, spinAt, hold = 0, doneMobileClass, children }: AnimatedHeroProps) {
   const stage = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -40,6 +43,7 @@ export default function AnimatedHero({ scene, parts, duration = 2500, spinAt, do
     };
     const finish = () => { apply(1); s.dataset.phase = "done"; if (spinAt !== undefined) s.dataset.spin = "true"; };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
+    let timer = 0;
     s.dataset.phase = "building";
     apply(0);
     let frame = 0, start = 0;
@@ -47,10 +51,12 @@ export default function AnimatedHero({ scene, parts, duration = 2500, spinAt, do
       if (!start) start = now + START_DELAY;
       const p = clamp((now - start) / duration);
       apply(p);
-      if (p < 1) frame = requestAnimationFrame(tick); else finish();
+      if (p < 1) frame = requestAnimationFrame(tick);
+      else if (hold > 0) { s.dataset.hold = "true"; timer = window.setTimeout(finish, hold); }
+      else finish();
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); clearTimeout(timer); };
     // The animation is set up once per visit to the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

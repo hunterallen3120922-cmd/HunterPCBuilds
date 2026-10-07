@@ -50,7 +50,7 @@ export default function PcBuilds() {
         <div className="wrap grid gap-14 md:grid-cols-2">
           <div>
             <SectionHead eyebrow="Included" title="What's included" sub="Covered by the build fee." />
-            <ul className="space-y-4">
+            <ul data-reveal-group="left" className="space-y-4">
               {buildIncludes.map((x) => (
                 <li key={x} className="flex gap-3"><span className="icon-tile mt-[2px] h-6 w-6 rounded-full"><Icon name="check" className="h-3.5 w-3.5" /></span><span>{x}</span></li>
               ))}
@@ -58,7 +58,7 @@ export default function PcBuilds() {
           </div>
           <div>
             <SectionHead eyebrow="Process" title="How a build goes" />
-            <ol className="relative space-y-6 before:absolute before:bottom-2 before:left-[0.9375rem] before:top-2 before:w-px before:bg-line">
+            <ol data-reveal-group="up" className="relative space-y-6 before:absolute before:bottom-2 before:left-[0.9375rem] before:top-2 before:w-px before:bg-line">
               {buildProcess.map((p, i) => (
                 <li key={p.title} className="relative flex gap-5">
                   <span className="relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line bg-card font-mono text-[.72rem] text-accent2">{i + 1}</span>

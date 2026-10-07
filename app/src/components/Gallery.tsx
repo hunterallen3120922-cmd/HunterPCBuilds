@@ -24,7 +24,7 @@ export default function Gallery({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <ul className="grid list-none grid-cols-[repeat(auto-fit,minmax(16.25rem,1fr))] gap-[1.125rem] p-0">
+      <ul data-reveal-group="zoom" className="grid list-none grid-cols-[repeat(auto-fit,minmax(16.25rem,1fr))] gap-[1.125rem] p-0">
         {items.map((g) => (
           <li key={g.title}>
             <button type="button" onClick={() => setActive(g)}

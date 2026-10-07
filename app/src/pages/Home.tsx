@@ -80,7 +80,7 @@ export default function Home() {
               { to: "/pc-builds", icon: "chip", title: "Build me a PC", text: "Custom builds for your budget: gaming, school, editing and more. I plan the parts, build it and test it.", cta: "See builds & request" },
               { to: "/tech-repair", icon: "wrench", title: "Fix my device", text: "Slow, broken or overheating? Repairs and upgrades with a firm quote before I start.", cta: "See prices & request" },
             ].map((p, i) => (
-              <Reveal key={p.to} delay={i * 100}>
+              <Reveal key={p.to} delay={i * 100} as={i ? "right" : "left"}>
                 <Link to={p.to} className="card lift group block h-full p-8 no-underline">
                   <IconTile name={p.icon} size="h-12 w-12" />
                   <h3 className="mb-2 mt-6 text-[1.7rem] text-ink">{p.title}</h3>
@@ -114,7 +114,7 @@ export default function Home() {
         <div className="wrap">
           <SectionHead center eyebrow="Featured" title="Recent work & the basics" sub="A few builds, popular repairs, and the quick facts." />
         </div>
-        <Carousel label="Featured builds and repairs" items={[<GlanceCard key="glance" />, ...featuredCards()]} />
+        <div data-reveal="zoom"><Carousel label="Featured builds and repairs" items={[<GlanceCard key="glance" />, ...featuredCards()]} /></div>
       </section>
 
       <section className="section alt">
@@ -134,13 +134,13 @@ export default function Home() {
 
       <section className="section">
         <div className="wrap grid items-center gap-12 lg:grid-cols-2">
-          <div>
+          <div data-reveal-group="blur">
             <p className="eyebrow mb-3">Local</p>
             <h2 className="text-[clamp(1.8rem,3.6vw,2.6rem)]">{site.localTitle}</h2>
             <p className="mt-4 max-w-[52ch] text-muted">{site.localText}</p>
             {site.serviceArea && <p className="mt-4 text-[.9rem] text-muted">Serving {site.serviceArea}.</p>}
           </div>
-          <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card">
+          <ul data-reveal="right" className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card">
             {meetingMethods.map((m) => (
               <li key={m.value} className="flex items-center gap-4 p-5">
                 <IconTile name={m.icon ?? "pin"} />
@@ -155,13 +155,13 @@ export default function Home() {
         <div className="wrap max-w-[51.25rem]">
           <SectionHead eyebrow="FAQ" title="Quick answers" />
           <FaqList items={faq.filter((f) => f.preview)} />
-          <p className="mt-6"><Link to="/faq" className="inline-flex items-center gap-2 font-medium">All FAQ & terms <Icon name="arrow" className="h-4 w-4" /></Link></p>
+          <p data-reveal="up" className="mt-6"><Link to="/faq" className="inline-flex items-center gap-2 font-medium">All FAQ & terms <Icon name="arrow" className="h-4 w-4" /></Link></p>
         </div>
       </section>
 
       <section className="section theme-dark relative overflow-hidden bg-bg text-center text-ink">
         <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden />
-        <div className="wrap relative">
+        <div data-reveal-group="zoom" className="wrap relative">
           <h2 className="text-[clamp(2rem,4.4vw,3.2rem)]">Ready when <em className="grad-text">you are.</em></h2>
           <p className="mx-auto mb-8 mt-4 max-w-[48ch] text-muted">{site.responseTime} Tell me what you need.</p>
           <div className="flex flex-wrap justify-center gap-3">

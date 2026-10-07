@@ -6,7 +6,7 @@ export default function Footer() {
   const col = "text-[.9rem] text-muted no-underline hover:text-ink";
   return (
     <footer className="theme-dark border-t border-line bg-bg pt-14 text-[.9rem] text-muted">
-      <div className="wrap grid gap-10 pb-12 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div data-reveal-group="up" className="wrap grid gap-10 pb-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <img src={`${import.meta.env.BASE_URL}logo.svg`} alt={`${site.name} logo`} width={112} height={112} className="h-28 w-28" loading="lazy" />
           <p className="mt-4 max-w-[34ch]">{site.tagline}.</p>

@@ -7,7 +7,7 @@ export default function PageHero({ tag, title, children, actions, aside }: { tag
       <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden />
       <div className="hero-glow pointer-events-none absolute inset-0" aria-hidden />
       <div className={`wrap relative py-16 sm:py-24 ${aside ? "grid items-center gap-12 lg:grid-cols-[1.25fr_1fr]" : ""}`}>
-        <div>
+        <div data-reveal-group="blur">
           <p className="eyebrow mb-5 flex items-center gap-2"><span className="h-px w-6 bg-accent2" aria-hidden />{tag}</p>
           <h1 className="max-w-[17ch] text-[clamp(2.4rem,5.6vw,4.2rem)]">{title}</h1>
           <p className="my-6 max-w-[54ch] text-[1.1rem] text-muted">{children}</p>
