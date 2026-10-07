@@ -16,8 +16,7 @@ export default function Footer() {
           <ul className="space-y-2">
             <li><Link to="/pc-builds" className={col}>PC Builds</Link></li>
             <li><Link to="/tech-repair" className={col}>Tech Repair</Link></li>
-            <li><Link to="/faq" className={col}>FAQ & Terms</Link></li>
-            <li><Link to="/privacy" className={col}>Privacy</Link></li>
+            <li><Link to="/about" className={col}>About me</Link></li>
           </ul>
         </div>
         <div>
@@ -25,6 +24,8 @@ export default function Footer() {
           <ul className="space-y-2">
             {site.serviceArea && <li>{site.serviceArea}</li>}
             <li>Pay by {site.paymentMethods.join(" or ")}</li>
+            <li><Link to="/faq" className={col}>FAQ & Terms</Link></li>
+            <li><Link to="/privacy" className={col}>Privacy</Link></li>
             {socials.map(([name, url]) => (
               <li key={name}><a href={url} className={`${col} capitalize`} rel="noopener noreferrer" target="_blank">{name}</a></li>
             ))}
