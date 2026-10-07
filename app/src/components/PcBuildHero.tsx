@@ -1,7 +1,6 @@
 import AnimatedHero from "./AnimatedHero";
 import BuildScene from "./BuildScene";
 import Icon from "./Icon";
-import { heroSteps } from "../content/site";
 
 /** When each part of the PC flies in, as [start, end] fractions of the duration. */
 const PARTS: Record<string, [number, number]> = {
@@ -23,7 +22,7 @@ const PARTS: Record<string, [number, number]> = {
  */
 export default function PcBuildHero() {
   return (
-    <AnimatedHero scene={<BuildScene />} parts={PARTS} steps={heroSteps} duration={6500} spinAt={0.62}
+    <AnimatedHero scene={<BuildScene />} parts={PARTS} duration={2400} spinAt={0.62}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[27rem]">
       {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
       <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">

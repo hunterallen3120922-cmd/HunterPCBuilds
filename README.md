@@ -37,16 +37,11 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Home page opening:** your logo, headline and buttons, with a large faint circuit ring behind them. As you scroll, the circuit lines in the badge turn and the ring turns the other way. Speeds are the `deg` numbers in the `.hero-spin` and `.hero-ring` rules in `app/src/index.css`; the artwork is in `app/public/hero/`; the component is `app/src/components/HomeHero.tsx`.
 
-**PC builds page opening:** every time you arrive, a modern glass-panel PC builds itself (power supply, motherboard, CPU cooler, RAM, graphics card, top and front fans, then the glass panel, then it powers on) while four captions walk through the process. It runs on a timer, never reverses, and you can scroll away at any time. When it's built, the page's heading, text and button fade in beside it (on phones and tablets the PC sits above them) and the fans keep turning. There's a "Skip intro" button. Tweak it here:
-- Captions: `heroSteps` in `app/src/content/site.ts`.
-- The drawing (parts, colors, shapes): `app/src/components/BuildScene.tsx`. The glow uses your accent color from `theme.ts`.
-- How long it takes (`DURATION`, in milliseconds), when each part appears (`PARTS`), and the page text: `app/src/components/PcBuildHero.tsx`.
-- Fan speed: `.fan-spin` in `app/src/index.css` (`1.3s` per turn).
-Visitors who turn on "reduce motion" see the finished layout straight away, with the fans still.
+**PC builds page opening:** every time you arrive, a modern glass-panel PC builds itself in about 2.5 seconds (parts fly in, the glass goes on, it powers on), then slides to the right as the page's heading, text and button fade in (on phones and tablets the PC sits above them). The fans keep turning. The drawing is `app/src/components/BuildScene.tsx`; speed (`duration`, in milliseconds), when each part appears (`PARTS`) and the page text are in `app/src/components/PcBuildHero.tsx`. Fan speed is `.fan-spin` in `app/src/index.css`.
 
-**Tech Repair page opening:** every time you arrive, a broken laptop gets repaired: a scan finds the problems (readouts for CPU temp, battery, disk and malware show in red), the cracked screen clears, old parts pop out and new ones go in, it reboots to "All systems normal" and every readout turns green. Then the page text fades in beside it. Captions are `repairSteps` in `app/src/content/repairServices.ts`; the drawing is `app/src/components/RepairScene.tsx`; timing (`PARTS`, `WINDOWS`, `duration`) is in `app/src/components/RepairHero.tsx`. On phones the readouts are left out so the laptop stays large.
+**Tech Repair page opening:** every time you arrive, a broken laptop gets fixed in about 3 seconds: readouts show the problems in red, the crack clears, old parts swap for new, it reboots to "All systems normal" and the readouts turn green, then it slides aside as the page text fades in. The drawing is `app/src/components/RepairScene.tsx`; speed and timing are in `app/src/components/RepairHero.tsx`.
 
-**Adding an animated opening to another page:** both animated openings use `app/src/components/AnimatedHero.tsx`. Give it a drawing, a list of timed parts, captions and the page text (see `PcBuildHero.tsx` or `RepairHero.tsx` as examples).
+Both use `app/src/components/AnimatedHero.tsx`, so another page can get its own animated opening the same way. Visitors who turn on "reduce motion" see the finished layout straight away.
 
 **Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
 

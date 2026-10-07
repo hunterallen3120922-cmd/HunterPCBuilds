@@ -28,11 +28,3 @@ export const devicesServed = [
 
 export const backupNotice =
   "Back up anything important before handing over a device. I only touch what's needed for the repair, but I can't be responsible for data loss.";
-
-/** The four captions shown while the laptop gets repaired at the top of the Tech Repair page. */
-export const repairSteps = [
-  { title: "Diagnose", text: "A free diagnostic to find what's actually wrong." },
-  { title: "Fix", text: "Worn or failing parts swapped, with a firm quote first." },
-  { title: "Test", text: "Temps, drives and security checked before handoff." },
-  { title: "Hand it back", text: "Working again, and explained in plain English." },
-];

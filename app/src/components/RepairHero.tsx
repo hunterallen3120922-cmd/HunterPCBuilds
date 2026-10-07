@@ -1,7 +1,6 @@
 import AnimatedHero from "./AnimatedHero";
 import RepairScene from "./RepairScene";
 import Icon from "./Icon";
-import { repairSteps } from "../content/repairServices";
 
 /** When each piece of the repair happens, as [start, end] fractions of the duration. */
 const PARTS: Record<string, [number, number]> = {
@@ -24,16 +23,13 @@ const PARTS: Record<string, [number, number]> = {
   load: [0.73, 0.82],
   ready: [0.82, 0.9],
 };
-/** When each caption shows: Diagnose, Fix, Test, Hand it back. */
-const WINDOWS: [number, number][] = [[0, 0.32], [0.32, 0.7], [0.7, 0.88], [0.88, 1.01]];
-
 /**
  * The Tech Repair page opening: a broken laptop gets diagnosed and repaired (see RepairScene), then the page text
  * fades in beside it. How long it takes is `duration` below, in milliseconds.
  */
 export default function RepairHero() {
   return (
-    <AnimatedHero scene={<RepairScene />} parts={PARTS} steps={repairSteps} windows={WINDOWS} duration={7000}
+    <AnimatedHero scene={<RepairScene />} parts={PARTS} duration={2800}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[23rem]">
       <p className="eyebrow mb-5 flex items-center gap-2"><span className="h-px w-6 bg-accent2" aria-hidden />Tech repair</p>
       <h1 className="text-[clamp(2.4rem,5.6vw,4.2rem)] lg:text-[clamp(2rem,3.5vw,3.6rem)]">
