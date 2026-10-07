@@ -1,5 +1,5 @@
 import { useState } from "react";
-import PageHero from "../components/PageHero";
+import RepairHero from "../components/RepairHero";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
 import Icon, { IconTile } from "../components/Icon";
@@ -16,11 +16,7 @@ export default function TechRepair() {
   useSeo(`Computer Repair | ${site.name}`, "Laptop and PC repair, upgrades, virus removal and cleanups. Firm quotes, 30-day labor guarantee.");
   return (
     <>
-      <PageHero tag="Tech repair"
-        title={<>Slow, broken or overheating? <em className="grad-text">Let's fix it.</em></>}
-        actions={<button type="button" className="btn" onClick={() => document.getElementById("request")?.scrollIntoView()}>Start a repair request <Icon name="arrow" className="h-4 w-4" /></button>}>
-        Repairs and upgrades with a firm quote before I start. Simple fixes often happen same-day.
-      </PageHero>
+      <RepairHero />
 
       <section className="section">
         <div className="wrap">

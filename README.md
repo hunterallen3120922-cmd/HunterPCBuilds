@@ -44,6 +44,10 @@ text between the quotes, save. You never need to touch the other folders.
 - Fan speed: `.fan-spin` in `app/src/index.css` (`1.3s` per turn).
 Visitors who turn on "reduce motion" see the finished layout straight away, with the fans still.
 
+**Tech Repair page opening:** every time you arrive, a broken laptop gets repaired: a scan finds the problems (readouts for CPU temp, battery, disk and malware show in red), the cracked screen clears, old parts pop out and new ones go in, it reboots to "All systems normal" and every readout turns green. Then the page text fades in beside it. Captions are `repairSteps` in `app/src/content/repairServices.ts`; the drawing is `app/src/components/RepairScene.tsx`; timing (`PARTS`, `WINDOWS`, `duration`) is in `app/src/components/RepairHero.tsx`. On phones the readouts are left out so the laptop stays large.
+
+**Adding an animated opening to another page:** both animated openings use `app/src/components/AnimatedHero.tsx`. Give it a drawing, a list of timed parts, captions and the page text (see `PcBuildHero.tsx` or `RepairHero.tsx` as examples).
+
 **Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
 
 **Overall size:** the whole site is sized in `rem`, so one number scales everything. It's the `html { font-size }` rules at the top of `app/src/index.css`: 90% on laptop-sized windows (1024 to 1599px wide), 100% on phones, tablets and big monitors. Make 90% smaller or larger to taste.
