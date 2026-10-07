@@ -90,7 +90,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
     <div ref={top} className={`mx-auto max-w-[47.5rem] scroll-mt-24 ${bare ? "" : "rounded-card border border-line bg-card p-8 max-sm:p-[1.375rem]"}`}>
       <div className="mb-7 flex gap-2" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`}>
         {Array.from({ length: total }, (_, n) => (
-          <div key={n} className={`h-[5px] flex-1 rounded-[5px] transition-colors duration-300 ${n <= step ? "bg-accent" : "bg-line"}`} />
+          <div key={n} className={`h-[5px] flex-1 rounded-card transition-colors duration-300 ${n <= step ? "bg-accent" : "bg-line"}`} />
         ))}
       </div>
 
@@ -112,7 +112,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
             <>
               <h3 className="mb-1 text-[1.6rem]">{config.reviewTitle ?? "Look good?"}</h3>
               <p className="mb-[1.375rem] text-[.95rem] text-muted">Check your details, then send.</p>
-              <dl className="rounded-lg border border-line bg-bg2 px-[1.125rem] py-4 text-[.92rem]">
+              <dl className="rounded-card border border-line bg-bg2 px-[1.125rem] py-4 text-[.92rem]">
                 {config.steps.flatMap((s) => s.fields).map((f) => (
                   <div key={f.name} className="flex gap-[0.625rem] border-b border-dashed border-line py-[0.375rem] last:border-0 max-sm:flex-col max-sm:gap-0">
                     <dt className="min-w-[10.625rem] text-muted">{f.label}</dt>
@@ -120,7 +120,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose 
                   </div>
                 ))}
               </dl>
-              <label className="mt-[1.125rem] flex items-start gap-[0.625rem] rounded-lg border border-line bg-bg2 p-[0.875rem] text-[.9rem] text-muted">
+              <label className="mt-[1.125rem] flex items-start gap-[0.625rem] rounded-card border border-line bg-bg2 p-[0.875rem] text-[.9rem] text-muted">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
                   className="mt-1 h-[1.125rem] w-[1.125rem] shrink-0 accent-accent" />
                 <span>
