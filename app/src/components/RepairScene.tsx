@@ -9,7 +9,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
  * On narrow screens the readouts are left out so the laptop stays large.
  */
 
-const OK = "var(--accent)";
+const OK = "var(--success)"; // "fixed" green (theme.ts)
 const BAD = "var(--danger)";
 const q = (id: string) => `var(--q-${id}, 0)`;
 const inv = (id: string) => `calc(1 - var(--q-${id}, 0))`;
@@ -128,7 +128,7 @@ export default function RepairScene() {
       {/* LAPTOP */}
       <Layer style={{ opacity: `calc(.08 + .92 * ${q("laptop")})`, transform: `translateY(calc(${inv("laptop")} * 24px))` }}>
         {/* shadow and glow on the desk */}
-        <ellipse cx="430" cy="488" rx="300" ry="22" fill="#000" opacity=".55" />
+        <ellipse cx="430" cy="488" rx="300" ry="22" fill="#000" opacity=".22" />
         <ellipse cx="430" cy="488" rx="280" ry="20" fill="url(#rs-glow)" style={{ opacity: q("ready") }} />
 
         {/* base: right side, front edge, top deck */}
@@ -157,7 +157,7 @@ export default function RepairScene() {
               <path d="M190 72 L222 128 H158Z" stroke={BAD} strokeWidth="4" />
               <path d="M190 92 V110 M190 118 V119" stroke={BAD} strokeWidth="4" />
               <text x="190" y="156" textAnchor="middle" fontSize="15" letterSpacing="2" fill={BAD} style={{ fontFamily: "var(--font-mono)" }}>SYSTEM ERROR</text>
-              <text x="190" y="176" textAnchor="middle" fontSize="11" fill="var(--muted)" style={{ fontFamily: "var(--font-mono)" }}>0x0000007B · disk not found</text>
+              <text x="190" y="176" textAnchor="middle" fontSize="11" fill="#9aa48a" style={{ fontFamily: "var(--font-mono)" }}>0x0000007B · disk not found</text>
               <Layer style={{ opacity: inv("clean") }}>
                 {[[70, 205], [300, 55], [318, 200]].map(([x, y]) => (
                   <g key={`${x}`} transform={`translate(${x} ${y})`}>
@@ -190,7 +190,7 @@ export default function RepairScene() {
               <rect x="14" y="12" width="352" height="232" fill="url(#rs-desk)" />
               <circle cx="190" cy="100" r="30" fill="#05080c" stroke={OK} strokeWidth="3.5" />
               <path d="M176 101 L186 111 L205 90" stroke={OK} strokeWidth="4" />
-              <text x="190" y="160" textAnchor="middle" fontSize="16" fill="var(--text)" style={{ fontFamily: "var(--font-heading)" }}>All systems normal</text>
+              <text x="190" y="160" textAnchor="middle" fontSize="16" fill="#eef1e8" style={{ fontFamily: "var(--font-heading)" }}>All systems normal</text>
               <rect x="14" y="228" width="352" height="16" fill="#05080c" opacity=".8" />
               {[170, 184, 198, 212].map((x) => <rect key={x} x={x} y="232" width="9" height="8" rx="2" fill={OK} opacity=".6" />)}
             </Layer>

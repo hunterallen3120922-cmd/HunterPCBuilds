@@ -105,7 +105,7 @@ export default function BuildScene() {
       </defs>
 
       {/* floor shadow and glow */}
-      <ellipse cx="395" cy="580" rx="290" ry="22" fill="#000" opacity=".55" />
+      <ellipse cx="395" cy="580" rx="290" ry="22" fill="#000" opacity=".28" />
       <ellipse cx="395" cy="580" rx="260" ry="20" fill="url(#bs-floor)" style={{ opacity: power(1) }} />
 
       {/* feet */}

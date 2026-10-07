@@ -4,22 +4,23 @@
  */
 export const theme = {
   colors: {
-    bg: "#0b1017", // page background
-    bg2: "#0f1621", // alternate section background
-    card: "#121a26", // cards
-    line: "#1e2938", // hairline borders
-    text: "#eceff4",
-    muted: "#8e9bad",
-    accent: "#3ecf9a", // main accent (buttons, highlights) - emerald
-    accent2: "#d6b370", // small details (labels, numbers) - brass
-    danger: "#ff7a7a",
+    bg: "#eaede2", // page background - sage paper
+    bg2: "#e0e5d2", // alternate section background
+    card: "#f4f6eb", // cards - lightest paper
+    line: "#c6cdb2", // hairline borders
+    text: "#22261b", // ink
+    muted: "#5d6450",
+    accent: "#cf2e50", // main accent (buttons, highlights) - crimson, used sparingly
+    accent2: "#6f7a56", // small details (labels, numbers) - dark sage
+    danger: "#b3273c",
+    success: "#3d8a5a", // "fixed / all good" states (Tech Repair animation)
   },
   fonts: {
-    heading: '"Fraunces", Georgia, serif',
+    heading: '"Inter Tight", Inter, system-ui, sans-serif',
     body: 'Inter, system-ui, sans-serif',
     mono: '"JetBrains Mono", ui-monospace, monospace',
   },
-  radius: "12px",
+  radius: "3px",
 };
 
 /** Copies the theme into CSS variables. Called once at startup. */

@@ -159,8 +159,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section relative overflow-hidden text-center">
-        <div className="hero-glow pointer-events-none absolute inset-0" aria-hidden />
+      <section className="section theme-dark relative overflow-hidden bg-bg text-center text-ink">
+        <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden />
         <div className="wrap relative">
           <h2 className="text-[clamp(2rem,4.4vw,3.2rem)]">Ready when <em className="grad-text">you are.</em></h2>
           <p className="mx-auto mb-8 mt-4 max-w-[48ch] text-muted">{site.responseTime} Tell me what you need.</p>
