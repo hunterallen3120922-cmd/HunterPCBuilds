@@ -98,7 +98,7 @@ const FLOATS: { id: string; wide: [number, number]; tall: [number, number]; to: 
   { id: "ram", wide: [40, 110], tall: [170, -30], to: [388, 224], bob: 0.7, el: <FloatRam /> },
   { id: "cooler", wide: [740, 100], tall: [300, -70], to: [302, 232], bob: 1.6, el: <FloatCooler /> },
   { id: "topfans", wide: [800, 250], tall: [440, -60], to: [385, 112], bob: 0.4, el: <FloatFan /> },
-  { id: "gpu", wide: [760, 410], tall: [400, 700], to: [321, 347], bob: 2.1, el: <FloatGpu /> },
+  { id: "gpu", wide: [760, 410], tall: [400, 700], to: [306, 359], bob: 2.1, el: <FloatGpu /> },
   { id: "front", wide: [790, 545], tall: [600, 655], to: [545, 344], bob: 1.3, el: <FloatFan /> },
 ];
 
@@ -188,13 +188,16 @@ export default function BuildScene() {
         <Face matrix={SIDE} clip="bs-clip-side">
           <rect x="-10" y="-10" width="340" height="450" fill="url(#bs-inside)" />
 
-          {/* power supply shroud with two intake fans */}
+          {/* power supply shroud: its top shelf (seen from above, giving the case a floor) and a perforated front */}
           <g style={fly("psu", 0, 260)}>
+            <polygon points="0,336 320,336 378,323 58,323" fill="#0b121a" />
+            <path d="M58 323 H320" stroke="#141e29" strokeWidth="2" />
             <rect x="0" y="336" width="320" height="100" fill="#05080c" />
             <path d="M0 336 H320" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.12) }} />
-            <path d="M10 360 H60 M10 372 H60 M260 360 H312 M260 372 H312" stroke="#16212d" strokeWidth="3" />
-            <text x="160" y="396" textAnchor="middle" fontSize="13" letterSpacing="5" fill={GLOW}
-              style={{ fontFamily: "var(--font-mono)", opacity: power(0.5, 0.1) }}>HUNTERPCBUILDS</text>
+            {Array.from({ length: 6 }, (_, r) => Array.from({ length: 16 }, (_, c) => (
+              <circle key={`${r}-${c}`} cx={18 + c * 7.5} cy={356 + r * 9} r="1.7" fill="#131c27" />
+            )))}
+            <path d="M232 354 V404 M244 354 V404 M256 354 V404 M268 354 V404 M280 354 V404 M292 354 V404" stroke="#111924" strokeWidth="4" />
           </g>
 
           {/* rear exhaust fan on the back wall, seen at an angle through the glass */}
@@ -205,21 +208,14 @@ export default function BuildScene() {
             </g>
           </g>
 
-          {/* motherboard with VRM armor and chipset block */}
+          {/* motherboard with rear I/O cover and a finned chipset heatsink */}
           <g style={fly("board", -260, -20, -6)}>
-            <rect x="68" y="26" width="220" height="256" rx="7" fill="#0a121b" stroke="#1a2735" strokeWidth="2.5" />
-            <path d="M80 160 H130 L150 140 H230 M170 258 H250 L270 238 M120 60 V110 M240 60 V120" stroke={GLOW} strokeWidth="1.5" style={{ opacity: power(0.2, 0.1) }} />
-            {/* rear I/O cover */}
+            <rect x="68" y="26" width="220" height="276" rx="7" fill="#0a121b" stroke="#1a2735" strokeWidth="2.5" />
+            <path d="M80 160 H130 L150 140 H230 M120 60 V110 M240 60 V120" stroke={GLOW} strokeWidth="1.5" style={{ opacity: power(0.2, 0.1) }} />
             <path d="M68 34 H96 V118 L84 128 H68Z" fill="#101a24" stroke="#1d2a38" strokeWidth="2.5" />
             <path d="M88 44 V110" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.6, 0.12) }} />
-            {/* second slot and chipset heatsink, below the graphics card */}
-            <rect x="84" y="258" width="104" height="8" rx="2" fill="#141d28" />
-            <rect x="200" y="252" width="70" height="26" rx="4" fill="#101a24" stroke="#1d2a38" strokeWidth="2.5" />
-            <path d="M210 265 H258" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.15) }} />
-            {/* main power cable bundle running to the back */}
-            <path d="M286 132 C300 134 302 150 302 166 V336 M286 140 C296 142 297 154 297 168 V336 M286 148 C292 150 292 160 292 170 V336"
-              stroke="#1a2533" strokeWidth="3.5" />
-            <path d="M286 136 C299 138 300 152 300 167 V336" stroke={GLOW} strokeWidth="1" style={{ opacity: power(0.35, 0.05) }} />
+            <rect x="204" y="278" width="64" height="20" rx="3" fill="#0f1822" stroke="#1d2a38" strokeWidth="2" />
+            {[212, 220, 228, 236, 244, 252, 260].map((x) => <path key={x} d={`M${x} 282 L${x - 5} 294`} stroke="#1a2633" strokeWidth="2" />)}
           </g>
 
           {/* CPU tower cooler: fin stack, copper heat pipes and a big RGB fan */}
@@ -240,18 +236,17 @@ export default function BuildScene() {
             ))}
           </g>
 
-          {/* graphics card, mounted flat in its slot: we see its long edge and the backplate on top, fans face down */}
+          {/* graphics card, mounted flat in its slot and reaching out toward the glass: we see its long shroud edge and
+              the backplate on top (its fans face down, lighting the shelf below) */}
           <g style={fly("gpu", 300, 0)}>
-            <ellipse cx="160" cy="250" rx="140" ry="16" fill="url(#bs-glow)" style={{ opacity: power(0.55) }} />
-            <rect x="14" y="192" width="9" height="58" rx="2" fill="#1b2633" />
-            <polygon points="26,206 284,206 316,198 58,198" fill="#0e1620" stroke="#1f2c3a" strokeWidth="2" />
-            <path d="M70 202 H290" stroke="#18222e" strokeWidth="2" />
-            <rect x="26" y="206" width="258" height="38" rx="4" fill="#07090d" stroke="#1f2c3a" strokeWidth="2.5" />
-            <path d="M38 238 H272" stroke={GLOW} strokeWidth="2.5" style={{ opacity: power(0.85, 0.15) }} />
-            <rect x="196" y="213" width="66" height="16" rx="3" fill="#0e1620" stroke="#1f2c3a" strokeWidth="1.5" />
-            <path d="M204 221 H254" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.7, 0.15) }} />
-            <path d="M44 216 H170 M44 226 H150" stroke="#141d28" strokeWidth="2" />
-            <path d="M240 198 C240 180 250 172 262 168 M246 198 C246 182 255 175 266 172" stroke="#1a2533" strokeWidth="3.5" />
+            <ellipse cx="140" cy="286" rx="150" ry="20" fill="url(#bs-glow)" style={{ opacity: power(0.5) }} />
+            <rect x="6" y="198" width="9" height="74" rx="2" fill="#1b2633" />
+            <polygon points="14,214 254,214 312,201 72,201" fill="#0e1620" stroke="#1f2c3a" strokeWidth="2" />
+            <path d="M40 210 H262 M64 205 H286" stroke="#18222e" strokeWidth="1.5" />
+            <rect x="14" y="214" width="240" height="54" rx="5" fill="#07090d" stroke="#1f2c3a" strokeWidth="2.5" />
+            <path d="M28 224 H190 L204 236 H240" stroke={GLOW} strokeWidth="2.5" style={{ opacity: power(0.85, 0.15) }} />
+            <path d="M28 256 H120 L132 246 H240" stroke="#151f2a" strokeWidth="2.5" />
+            {Array.from({ length: 36 }, (_, k) => 24 + k * 6).map((x) => <path key={x} d={`M${x} 262 V267`} stroke="#121a24" strokeWidth="2" />)}
           </g>
 
           {/* a flash of light inside the case as the parts land */}
