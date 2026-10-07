@@ -35,11 +35,14 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Home page carousel:** it shows the "At a glance" card, every build in `gallery.ts` with `featured: true`, and every repair in `repairServices.ts` with `featured: true`. Set `featured: true` on any entry to add it, remove the line to take it out. The glance rows are in `site.ts`. The carousel is centered, loops forever and rotates by itself; change the speed with `INTERVAL` at the top of `app/src/components/Carousel.tsx` (3500 = 3.5 seconds).
 
-**Home page opening:** when the home page loads, a modern glass-panel PC builds itself (power supply, motherboard, CPU cooler, RAM, graphics card, top and front fans, then the glass panel, then it powers on) while four captions walk through the process. It runs on a timer, never reverses, and you can scroll away at any time. When it's built, your logo, name, headline and buttons fade back in beside it (on phones the PC fades behind them). It doesn't replay when you move between pages, and there's a small "Skip intro" button. Tweak it here:
+**Home page opening:** your logo, headline and buttons, with a large faint circuit ring behind them. As you scroll, the circuit lines in the badge turn and the ring turns the other way. Speeds are the `deg` numbers in the `.hero-spin` and `.hero-ring` rules in `app/src/index.css`; the artwork is in `app/public/hero/`; the component is `app/src/components/HomeHero.tsx`.
+
+**PC builds page opening:** every time you arrive, a modern glass-panel PC builds itself (power supply, motherboard, CPU cooler, RAM, graphics card, top and front fans, then the glass panel, then it powers on) while four captions walk through the process. It runs on a timer, never reverses, and you can scroll away at any time. When it's built, the page's heading, text and button fade in beside it (on phones and tablets the PC sits above them) and the fans keep turning. There's a "Skip intro" button. Tweak it here:
 - Captions: `heroSteps` in `app/src/content/site.ts`.
 - The drawing (parts, colors, shapes): `app/src/components/BuildScene.tsx`. The glow uses your accent color from `theme.ts`.
-- How long it takes (`DURATION`, in milliseconds) and when each part appears (`PARTS`): `app/src/components/HomeHero.tsx`.
-Visitors who turn on "reduce motion" see the finished layout straight away.
+- How long it takes (`DURATION`, in milliseconds), when each part appears (`PARTS`), and the page text: `app/src/components/PcBuildHero.tsx`.
+- Fan speed: `.fan-spin` in `app/src/index.css` (`1.3s` per turn).
+Visitors who turn on "reduce motion" see the finished layout straight away, with the fans still.
 
 **Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
 

@@ -1,4 +1,4 @@
-import PageHero from "../components/PageHero";
+import PcBuildHero from "../components/PcBuildHero";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
 import Gallery from "../components/Gallery";
@@ -14,11 +14,7 @@ export default function PcBuilds() {
   useSeo(`Custom PC Builds | ${site.name}`, "Custom gaming, school and workstation PC builds. Free consultation, parts at cost, 30-day labor guarantee.");
   return (
     <>
-      <PageHero tag="Custom PC builds"
-        title={<>A PC built <em className="grad-text">for your budget.</em></>}
-        actions={<button type="button" className="btn" onClick={() => document.getElementById("request")?.scrollIntoView()}>Start a build request <Icon name="arrow" className="h-4 w-4" /></button>}>
-        Tell me your budget and what you'll use it for. I plan the parts, build it, test it and hand it over ready to go.
-      </PageHero>
+      <PcBuildHero />
 
       <section className="section">
         <div className="wrap">

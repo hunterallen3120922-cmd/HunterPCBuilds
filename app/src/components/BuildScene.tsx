@@ -26,7 +26,7 @@ const fly = (id: string, dx: number, dy: number, rot = 0): CSSProperties => ({
 
 const power = (mult: number, base = 0): string => `calc(${base} + var(--q-power, 0) * ${mult})`;
 
-/** An RGB case fan: glow halo, lit ring, blades that turn with the scroll, hub. `fancy` adds the extra rings of the CPU fan. */
+/** An RGB case fan: glow halo, lit ring, blades that keep turning (see .fan-spin in index.css), hub. `fancy` adds the extra rings of the CPU fan. */
 function Fan({ cx, cy, r, blades = 9, fancy = false }: { cx: number; cy: number; r: number; blades?: number; fancy?: boolean }) {
   return (
     <g>
@@ -37,14 +37,14 @@ function Fan({ cx, cy, r, blades = 9, fancy = false }: { cx: number; cy: number;
       {fancy && (
         <>
           {/* segmented outer ring that counter-rotates, and a lit inner ring */}
-          <g style={{ transform: "rotate(calc(var(--p, 0) * -900deg))", transformBox: "fill-box", transformOrigin: "center" }}>
+          <g className="fan-spin-rev">
             <circle cx={cx} cy={cy} r={r * 1.14} fill="none" stroke={GLOW} strokeWidth={r * 0.07}
               strokeDasharray={`${r * 0.55} ${r * 0.3}`} style={{ opacity: power(0.9, 0.2) }} />
           </g>
           <circle cx={cx} cy={cy} r={r * 0.5} fill="none" stroke={GLOW} strokeWidth={r * 0.05} style={{ opacity: power(0.9, 0.2) }} />
         </>
       )}
-      <g style={{ transform: "rotate(calc(var(--p, 0) * 1500deg))", transformBox: "fill-box", transformOrigin: "center" }}>
+      <g className="fan-spin">
         <circle cx={cx} cy={cy} r={r * 0.72} fill="none" stroke="none" />
         {Array.from({ length: fancy ? 11 : blades }, (_, k) => (
           <path key={k} transform={`translate(${cx} ${cy}) rotate(${(k * 360) / (fancy ? 11 : blades)})`}
@@ -157,7 +157,6 @@ export default function BuildScene() {
           {/* CPU tower cooler: fin stack, copper heat pipes and a big RGB fan */}
           <g style={fly("cooler", 0, -300)}>
             <rect x="98" y="40" width="108" height="14" rx="4" fill="#141d28" stroke="#1d2a38" strokeWidth="2.5" />
-            {[120, 152, 184].map((x) => <path key={x} d={`M${x} 42 V12`} stroke="var(--accent2)" strokeWidth="5" opacity=".85" />)}
             <rect x="98" y="52" width="108" height="112" rx="10" fill="#0a1017" stroke="#1d2a38" strokeWidth="3" />
             {Array.from({ length: 12 }, (_, k) => 106 + k * 8.2).map((x) => <path key={x} d={`M${x} 58 V158`} stroke="#16212d" strokeWidth="2.5" />)}
             <Fan cx={152} cy={108} r={44} fancy />
