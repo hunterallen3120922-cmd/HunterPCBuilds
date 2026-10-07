@@ -155,7 +155,10 @@
 @media (prefers-reduced-motion: reduce) { .fan-spin, .fan-spin-rev { animation: none !important; } }
 
 /* Parts floating around the PC / laptop before they fly in (see Floaters.tsx) */
-@keyframes bob { 0%, 100% { transform: translateY(-6px) rotate(-3deg); } 50% { transform: translateY(6px) rotate(3deg); } }
+@keyframes bob {
+  0%, 100% { transform: translateY(calc(-6px * var(--bob, 1))) rotate(calc(-3deg * var(--bob, 1))); }
+  50% { transform: translateY(calc(6px * var(--bob, 1))) rotate(calc(3deg * var(--bob, 1))); }
+}
 .float-bob { transform-box: fill-box; transform-origin: center; animation: bob 2.4s ease-in-out infinite; }
 .floater .fan-spin, .floater .fan-spin-rev { animation-play-state: running; }
 @media (prefers-reduced-motion: reduce) { .float-bob { animation: none !important; } }

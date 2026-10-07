@@ -21,6 +21,9 @@ export interface AnimatedHeroProps {
   duration?: number;
   /** Fraction of the way through when data-spin turns on (used by spinning fans). Omit if not needed. */
   spinAt?: number;
+  /** Fraction of the way through when the drawing starts sliding aside and the text arrives, if that should
+   *  overlap the end of the animation (so it all flows as one motion). Defaults to the very end. */
+  doneAt?: number;
   /** Pause on the finished drawing before it slides aside and the text arrives, in milliseconds. During the pause
    *  the stage has data-hold="true", so the drawing can do something (see the repair readouts in index.css). */
   hold?: number;
@@ -35,7 +38,7 @@ export interface AnimatedHeroProps {
  * doesn't depend on scrolling. When it finishes, the drawing slides to the right (or above the text on phones and
  * tablets) and the page text fades in. Visitors who prefer reduced motion get the finished layout straight away.
  */
-export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, hold = 0, doneMobileClass, children }: AnimatedHeroProps) {
+export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, doneAt, hold = 0, doneMobileClass, children }: AnimatedHeroProps) {
   const stage = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -58,6 +61,7 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
       if (!start) start = now + START_DELAY;
       const p = clamp((now - start) / duration);
       apply(p);
+      if (doneAt !== undefined && p >= doneAt && s.dataset.phase !== "done") s.dataset.phase = "done";
       if (p < 1) frame = requestAnimationFrame(tick);
       else if (hold > 0) { s.dataset.hold = "true"; timer = window.setTimeout(finish, hold); }
       else finish();

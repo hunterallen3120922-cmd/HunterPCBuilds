@@ -24,7 +24,7 @@ const GLOW = "var(--accent)";
  */
 const fly = (id: string, dx: number, dy: number, rot = 0): CSSProperties => ({
   transform: `translate(calc((1 - var(--q-${id}, 0)) * ${dx * 0.12}px), calc((1 - var(--q-${id}, 0)) * ${dy * 0.12}px)) rotate(calc((1 - var(--q-${id}, 0)) * ${rot * 0.4}deg))`,
-  opacity: `calc(var(--q-${id}, 0) * var(--q-${id}, 0) * var(--q-${id}, 0))`,
+  opacity: `calc(var(--q-${id}, 0) * var(--q-${id}, 0) * var(--q-${id}, 0) * var(--q-${id}, 0) * var(--q-${id}, 0))`,
   transformBox: "fill-box",
   transformOrigin: "center",
 });
@@ -92,12 +92,13 @@ function FloatFan() {
 
 /** Where each floating part starts (beside the case on wide screens, above/below it on tall ones) and where it lands. */
 const FLOATS: { id: string; wide: [number, number]; tall: [number, number]; to: [number, number]; bob: number; el: ReactNode }[] = [
-  { id: "board", wide: [-40, 280], tall: [560, -20], to: [328, 281], bob: 0.2, el: <FloatBoard /> },
+  { id: "rear", wide: [-120, 110], tall: [180, 790], to: [188, 226], bob: 0.9, el: <FloatFan /> },
+  { id: "board", wide: [-40, 300], tall: [560, -20], to: [328, 281], bob: 0.2, el: <FloatBoard /> },
   { id: "psu", wide: [-20, 480], tall: [210, 660], to: [310, 511], bob: 1.1, el: <FloatPsu /> },
   { id: "ram", wide: [40, 110], tall: [170, -30], to: [388, 224], bob: 0.7, el: <FloatRam /> },
   { id: "cooler", wide: [740, 100], tall: [300, -70], to: [302, 232], bob: 1.6, el: <FloatCooler /> },
   { id: "topfans", wide: [800, 250], tall: [440, -60], to: [385, 112], bob: 0.4, el: <FloatFan /> },
-  { id: "gpu", wide: [760, 410], tall: [400, 700], to: [314, 409], bob: 2.1, el: <FloatGpu /> },
+  { id: "gpu", wide: [760, 410], tall: [400, 700], to: [321, 347], bob: 2.1, el: <FloatGpu /> },
   { id: "front", wide: [790, 545], tall: [600, 655], to: [545, 344], bob: 1.3, el: <FloatFan /> },
 ];
 
@@ -154,8 +155,8 @@ export default function BuildScene() {
         <ellipse cx="395" cy="580" rx="260" ry="20" fill="url(#bs-floor)" style={{ opacity: power(1) }} />
       </g>
 
-      {/* the PC itself; it bounces when the parts land (--bounce / --squash, see PcBuildHero) */}
-      <g style={{ transform: "translateY(calc(var(--bounce, 0) * 1px)) scaleY(var(--squash, 1))", transformOrigin: "395px 575px" }}>
+      {/* the PC itself; it grows slightly as it builds and bounces when the parts land (--grow / --bounce / --squash, see PcBuildHero) */}
+      <g style={{ transform: "translateY(calc(var(--bounce, 0) * 1px)) scale(var(--grow, 1)) scaleY(var(--squash, 1))", transformOrigin: "395px 575px" }}>
       {/* feet */}
       <path d="M170 540 L222 545 L220 562 L172 556Z M430 568 L500 566 L498 586 L432 588Z M585 548 L620 546 L618 562 L585 564Z" fill="#05080c" style={{ opacity: "var(--q-case, 0)" }} />
 
@@ -192,14 +193,33 @@ export default function BuildScene() {
             <rect x="0" y="336" width="320" height="100" fill="#05080c" />
             <path d="M0 336 H320" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.12) }} />
             <path d="M10 360 H60 M10 372 H60 M260 360 H312 M260 372 H312" stroke="#16212d" strokeWidth="3" />
+            <text x="160" y="396" textAnchor="middle" fontSize="13" letterSpacing="5" fill={GLOW}
+              style={{ fontFamily: "var(--font-mono)", opacity: power(0.5, 0.1) }}>HUNTERPCBUILDS</text>
+          </g>
+
+          {/* rear exhaust fan on the back wall, seen at an angle through the glass */}
+          <g style={fly("rear", -200, 0)}>
+            <g transform="matrix(.5769 -.131 0 1 38 112)">
+              <rect x="-54" y="-54" width="108" height="108" rx="12" fill="#070b10" stroke="#16212d" strokeWidth="3" />
+              <Fan cx={0} cy={0} r={48} />
+            </g>
           </g>
 
           {/* motherboard with VRM armor and chipset block */}
           <g style={fly("board", -260, -20, -6)}>
             <rect x="68" y="26" width="220" height="256" rx="7" fill="#0a121b" stroke="#1a2735" strokeWidth="2.5" />
             <path d="M80 160 H130 L150 140 H230 M170 258 H250 L270 238 M120 60 V110 M240 60 V120" stroke={GLOW} strokeWidth="1.5" style={{ opacity: power(0.2, 0.1) }} />
-            <rect x="196" y="196" width="74" height="58" rx="5" fill="#101a24" stroke="#1d2a38" strokeWidth="2.5" />
-            <path d="M206 214 H258 M206 228 H240" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.15) }} />
+            {/* rear I/O cover */}
+            <path d="M68 34 H96 V118 L84 128 H68Z" fill="#101a24" stroke="#1d2a38" strokeWidth="2.5" />
+            <path d="M88 44 V110" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.6, 0.12) }} />
+            {/* second slot and chipset heatsink, below the graphics card */}
+            <rect x="84" y="258" width="104" height="8" rx="2" fill="#141d28" />
+            <rect x="200" y="252" width="70" height="26" rx="4" fill="#101a24" stroke="#1d2a38" strokeWidth="2.5" />
+            <path d="M210 265 H258" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.15) }} />
+            {/* main power cable bundle running to the back */}
+            <path d="M286 132 C300 134 302 150 302 166 V336 M286 140 C296 142 297 154 297 168 V336 M286 148 C292 150 292 160 292 170 V336"
+              stroke="#1a2533" strokeWidth="3.5" />
+            <path d="M286 136 C299 138 300 152 300 167 V336" stroke={GLOW} strokeWidth="1" style={{ opacity: power(0.35, 0.05) }} />
           </g>
 
           {/* CPU tower cooler: fin stack, copper heat pipes and a big RGB fan */}
@@ -220,14 +240,22 @@ export default function BuildScene() {
             ))}
           </g>
 
-          {/* graphics card */}
-          <g style={fly("gpu", 420, 10, 3)}>
-            <rect x="22" y="246" width="284" height="76" rx="9" fill="#07090d" stroke="#1f2c3a" strokeWidth="3" />
-            <path d="M34 252 H294" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.6, 0.15) }} />
-            <rect x="12" y="240" width="11" height="88" rx="2" fill="#1b2633" />
-            <rect x="294" y="242" width="9" height="84" rx="2" fill="#121b25" />
-            {[82, 164, 246].map((x) => <Fan key={x} cx={x} cy={286} r={27} />)}
+          {/* graphics card, mounted flat in its slot: we see its long edge and the backplate on top, fans face down */}
+          <g style={fly("gpu", 300, 0)}>
+            <ellipse cx="160" cy="250" rx="140" ry="16" fill="url(#bs-glow)" style={{ opacity: power(0.55) }} />
+            <rect x="14" y="192" width="9" height="58" rx="2" fill="#1b2633" />
+            <polygon points="26,206 284,206 316,198 58,198" fill="#0e1620" stroke="#1f2c3a" strokeWidth="2" />
+            <path d="M70 202 H290" stroke="#18222e" strokeWidth="2" />
+            <rect x="26" y="206" width="258" height="38" rx="4" fill="#07090d" stroke="#1f2c3a" strokeWidth="2.5" />
+            <path d="M38 238 H272" stroke={GLOW} strokeWidth="2.5" style={{ opacity: power(0.85, 0.15) }} />
+            <rect x="196" y="213" width="66" height="16" rx="3" fill="#0e1620" stroke="#1f2c3a" strokeWidth="1.5" />
+            <path d="M204 221 H254" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.7, 0.15) }} />
+            <path d="M44 216 H170 M44 226 H150" stroke="#141d28" strokeWidth="2" />
+            <path d="M240 198 C240 180 250 172 262 168 M246 198 C246 182 255 175 266 172" stroke="#1a2533" strokeWidth="3.5" />
           </g>
+
+          {/* a flash of light inside the case as the parts land */}
+          <ellipse cx="170" cy="200" rx="230" ry="250" fill="url(#bs-glow)" style={{ opacity: "calc(var(--flash, 0) * .5)" }} />
 
           {/* glass: sheen and reflections slide on last */}
           <g style={{ opacity: "var(--q-glass, 0)", transform: "translateX(calc((1 - var(--q-glass, 0)) * -24px))" }}>
@@ -252,9 +280,9 @@ export default function BuildScene() {
       </g>
       </g>
 
-      {/* the parts floating around the case before they fly in */}
+      {/* the parts floating around the case, spiralling in together */}
       {FLOATS.map((f) => (
-        <Floater key={f.id} id={f.id} from={portrait ? f.tall : f.wide} to={f.to} appear="case" bob={f.bob}>{f.el}</Floater>
+        <Floater key={f.id} id={f.id} from={portrait ? f.tall : f.wide} to={f.to} appear="case" bob={f.bob} swirl={0.22}>{f.el}</Floater>
       ))}
     </svg>
   );
