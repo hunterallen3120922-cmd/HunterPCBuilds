@@ -1,11 +1,13 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { Floater, usePortrait } from "./Floaters";
 
 /**
  * A laptop in three-quarter view that gets diagnosed and repaired. Every piece reads its own progress from a CSS
  * variable (--q-<name>, 0 to 1) that AnimatedHero updates on a timer:
  *   laptop  - the laptop fades in        tag1..4 - diagnostic readouts appear     scan / scanend - scan line sweep
- *   screen  - the screen crack clears    old* / new* - old part pops out, new part goes in (fan, ssd, batt)
- *   clean   - malware removed            boot / load / ready - reboot, loading bar, "All systems normal"
+ *   screen  - new screen flies in, crack clears    old* - old part pops out    new* - new part flies in (fan, ssd, batt)
+ *   clean   - security shield flies in, malware removed    boot / load / ready - reboot, loading bar, "All systems normal"
+ * New parts float around the laptop first (see Floaters.tsx).
  * On narrow screens the readouts are left out so the laptop stays large.
  */
 
@@ -19,14 +21,9 @@ const LID = "matrix(1 .0789 -.0755 1 320 95)"; // local 380 x 265
 const BASE = "matrix(1 .0789 -.8667 .4667 300 360)"; // local 380 x 150
 const CENTER = { x: 425, y: 410 }; // where parts come out of / go into the base
 
-/** A part that pops out of the laptop to the left and fades away (old), or arrives from the right (new). */
+/** An old part that pops up out of the laptop and fades away. */
 const swapOut = (id: string): CSSProperties => ({
-  transform: `translate(calc(${q(id)} * -290px), calc(${q(id)} * 30px)) rotate(calc(${q(id)} * -25deg))`,
-  opacity: `calc(4 * ${q(id)} * ${inv(id)})`,
-  transformBox: "fill-box", transformOrigin: "center",
-});
-const swapIn = (id: string): CSSProperties => ({
-  transform: `translate(calc(${inv(id)} * 290px), calc(${inv(id)} * 30px)) rotate(calc(${inv(id)} * 25deg))`,
+  transform: `translate(calc(${q(id)} * -110px), calc(${q(id)} * -80px)) rotate(calc(${q(id)} * -30deg))`,
   opacity: `calc(4 * ${q(id)} * ${inv(id)})`,
   transformBox: "fill-box", transformOrigin: "center",
 });
@@ -51,6 +48,23 @@ function PartSsd({ color }: { color: string }) {
       <rect x="-30" y="-5" width="22" height="10" rx="2" fill={color} opacity=".45" />
       <rect x="-2" y="-5" width="22" height="10" rx="2" fill={color} opacity=".45" />
       <path d="M30 -6 V6" stroke={color} strokeWidth="3" />
+    </g>
+  );
+}
+function PartScreen() {
+  return (
+    <g>
+      <rect x="-50" y="-34" width="100" height="68" rx="6" fill="#05080c" stroke={OK} strokeWidth="3.5" />
+      <rect x="-42" y="-27" width="84" height="54" rx="3" fill={OK} opacity=".14" />
+      <polygon points="8,-27 26,-27 0,27 -18,27" fill="#fff" opacity=".1" />
+    </g>
+  );
+}
+function PartShield() {
+  return (
+    <g>
+      <path d="M0 -34 L28 -24 V0 C28 18 16 30 0 36 C-16 30 -28 18 -28 0 V-24Z" fill="#05080c" stroke={OK} strokeWidth="3.5" />
+      <path d="M-11 1 L-3 9 L12 -8" stroke={OK} strokeWidth="4" />
     </g>
   );
 }
@@ -101,13 +115,24 @@ function useNarrow() {
   return narrow;
 }
 
+/** New parts floating around the laptop (beside it on wide screens, above/below on tall ones), then flying in. */
+const LID_CENTER: [number, number] = [500, 238];
+const FLOATS: { id: string; wide: [number, number]; tall: [number, number]; to: [number, number]; bob: number; el: ReactNode }[] = [
+  { id: "screen", wide: [95, 95], tall: [240, 10], to: LID_CENTER, bob: 0.3, el: <PartScreen /> },
+  { id: "newfan", wide: [85, 440], tall: [210, 600], to: [CENTER.x, CENTER.y], bob: 1.2, el: <PartFan color={OK} /> },
+  { id: "newssd", wide: [640, 505], tall: [630, 590], to: [CENTER.x, CENTER.y], bob: 0.8, el: <PartSsd color={OK} /> },
+  { id: "newbatt", wide: [790, 450], tall: [430, 625], to: [CENTER.x, CENTER.y], bob: 1.8, el: <PartBattery color={OK} /> },
+  { id: "clean", wide: [790, 105], tall: [560, 0], to: LID_CENTER, bob: 0.6, el: <PartShield /> },
+];
+
 export default function RepairScene() {
   const narrow = useNarrow();
+  const portrait = usePortrait();
   const keys: [number, number][] = [];
   for (let r = 0; r < 5; r++) for (let c = 0; c < 14; c++) keys.push([30 + c * 23.1, 14 + r * 15]);
 
   return (
-    <svg viewBox={narrow ? "150 70 570 450" : "0 70 870 450"} preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden="true"
+    <svg viewBox={narrow ? "150 70 570 450" : "0 70 870 450"} preserveAspectRatio="xMidYMid meet" className="h-full w-full overflow-visible" aria-hidden="true"
       fill="none" strokeLinecap="round" strokeLinejoin="round">
       <defs>
         <radialGradient id="rs-glow">
@@ -202,14 +227,11 @@ export default function RepairScene() {
         <path d="M300 360 L680 390" stroke="#05080c" strokeWidth="5" />
       </Layer>
 
-      {/* PARTS SWAPPING (old parts in red pop out, new parts in green go in) */}
+      {/* OLD PARTS (red) pop out and fade */}
       <g transform={`translate(${CENTER.x} ${CENTER.y})`}>
         <g style={swapOut("oldfan")}><PartFan color={BAD} dusty /></g>
-        <g style={swapIn("newfan")}><PartFan color={OK} /></g>
         <g style={swapOut("oldssd")}><PartSsd color={BAD} /></g>
-        <g style={swapIn("newssd")}><PartSsd color={OK} /></g>
         <g style={swapOut("oldbatt")}><PartBattery color={BAD} /></g>
-        <g style={swapIn("newbatt")}><PartBattery color={OK} /></g>
       </g>
 
       {/* DIAGNOSTIC READOUTS (wider screens) */}
@@ -221,6 +243,11 @@ export default function RepairScene() {
           <Tag x={700} y={290} label="MALWARE" bad="3 found" good="Removed" show="tag4" fix="clean" to={[684, 330]} />
         </g>
       )}
+
+      {/* NEW PARTS (green) float around the laptop, then fly in */}
+      {FLOATS.map((f) => (
+        <Floater key={f.id} id={f.id} from={portrait ? f.tall : f.wide} to={f.to} appear="laptop" bob={f.bob}>{f.el}</Floater>
+      ))}
     </svg>
   );
 }

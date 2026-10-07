@@ -1,8 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
+import { Floater, usePortrait } from "./Floaters";
 
 /**
  * A modern glass-panel PC case in three-quarter view that assembles as you scroll.
- * Every part reads its own progress from a CSS variable (--q-<name>, 0 to 1) that HomeHero updates on a timer;
+ * The parts first float around the case, then fly in (see Floaters.tsx). Every part reads its own progress from a CSS
+ * variable (--q-<name>, 0 to 1) that AnimatedHero updates on a timer;
  * --p (0 to 1) is the overall progress. The drawing uses a fixed coordinate space and scales to fit
  * any box ("meet"), so it never crops.
  *
@@ -16,10 +18,13 @@ import type { CSSProperties, ReactNode } from "react";
 
 const GLOW = "var(--accent)";
 
-/** A part that slides in from an offset (dx, dy) in its face's local units, with a slight tilt, and fades up. */
+/**
+ * A part settling into place: it fades in as its floating copy (see Floaters) arrives, with a small final nudge
+ * from the direction it came from.
+ */
 const fly = (id: string, dx: number, dy: number, rot = 0): CSSProperties => ({
-  transform: `translate(calc((1 - var(--q-${id}, 0)) * ${dx}px), calc((1 - var(--q-${id}, 0)) * ${dy}px)) rotate(calc((1 - var(--q-${id}, 0)) * ${rot}deg))`,
-  opacity: `calc(.07 + .93 * var(--q-${id}, 0))`,
+  transform: `translate(calc((1 - var(--q-${id}, 0)) * ${dx * 0.12}px), calc((1 - var(--q-${id}, 0)) * ${dy * 0.12}px)) rotate(calc((1 - var(--q-${id}, 0)) * ${rot * 0.4}deg))`,
+  opacity: `calc(var(--q-${id}, 0) * var(--q-${id}, 0) * var(--q-${id}, 0))`,
   transformBox: "fill-box",
   transformOrigin: "center",
 });
@@ -58,6 +63,44 @@ function Fan({ cx, cy, r, blades = 9, fancy = false }: { cx: number; cy: number;
   );
 }
 
+/** Floating versions of the parts, drawn flat and centered on (0, 0). */
+function FloatPsu() {
+  return <g><rect x="-58" y="-30" width="116" height="60" rx="8" fill="#0a1017" stroke={GLOW} strokeWidth="3" /><Fan cx={-28} cy={0} r={20} /><path d="M6 -12 H44 M6 0 H44 M6 12 H32" stroke="#1d2a38" strokeWidth="3" /></g>;
+}
+function FloatBoard() {
+  return (
+    <g>
+      <rect x="-52" y="-66" width="104" height="132" rx="6" fill="#0a121b" stroke={GLOW} strokeWidth="2.5" />
+      <rect x="-30" y="-46" width="36" height="36" rx="4" stroke="#1d2a38" strokeWidth="2.5" strokeDasharray="5 4" />
+      <path d="M18 -50 V-10 M28 -50 V-10 M-40 18 H40 M-40 34 H24" stroke="#1d2a38" strokeWidth="3" />
+      <path d="M-40 52 H0 L10 42 H40" stroke={GLOW} strokeWidth="1.5" opacity=".6" />
+    </g>
+  );
+}
+function FloatRam() {
+  return <g transform="rotate(-18)">{[-12, 12].map((x) => <g key={x}><rect x={x - 8} y="-48" width="16" height="96" rx="2.5" fill="#0c131b" stroke="#2a3a4c" strokeWidth="2" /><rect x={x - 6} y="-46" width="3.5" height="92" rx="1.5" fill={GLOW} opacity=".8" /></g>)}</g>;
+}
+function FloatCooler() {
+  return <g><rect x="-44" y="-44" width="88" height="88" rx="10" fill="#0a1017" stroke="#2a3a4c" strokeWidth="3" /><Fan cx={0} cy={0} r={34} fancy /></g>;
+}
+function FloatGpu() {
+  return <g><rect x="-86" y="-30" width="172" height="60" rx="9" fill="#07090d" stroke="#2a3a4c" strokeWidth="3" /><path d="M-76 -24 H76" stroke={GLOW} strokeWidth="2" opacity=".7" />{[-50, 0, 50].map((x) => <Fan key={x} cx={x} cy={4} r={20} />)}</g>;
+}
+function FloatFan() {
+  return <Fan cx={0} cy={0} r={36} />;
+}
+
+/** Where each floating part starts (beside the case on wide screens, above/below it on tall ones) and where it lands. */
+const FLOATS: { id: string; wide: [number, number]; tall: [number, number]; to: [number, number]; bob: number; el: ReactNode }[] = [
+  { id: "board", wide: [-40, 280], tall: [560, -20], to: [328, 281], bob: 0.2, el: <FloatBoard /> },
+  { id: "psu", wide: [-20, 480], tall: [210, 660], to: [310, 511], bob: 1.1, el: <FloatPsu /> },
+  { id: "ram", wide: [40, 110], tall: [170, -30], to: [388, 224], bob: 0.7, el: <FloatRam /> },
+  { id: "cooler", wide: [740, 100], tall: [300, -70], to: [302, 232], bob: 1.6, el: <FloatCooler /> },
+  { id: "topfans", wide: [800, 250], tall: [440, -60], to: [385, 112], bob: 0.4, el: <FloatFan /> },
+  { id: "gpu", wide: [760, 410], tall: [400, 700], to: [314, 409], bob: 2.1, el: <FloatGpu /> },
+  { id: "front", wide: [790, 545], tall: [600, 655], to: [545, 344], bob: 1.3, el: <FloatFan /> },
+];
+
 /** Wraps flat parts so they sit on one face of the case. */
 function Face({ matrix, clip, children }: { matrix: string; clip: string; children: ReactNode }) {
   return (
@@ -73,8 +116,9 @@ const FRONT = "matrix(.6 -.08 0 1 470 140)"; // local u 0..250, v 0..430
 const TOP = "matrix(1 .09375 .5769 -.0769 150 110)"; // local x 0..320, y 0..260
 
 export default function BuildScene() {
+  const portrait = usePortrait();
   return (
-    <svg viewBox="110 56 550 548" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden="true"
+    <svg viewBox="110 56 550 548" preserveAspectRatio="xMidYMid meet" className="h-full w-full overflow-visible" aria-hidden="true"
       fill="none" strokeLinecap="round" strokeLinejoin="round">
       <defs>
         <radialGradient id="bs-glow">
@@ -202,6 +246,11 @@ export default function BuildScene() {
         <path d="M150 540 L470 570 L620 550" stroke="#5f7388" strokeWidth="2" opacity=".35" />
         <path d="M150 110 V540" stroke="#4d6073" strokeWidth="2" opacity=".35" />
       </g>
+
+      {/* the parts floating around the case before they fly in */}
+      {FLOATS.map((f) => (
+        <Floater key={f.id} id={f.id} from={portrait ? f.tall : f.wide} to={f.to} appear="case" bob={f.bob}>{f.el}</Floater>
+      ))}
     </svg>
   );
 }

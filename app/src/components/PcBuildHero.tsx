@@ -2,18 +2,18 @@ import AnimatedHero from "./AnimatedHero";
 import BuildScene from "./BuildScene";
 import Icon from "./Icon";
 
-/** When each part of the PC flies in, as [start, end] fractions of the duration. */
+/** When each floating part flies into the PC, as [start, end] fractions of the duration (before that they float around it). */
 const PARTS: Record<string, [number, number]> = {
-  case: [0.0, 0.14],
-  psu: [0.1, 0.22],
-  board: [0.14, 0.3],
-  cooler: [0.26, 0.4],
-  ram: [0.36, 0.46],
-  gpu: [0.4, 0.56],
-  topfans: [0.3, 0.46],
-  front: [0.46, 0.6],
-  glass: [0.58, 0.7],
-  power: [0.68, 0.88],
+  case: [0.0, 0.12],
+  board: [0.16, 0.34],
+  psu: [0.2, 0.36],
+  cooler: [0.3, 0.46],
+  ram: [0.36, 0.5],
+  topfans: [0.4, 0.54],
+  gpu: [0.44, 0.6],
+  front: [0.5, 0.66],
+  glass: [0.64, 0.74],
+  power: [0.72, 0.9],
 };
 
 /**
@@ -22,7 +22,7 @@ const PARTS: Record<string, [number, number]> = {
  */
 export default function PcBuildHero() {
   return (
-    <AnimatedHero scene={<BuildScene />} parts={PARTS} duration={2400} spinAt={0.62}
+    <AnimatedHero scene={<BuildScene />} parts={PARTS} duration={3200} spinAt={0.68}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[27rem]">
       {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
       <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">

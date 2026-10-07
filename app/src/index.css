@@ -149,6 +149,12 @@
 [data-spin="true"] .fan-spin, [data-spin="true"] .fan-spin-rev { animation-play-state: running; }
 @media (prefers-reduced-motion: reduce) { .fan-spin, .fan-spin-rev { animation: none !important; } }
 
+/* Parts floating around the PC / laptop before they fly in (see Floaters.tsx) */
+@keyframes bob { 0%, 100% { transform: translateY(-6px) rotate(-3deg); } 50% { transform: translateY(6px) rotate(3deg); } }
+.float-bob { transform-box: fill-box; transform-origin: center; animation: bob 2.4s ease-in-out infinite; }
+.floater .fan-spin, .floater .fan-spin-rev { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .float-bob { animation: none !important; } }
+
 /* Home page opening: as you scroll, the badge's circuit traces turn and a faint circuit ring behind the headline
    turns the other way. --p is 0 at the top and 1 once the opening has scrolled away. */
 .hero-badge { transform: translateY(calc(var(--p, 0) * 70px)) scale(calc(1 - var(--p, 0) * 0.2)); opacity: calc(1 - var(--p, 0) * 0.7); will-change: transform, opacity; }
