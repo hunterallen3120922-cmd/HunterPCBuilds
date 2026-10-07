@@ -78,13 +78,17 @@ export default function PcBuildHero() {
         <div aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-[12.5rem] top-16 -z-10 px-4 transition-all duration-[1100ms] ease-[cubic-bezier(.4,0,.2,1)] sm:bottom-[13.5rem]
             lg:group-data-[phase=done]:bottom-10 lg:group-data-[phase=done]:left-[46%] lg:group-data-[phase=done]:right-0
-            max-lg:group-data-[phase=done]:bottom-[22rem]">
+            max-lg:group-data-[phase=done]:bottom-[27rem]">
           <BuildScene />
         </div>
 
         {/* The page's heading, text and button: they fade in once the PC is built. */}
         <div className="pc-text wrap relative w-full">
           <div className="lg:max-w-[28rem]">
+            {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
+            <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">
+              Hunter<span className="text-accent">PC</span>Builds
+            </p>
             <p className="eyebrow mb-5 flex items-center gap-2"><span className="h-px w-6 bg-accent2" aria-hidden />Custom PC builds</p>
             <h1 className="text-[clamp(2.4rem,5.6vw,4.2rem)] lg:text-[clamp(2rem,3.5vw,3.6rem)]">
               A PC built <em className="grad-text">for your budget.</em>
