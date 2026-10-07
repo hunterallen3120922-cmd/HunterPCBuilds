@@ -2,8 +2,8 @@ import type { CSSProperties, ReactNode } from "react";
 
 /**
  * A modern glass-panel PC case in three-quarter view that assembles as you scroll.
- * Every part reads its own progress from a CSS variable (--q-<name>, 0 to 1) that HomeHero updates while
- * scrolling; --p (0 to 1) is the overall progress. The drawing uses a fixed coordinate space and scales to fit
+ * Every part reads its own progress from a CSS variable (--q-<name>, 0 to 1) that HomeHero updates on a timer;
+ * --p (0 to 1) is the overall progress. The drawing uses a fixed coordinate space and scales to fit
  * any box ("meet"), so it never crops.
  *
  * Geometry: three faces of the case share the near vertical edge B-C.
@@ -24,31 +24,36 @@ const fly = (id: string, dx: number, dy: number, rot = 0): CSSProperties => ({
   transformOrigin: "center",
 });
 
-/** A stroke that draws itself in (needs pathLength={1} on the element). */
-const draw = (id: string): CSSProperties => ({
-  strokeDasharray: 1,
-  strokeDashoffset: `calc((1 - var(--q-${id}, 0)) * 1px)`,
-});
-
 const power = (mult: number, base = 0): string => `calc(${base} + var(--q-power, 0) * ${mult})`;
 
-/** An RGB case fan: glow halo, lit ring, blades that turn with the scroll, hub. */
-function Fan({ cx, cy, r, blades = 9 }: { cx: number; cy: number; r: number; blades?: number }) {
+/** An RGB case fan: glow halo, lit ring, blades that turn with the scroll, hub. `fancy` adds the extra rings of the CPU fan. */
+function Fan({ cx, cy, r, blades = 9, fancy = false }: { cx: number; cy: number; r: number; blades?: number; fancy?: boolean }) {
   return (
     <g>
-      <circle cx={cx} cy={cy} r={r * 1.95} fill="url(#bs-glow)" style={{ opacity: power(1) }} />
+      <circle cx={cx} cy={cy} r={r * (fancy ? 2.3 : 1.95)} fill="url(#bs-glow)" style={{ opacity: power(1) }} />
       <circle cx={cx} cy={cy} r={r} fill="#04070b" stroke="#1b2735" strokeWidth={r * 0.1} />
       <circle cx={cx} cy={cy} r={r * 0.92} fill="none" stroke={GLOW} strokeWidth={r * 0.15} style={{ opacity: power(0.85, 0.15) }} />
       <circle cx={cx} cy={cy} r={r * 0.74} fill="none" stroke={GLOW} strokeWidth={r * 0.03} style={{ opacity: power(0.5, 0.15) }} />
+      {fancy && (
+        <>
+          {/* segmented outer ring that counter-rotates, and a lit inner ring */}
+          <g style={{ transform: "rotate(calc(var(--p, 0) * -900deg))", transformBox: "fill-box", transformOrigin: "center" }}>
+            <circle cx={cx} cy={cy} r={r * 1.14} fill="none" stroke={GLOW} strokeWidth={r * 0.07}
+              strokeDasharray={`${r * 0.55} ${r * 0.3}`} style={{ opacity: power(0.9, 0.2) }} />
+          </g>
+          <circle cx={cx} cy={cy} r={r * 0.5} fill="none" stroke={GLOW} strokeWidth={r * 0.05} style={{ opacity: power(0.9, 0.2) }} />
+        </>
+      )}
       <g style={{ transform: "rotate(calc(var(--p, 0) * 1500deg))", transformBox: "fill-box", transformOrigin: "center" }}>
         <circle cx={cx} cy={cy} r={r * 0.72} fill="none" stroke="none" />
-        {Array.from({ length: blades }, (_, k) => (
-          <path key={k} transform={`translate(${cx} ${cy}) rotate(${(k * 360) / blades})`}
+        {Array.from({ length: fancy ? 11 : blades }, (_, k) => (
+          <path key={k} transform={`translate(${cx} ${cy}) rotate(${(k * 360) / (fancy ? 11 : blades)})`}
             d={`M0 0 C ${r * 0.12} ${-r * 0.1} ${r * 0.5} ${-r * 0.1} ${r * 0.66} ${-r * 0.42} C ${r * 0.4} ${-r * 0.5} ${r * 0.14} ${-r * 0.36} 0 0Z`}
             fill={GLOW} style={{ opacity: power(0.36, 0.1) }} />
         ))}
       </g>
       <circle cx={cx} cy={cy} r={r * 0.24} fill="#070b10" stroke={GLOW} strokeWidth={r * 0.05} style={{ opacity: power(0.6, 0.4) }} />
+      {fancy && <circle cx={cx} cy={cy} r={r * 0.09} fill={GLOW} style={{ opacity: power(0.7, 0.3) }} />}
     </g>
   );
 }
@@ -139,32 +144,23 @@ export default function BuildScene() {
             <rect x="0" y="336" width="320" height="100" fill="#05080c" />
             <path d="M0 336 H320" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.12) }} />
             <path d="M10 360 H60 M10 372 H60 M260 360 H312 M260 372 H312" stroke="#16212d" strokeWidth="3" />
-            {[100, 215].map((x) => <Fan key={x} cx={x} cy={392} r={24} />)}
           </g>
 
           {/* motherboard with VRM armor and chipset block */}
           <g style={fly("board", -260, -20, -6)}>
             <rect x="68" y="26" width="220" height="256" rx="7" fill="#0a121b" stroke="#1a2735" strokeWidth="2.5" />
             <path d="M80 160 H130 L150 140 H230 M170 258 H250 L270 238 M120 60 V110 M240 60 V120" stroke={GLOW} strokeWidth="1.5" style={{ opacity: power(0.2, 0.1) }} />
-            <rect x="14" y="22" width="76" height="136" rx="7" fill="#0d1620" stroke="#1d2a38" strokeWidth="2.5" />
-            {[40, 56, 72, 88, 104, 120, 136].map((y) => <path key={y} d={`M24 ${y} H80`} stroke="#18232f" strokeWidth="2.5" />)}
             <rect x="196" y="196" width="74" height="58" rx="5" fill="#101a24" stroke="#1d2a38" strokeWidth="2.5" />
             <path d="M206 214 H258 M206 228 H240" stroke={GLOW} strokeWidth="2" style={{ opacity: power(0.5, 0.15) }} />
           </g>
 
-          {/* CPU pump head */}
-          <g style={fly("pump", 0, -300)}>
-            <circle cx="152" cy="104" r="32" fill="#05080c" stroke="#1d2a38" strokeWidth="4" />
-            <circle cx="152" cy="104" r="26" fill="none" stroke={GLOW} strokeWidth="3.5" style={{ opacity: power(0.7, 0.3) }} />
-            <circle cx="152" cy="104" r="15" fill="#0a1017" stroke="#1d2a38" strokeWidth="2" />
-            <circle cx="152" cy="104" r="5" fill={GLOW} style={{ opacity: power(0.7, 0.3) }} />
-          </g>
-          {/* AIO tubes up to the top radiator */}
-          <g strokeLinecap="round">
-            <path d="M130 88 C108 50 92 22 66 -12" pathLength={1} stroke="#04070a" strokeWidth="15" style={draw("tubes")} />
-            <path d="M130 88 C108 50 92 22 66 -12" pathLength={1} stroke="#233140" strokeWidth="3" transform="translate(-3 0)" style={draw("tubes")} />
-            <path d="M176 88 C196 54 214 30 240 -12" pathLength={1} stroke="#04070a" strokeWidth="15" style={draw("tubes")} />
-            <path d="M176 88 C196 54 214 30 240 -12" pathLength={1} stroke="#233140" strokeWidth="3" transform="translate(-3 0)" style={draw("tubes")} />
+          {/* CPU tower cooler: fin stack, copper heat pipes and a big RGB fan */}
+          <g style={fly("cooler", 0, -300)}>
+            <rect x="98" y="40" width="108" height="14" rx="4" fill="#141d28" stroke="#1d2a38" strokeWidth="2.5" />
+            {[120, 152, 184].map((x) => <path key={x} d={`M${x} 42 V12`} stroke="var(--accent2)" strokeWidth="5" opacity=".85" />)}
+            <rect x="98" y="52" width="108" height="112" rx="10" fill="#0a1017" stroke="#1d2a38" strokeWidth="3" />
+            {Array.from({ length: 12 }, (_, k) => 106 + k * 8.2).map((x) => <path key={x} d={`M${x} 58 V158`} stroke="#16212d" strokeWidth="2.5" />)}
+            <Fan cx={152} cy={108} r={44} fancy />
           </g>
 
           {/* RAM with light strips */}
