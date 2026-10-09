@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { HeroPhoto } from "../content/heroPhotos";
 
 /** Full web address of a photo: files in public/photos/, or an already-complete path (e.g. a gallery photo). */
@@ -46,25 +46,26 @@ export default function HeroPhotos({ photos, ready, delay, interval, className, 
   }, [on, ok.length, index, interval]);
 
   // The frame takes the shape of the photo on screen: as big as fits in the space, resizing smoothly between photos.
-  const area = useRef<HTMLDivElement>(null);
+  // (measured once the area actually exists: it isn't rendered until there are photos)
+  const [area, setArea] = useState<HTMLDivElement | null>(null);
   const [space, setSpace] = useState({ w: 0, h: 0 });
   useEffect(() => {
-    const el = area.current;
+    const el = area;
     if (!el) return;
     const ro = new ResizeObserver(() => setSpace({ w: el.clientWidth, h: el.clientHeight - parseFloat(getComputedStyle(el).paddingBottom) - parseFloat(getComputedStyle(el).paddingTop) }));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [area]);
 
   if (photos.length === 0) return null;
   const current = ok[index];
   const ratio = current?.ratio ?? 3 / 4;
   const maxW = Math.min(space.w - 32, 640), maxH = Math.min(space.h, 608); // at most 40rem × 38rem, clear of the screen edge
-  const width = Math.min(maxW, maxH * ratio);
+  const width = Math.max(0, Math.min(maxW, maxH * ratio));
   const frame = { width: `${Math.round(width)}px`, height: `${Math.round(width / ratio)}px` };
   return (
     <div className={`${className} transition-opacity duration-1000 ${on ? "opacity-100" : "opacity-0"}`}>
-      <div ref={area} className="flex h-full w-full items-center justify-center max-lg:items-end max-lg:pb-10 max-lg:pt-4">
+      <div ref={setArea} className="flex h-full w-full items-center justify-center max-lg:items-end max-lg:pb-10 max-lg:pt-4">
       <figure style={frame}
         className="relative m-0 shrink-0 overflow-hidden rounded-[1.25rem] border border-line bg-bg2 shadow-[0_30px_80px_-30px_rgba(0,0,0,.85)] transition-[width,height] duration-700 ease-[cubic-bezier(.4,0,.2,1)]">
         {ok.map((p, i) => (
