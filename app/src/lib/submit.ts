@@ -1,6 +1,7 @@
 import type { FormConfig } from "../components/form/types";
 import type { FormValues, PreferredWindow } from "../types";
 import { site } from "../content/site";
+import { insertRequest, supabaseReady } from "./supabase";
 
 const WEB3FORMS_URL = "https://api.web3forms.com/submit";
 const accessKey = import.meta.env.VITE_WEB3FORMS_KEY as string | undefined;
@@ -42,24 +43,46 @@ async function sendEmail(config: FormConfig, values: FormValues): Promise<void> 
   if (!data.success) throw new Error(data.message || "Email failed");
 }
 
+/** Every answer with its label, as saved in the admin portal's Requests tab. */
+function labeledAnswers(config: FormConfig, values: FormValues): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const f of config.steps.flatMap((s) => s.fields)) {
+    const text = asText(values[f.name]);
+    if (text) out[f.label] = text;
+  }
+  return out;
+}
+
+/** Saves the request to the database so it shows in the admin portal. */
+async function saveToPortal(type: "build" | "repair", config: FormConfig, values: FormValues): Promise<void> {
+  await insertRequest({
+    type,
+    name: asText(values.name).slice(0, 200),
+    email: asText(values.email).slice(0, 320),
+    phone: asText(values.phone).slice(0, 60),
+    fields: { "Request type": config.label, ...labeledAnswers(config, values) },
+  });
+}
+
 /**
- * Phase 3 (email): sends through Web3Forms.
- * Still to come: also saving to Supabase (then only fail if BOTH fail).
- * With no key set, `npm run dev` simulates success; the live site reports an error.
+ * Sends a request two ways at once: by email (Web3Forms) and into the admin portal (Supabase).
+ * It counts as sent if either works, and only fails if both do.
+ * With neither set up, `npm run dev` simulates success; the live site reports an error.
  */
-export async function submitRequest(_type: "build" | "repair", config: FormConfig, values: FormValues): Promise<void> {
-  if (!accessKey) {
+export async function submitRequest(type: "build" | "repair", config: FormConfig, values: FormValues): Promise<void> {
+  const tasks: Promise<void>[] = [];
+  if (accessKey) tasks.push(sendEmail(config, values));
+  if (supabaseReady) tasks.push(saveToPortal(type, config, values));
+  if (tasks.length === 0) {
     if (import.meta.env.DEV) {
-      console.info("[dev] no Web3Forms key set; request would be sent:", config.label, values);
+      console.info("[dev] no Web3Forms key or Supabase set; request would be sent:", config.label, values);
       await new Promise((r) => setTimeout(r, 600));
       return;
     }
     throw new Error("The request form isn't connected yet.");
   }
-  try {
-    await sendEmail(config, values);
-  } catch (err) {
-    console.error("Email send failed:", err);
-    throw err;
-  }
+  const results = await Promise.allSettled(tasks);
+  const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+  failed.forEach((f) => console.error("Request delivery problem:", f.reason));
+  if (failed.length === results.length) throw failed[0].reason;
 }

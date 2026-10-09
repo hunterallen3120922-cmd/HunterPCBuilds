@@ -62,9 +62,33 @@ Keep the commas. Example, a new repair service:
 
 Questions asked in the forms live in `app/src/forms/` (`repairForm.ts`, `buildForm.ts`).
 
+## Admin portal (builds + requests)
+
+A private page at **`/#/admin`** on your site (for example `https://YOUR-SITE.netlify.app/#/admin`). It isn't linked anywhere and search engines are told to skip it. Sign in to:
+
+- **Builds:** add a build (name, price, specs, photos), reorder with ▲▼, and switch where it shows:
+  - **Home carousel:** the carousel on the home page.
+  - **Past builds:** the gallery on the PC Builds page. Clicking a build shows all its photos.
+  - **Slideshow:** its photos rotate at the top of the PC Builds page.
+  - **Published:** turn off to hide it (a draft).
+
+  Photos are shrunk automatically when you upload them. Changes show the next time someone loads the page, no rebuild needed. If the list is empty, an **Import** button brings in the photos already in your slideshow.
+- **Requests:** every build/repair request from the site's forms (you still get the emails). Filter by status (new → quoted → scheduled → done → archived), search, read every answer, reply by email/call/text, and keep private notes.
+
+It runs on [Supabase](https://supabase.com) (free). Until it's set up, the site simply uses the files in `app/src/content/`, and it falls back to them if Supabase is ever unreachable. Free Supabase projects pause after about a week with no visits; normal site traffic keeps it awake, and if it does pause, open the Supabase dashboard and press "Restore".
+
+**One-time setup:**
+1. Create a free account and a new project at supabase.com (any name and region, and save the database password somewhere).
+2. In the project, open **SQL Editor → New query**, paste everything in `supabase/schema.sql`, and press **Run**.
+3. Open **Authentication → Users → Add user → Create new user**: your email and a strong password, with "Auto Confirm User" ticked. The first user becomes the admin automatically.
+4. Open **Authentication → Sign In / Providers** and turn off **Allow new users to sign up**, so nobody else can make an account.
+5. Open **Project Settings → API** and copy the **Project URL** and the **anon public** key into `app/.env` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then rebuild. The anon key is safe to be public; the database rules in `schema.sql` only let your admin login read requests or change builds.
+
+To change your password: Supabase dashboard → Authentication → Users → your user → reset or update the password there.
+
 ## Status
 - [x] Phase 2: public site (all pages, forms validate)
-- [ ] Phase 3: Supabase + Web3Forms (forms actually send)
-- [ ] Phase 4: admin panel
+- [x] Phase 3: Web3Forms email + Supabase (requests are emailed and saved)
+- [x] Phase 4: admin panel (builds + requests)
 - [ ] Phase 5: calendar
-- [ ] Phase 6: GitHub Pages deploy
+- [x] Phase 6: deploy

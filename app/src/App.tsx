@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
@@ -9,6 +9,9 @@ import TechRepair from "./pages/TechRepair";
 import Faq from "./pages/Faq";
 import Privacy from "./pages/Privacy";
 import About from "./pages/About";
+
+/** The admin portal is a separate download, so visitors never load it. */
+const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 /** Scrolls to top on page change, or to an element id passed as router state. */
 function ScrollManager() {
@@ -23,6 +26,14 @@ function ScrollManager() {
 }
 
 export default function App() {
+  const { pathname } = useLocation();
+  if (pathname === "/admin") {
+    return (
+      <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+        <AdminApp />
+      </Suspense>
+    );
+  }
   return (
     <>
       <a href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}

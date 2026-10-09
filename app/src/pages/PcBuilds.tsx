@@ -8,9 +8,14 @@ import { useSeo } from "../lib/seo";
 import { buildForm } from "../forms/buildForm";
 import { buildIncludes, buildProcess, buildTiers } from "../content/buildTiers";
 import { gallery } from "../content/gallery";
+import { toGalleryItem, useBuilds } from "../lib/useBuilds";
 import { site } from "../content/site";
 
 export default function PcBuilds() {
+  // Past builds: the ones from the admin portal if there are any, otherwise content/gallery.ts
+  const builds = useBuilds();
+  const fromPortal = builds?.filter((b) => b.in_gallery && b.photos.length > 0) ?? [];
+  const pastBuilds = fromPortal.length > 0 ? fromPortal.map(toGalleryItem) : gallery;
   useSeo(`Custom PC Builds | ${site.name}`, "Custom gaming, school and workstation PC builds. Free consultation, parts at cost, 30-day labor guarantee.");
   return (
     <>
@@ -42,7 +47,7 @@ export default function PcBuilds() {
       <section className="section alt">
         <div className="wrap">
           <SectionHead eyebrow="Portfolio" title="Past builds" sub="Tap one to see the specs." />
-          <Gallery items={gallery} />
+          <Gallery items={pastBuilds} />
         </div>
       </section>
 

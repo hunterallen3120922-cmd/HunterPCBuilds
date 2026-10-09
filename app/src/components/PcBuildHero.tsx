@@ -1,11 +1,14 @@
+import { useMemo } from "react";
 import AnimatedHero, { type Part } from "./AnimatedHero";
 import BuildScene from "./BuildScene";
 import Icon from "./Icon";
 import { heroPhotos } from "../content/heroPhotos";
 import { gallery } from "../content/gallery";
+import { useBuilds } from "../lib/useBuilds";
+import { photoUrl } from "../lib/supabase";
 
-/** Real photos for the end of the animation: heroPhotos.pcBuilds, or else the real (non-example) Past builds photos. */
-const PHOTOS = heroPhotos.pcBuilds.length > 0 ? heroPhotos.pcBuilds
+/** Built-in photos for the end of the animation: heroPhotos.pcBuilds, or else the real (non-example) Past builds photos. */
+const BUILT_IN_PHOTOS = heroPhotos.pcBuilds.length > 0 ? heroPhotos.pcBuilds
   : gallery.filter((g) => !g.photo.startsWith("example-")).map((g) => ({ photo: `${import.meta.env.BASE_URL}gallery/${g.photo}`, alt: g.title, caption: g.title }));
 
 /**
@@ -51,8 +54,17 @@ function motion(p: number) {
  * fans keep turning. How long it takes is `duration` below, in milliseconds.
  */
 export default function PcBuildHero() {
+  // Slideshow photos: builds marked "Slideshow" in the admin portal if there are any, otherwise the built-in ones.
+  // Nothing is passed until we know which, so the slideshow never switches lists halfway.
+  const builds = useBuilds();
+  const photos = useMemo(() => {
+    if (builds === undefined) return [];
+    const fromPortal = (builds ?? []).filter((b) => b.in_slideshow)
+      .flatMap((b) => b.photos.map((p) => ({ photo: photoUrl(p), alt: b.title })));
+    return fromPortal.length > 0 ? fromPortal : BUILT_IN_PHOTOS;
+  }, [builds]);
   return (
-    <AnimatedHero scene={<BuildScene />} parts={PARTS} extra={motion} duration={3200} spinAt={SPIN_AT} doneAt={DONE_AT} photos={PHOTOS}
+    <AnimatedHero scene={<BuildScene />} parts={PARTS} extra={motion} duration={3200} spinAt={SPIN_AT} doneAt={DONE_AT} photos={photos}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[27rem]">
       {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
       <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">

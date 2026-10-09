@@ -21,8 +21,10 @@ export interface BuildTier {
 
 export interface GalleryItem {
   title: string;
-  /** File name inside public/gallery/ */
+  /** File name inside public/gallery/ (or a full web address, for builds from the admin portal) */
   photo: string;
+  /** All photos (full web addresses), when a build has more than one */
+  photos?: string[];
   specs: string[];
   /** Optional */
   price?: string;

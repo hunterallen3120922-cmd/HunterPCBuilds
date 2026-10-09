@@ -9,6 +9,8 @@ import Icon, { IconTile } from "../components/Icon";
 import { useSeo } from "../lib/seo";
 import { glance, howItWorks, site, trustPoints } from "../content/site";
 import { gallery } from "../content/gallery";
+import { toGalleryItem, useBuilds } from "../lib/useBuilds";
+import type { GalleryItem } from "../types";
 import { repairServices } from "../content/repairServices";
 import { faq } from "../content/faq";
 import { meetingMethods } from "../content/formOptions";
@@ -31,8 +33,8 @@ function GlanceCard() {
 }
 
 /** Builds and repairs, alternating, so the carousel stays varied. */
-function featuredCards() {
-  const builds = gallery.filter((g) => g.featured).map((g) => (
+function featuredCards(featured: GalleryItem[]) {
+  const builds = featured.map((g) => (
     <Link key={`b-${g.title}`} to="/pc-builds" className="card lift group flex w-full flex-col overflow-hidden p-0 no-underline">
       <Photo item={g} className="aspect-[4/3] w-full" />
       <div className="flex flex-1 flex-col p-5">
@@ -67,6 +69,10 @@ function featuredCards() {
 }
 
 export default function Home() {
+  // Carousel builds: the ones marked "Home carousel" in the admin portal if there are any, otherwise content/gallery.ts
+  const builds = useBuilds();
+  const fromPortal = builds?.filter((b) => b.featured && b.photos.length > 0) ?? [];
+  const featured = fromPortal.length > 0 ? fromPortal.map(toGalleryItem) : gallery.filter((g) => g.featured);
   useSeo(site.fullName, "Student-run computer repair and custom PC builds. Submit a request and get a quote fast.");
   return (
     <>
@@ -114,7 +120,7 @@ export default function Home() {
         <div className="wrap">
           <SectionHead center eyebrow="Featured" title="Recent work & the basics" sub="A few builds, popular repairs, and the quick facts." />
         </div>
-        <div data-reveal="zoom"><Carousel label="Featured builds and repairs" items={[<GlanceCard key="glance" />, ...featuredCards()]} /></div>
+        <div data-reveal="zoom"><Carousel key={featured.length} label="Featured builds and repairs" items={[<GlanceCard key="glance" />, ...featuredCards(featured)]} /></div>
       </section>
 
       <section className="section alt">
