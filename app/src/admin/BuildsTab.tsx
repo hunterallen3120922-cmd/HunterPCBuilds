@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "./client";
-import { resizePhoto } from "./resize";
+import { cropToJpeg, loadPhoto, type Crop } from "./resize";
+import Cropper from "./Cropper";
 import { PHOTO_BUCKET, photoUrl, type BuildRow } from "../lib/supabase";
 import { heroPhotos } from "../content/heroPhotos";
 import { photoSrc } from "../components/HeroPhotos";
@@ -156,24 +157,64 @@ function BuildEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: n
 
   useEffect(() => { dialog.current?.showModal(); }, []);
 
+  // Photos waiting to be cropped, one at a time. `replace` = an existing photo being re-cropped.
+  const [toCrop, setToCrop] = useState<{ id: string; img: ImageBitmap; name: string; replace?: string }[]>([]);
+  const [opening, setOpening] = useState(false);
+
   const addFiles = async (files: FileList | null) => {
     if (!files?.length) return;
     setError("");
-    setUploading((n) => n + files.length);
     for (const file of Array.from(files)) {
       try {
-        const blob = await resizePhoto(file);
-        const path = `builds/${crypto.randomUUID()}.jpg`;
-        const { error } = await supabase!.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
-        if (error) throw error;
-        uploaded.current.push(path);
-        setD((cur) => ({ ...cur, photos: [...cur.photos, path] }));
+        const img = await loadPhoto(file);
+        setToCrop((q) => [...q, { id: crypto.randomUUID(), img, name: file.name }]);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setUploading((n) => n - 1);
       }
     }
+  };
+
+  const recrop = async (path: string) => {
+    setError("");
+    setOpening(true);
+    try {
+      const img = await loadPhoto(photoUrl(path));
+      setToCrop((q) => [...q, { id: crypto.randomUUID(), img, name: "Existing photo", replace: path }]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setOpening(false);
+    }
+  };
+
+  // Crop chosen: shrink, upload, and add it (or swap it in for the photo being re-cropped)
+  const finishCrop = async (crop: Crop) => {
+    const item = toCrop[0];
+    setToCrop((q) => q.slice(1));
+    setUploading((n) => n + 1);
+    try {
+      const blob = await cropToJpeg(item.img, crop);
+      const path = `builds/${crypto.randomUUID()}.jpg`;
+      const { error } = await supabase!.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+      if (error) throw error;
+      uploaded.current.push(path);
+      if (item.replace) {
+        const old = item.replace;
+        removed.current.push(old);
+        setD((cur) => ({ ...cur, photos: cur.photos.map((p) => (p === old ? path : p)) }));
+      } else {
+        setD((cur) => ({ ...cur, photos: [...cur.photos, path] }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      item.img.close();
+      setUploading((n) => n - 1);
+    }
+  };
+  const skipCrop = () => {
+    toCrop[0]?.img.close();
+    setToCrop((q) => q.slice(1));
   };
 
   const movePhoto = (i: number, dir: -1 | 1) => setD((cur) => {
@@ -246,15 +287,16 @@ function BuildEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: n
           <div className="flex flex-wrap gap-3">
             {d.photos.map((p, i) => (
               <div key={p} className="relative">
-                <img src={photoUrl(p)} alt={`Photo ${i + 1}`} className={`h-24 w-24 rounded-md object-cover ${i === 0 ? "ring-2 ring-accent" : ""}`} />
+                <img src={photoUrl(p)} alt={`Photo ${i + 1}`} className={`h-28 w-28 rounded-md object-cover ${i === 0 ? "ring-2 ring-accent" : ""}`} />
                 <div className="mt-1 flex justify-between text-[.8rem]">
                   <button type="button" aria-label="Move photo left" disabled={i === 0} onClick={() => movePhoto(i, -1)} className="px-1 text-muted hover:text-ink disabled:opacity-30">◀</button>
+                  <button type="button" onClick={() => recrop(p)} disabled={opening} className="text-muted hover:text-accent">Crop</button>
                   <button type="button" onClick={() => removePhoto(p)} className="text-muted hover:text-danger">Remove</button>
                   <button type="button" aria-label="Move photo right" disabled={i === d.photos.length - 1} onClick={() => movePhoto(i, 1)} className="px-1 text-muted hover:text-ink disabled:opacity-30">▶</button>
                 </div>
               </div>
             ))}
-            <label className="grid h-24 w-24 cursor-pointer place-items-center rounded-md border-2 border-dashed border-line text-center text-[.8rem] text-muted hover:border-accent hover:text-accent">
+            <label className="grid h-28 w-28 cursor-pointer place-items-center rounded-md border-2 border-dashed border-line text-center text-[.8rem] text-muted hover:border-accent hover:text-accent">
               {uploading > 0 ? `Uploading ${uploading}…` : "+ Add photos"}
               <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
             </label>
@@ -273,6 +315,7 @@ function BuildEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: n
           </div>
         </fieldset>
 
+        {toCrop[0] && <Cropper key={toCrop[0].id} img={toCrop[0].img} name={toCrop[0].name} onDone={finishCrop} onSkip={skipCrop} />}
         {error && <p className="mt-4 text-[.9rem] text-danger" role="alert">{error}</p>}
         {dirty && !error && (
           <p className="mt-4 rounded-card border border-accent/40 bg-accent/10 px-3 py-2 text-[.88rem] text-accent">
