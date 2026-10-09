@@ -20,8 +20,17 @@ export function useBuilds() {
   return builds;
 }
 
+/** "850" → "$850", "2200" → "$2,200". Anything else (already has $, words like "Custom quote") is left as typed. */
+export function formatPrice(price: string | null | undefined): string | undefined {
+  const p = price?.trim();
+  if (!p) return undefined;
+  if (!/^\d[\d,]*(\.\d{1,2})?$/.test(p)) return p;
+  const n = Number(p.replace(/,/g, ""));
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: p.includes(".") ? 2 : 0, maximumFractionDigits: 2 })}`;
+}
+
 /** A database build in the shape the site's gallery and carousel use. */
 export function toGalleryItem(b: BuildRow): GalleryItem {
   const photos = b.photos.map(photoUrl);
-  return { title: b.title, photo: photos[0] ?? "", photos, specs: b.specs, price: b.price ?? undefined, featured: b.featured };
+  return { title: b.title, photo: photos[0] ?? "", photos, specs: b.specs, price: formatPrice(b.price), featured: b.featured };
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "./client";
 import { cropToJpeg, loadPhoto, type Crop } from "./resize";
+import { formatPrice } from "../lib/useBuilds";
 import Cropper from "./Cropper";
 import { PHOTO_BUCKET, photoUrl, type BuildRow } from "../lib/supabase";
 import { heroPhotos } from "../content/heroPhotos";
@@ -118,7 +119,7 @@ export default function BuildsTab() {
                 : <div className="grid h-16 w-16 place-items-center rounded-md bg-bg2 text-[.7rem] text-muted">No photo</div>}
               <div className="min-w-[10rem] flex-1">
                 <p className="font-medium">{b.title}</p>
-                <p className="text-[.85rem] text-muted">{[b.price, `${b.photos.length} photo${b.photos.length === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}</p>
+                <p className="text-[.85rem] text-muted">{[formatPrice(b.price), `${b.photos.length} photo${b.photos.length === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}</p>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {PLACES.map((p) => (
