@@ -82,7 +82,11 @@ It runs on [Supabase](https://supabase.com) (free). Until it's set up, the site 
 2. In the project, open **SQL Editor → New query**, paste everything in `supabase/schema.sql`, and press **Run**.
 3. Open **Authentication → Users → Add user → Create new user**: your email and a strong password, with "Auto Confirm User" ticked. The first user becomes the admin automatically.
 4. Open **Authentication → Sign In / Providers** and turn off **Allow new users to sign up**, so nobody else can make an account.
-5. Open **Project Settings → API** and copy the **Project URL** and the **anon public** key into `app/.env` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then rebuild. The anon key is safe to be public; the database rules in `schema.sql` only let your admin login read requests or change builds.
+5. Copy two things into `app/.env`, then rebuild:
+   - **Project URL** (the **Connect** button at the top of the project, or Project Settings → Data API), as `VITE_SUPABASE_URL`.
+   - **Publishable key** (`sb_publishable_…`, under Project Settings → API Keys; older projects call it the **anon public** key), as `VITE_SUPABASE_ANON_KEY`.
+
+   The publishable key is safe to be public; the database rules in `schema.sql` only let your admin login read requests or change builds. **Never** use or share the **Secret** key (`sb_secret_…` / `service_role`).
 
 To change your password: Supabase dashboard → Authentication → Users → your user → reset or update the password there.
 

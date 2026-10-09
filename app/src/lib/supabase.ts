@@ -29,7 +29,11 @@ export interface BuildRow {
 /** Public web address of a photo in storage. */
 export const photoUrl = (path: string) => `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`;
 
-const headers = () => ({ apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` });
+/** Newer projects use a "publishable" key (sb_publishable_…), which goes only in the apikey header; older
+ *  "anon" keys are JWTs (eyJ…) and also go in Authorization. */
+const headers = (): Record<string, string> => SUPABASE_ANON_KEY.startsWith("eyJ")
+  ? { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+  : { apikey: SUPABASE_ANON_KEY };
 
 /** Published builds, in your chosen order. Gives up after `timeoutMs` so the site never waits long. */
 export async function getBuilds(timeoutMs = 4000): Promise<BuildRow[]> {
