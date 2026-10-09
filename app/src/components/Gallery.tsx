@@ -5,10 +5,20 @@ import Icon from "./Icon";
 /** File names are in public/gallery/; builds from the admin portal already have full web addresses. */
 const src = (photo: string) => (photo.includes("/") ? photo : `${import.meta.env.BASE_URL}gallery/${photo}`);
 
+/**
+ * A build photo that's always shown whole (never trimmed to fit). Any space around it is filled with a soft,
+ * blurred copy of the same photo, so tall and wide photos both look tidy in the same-size card.
+ * `className` sets the box size (e.g. "aspect-[4/3] w-full").
+ */
 export function Photo({ item, photo = item.photo, className = "" }: { item: GalleryItem; photo?: string; className?: string }) {
   const [broken, setBroken] = useState(false);
   if (broken) return <div className={`grid place-items-center bg-bg2 ${className}`} role="img" aria-label={item.title}><Icon name="desktop" className="h-10 w-10 text-muted" /></div>;
-  return <img src={src(photo)} alt={item.title} loading="lazy" onError={() => setBroken(true)} className={`object-cover ${className}`} />;
+  return (
+    <div className={`relative overflow-hidden bg-bg2 ${className}`}>
+      <img src={src(photo)} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-xl" />
+      <img src={src(photo)} alt={item.title} loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 h-full w-full object-contain" />
+    </div>
+  );
 }
 
 /** Grid of builds. Clicking one opens a lightbox. */
@@ -45,7 +55,7 @@ export default function Gallery({ items }: { items: GalleryItem[] }) {
         className="m-auto w-[min(92vw,45rem)] rounded-card border border-line bg-card p-0 text-ink">
         {active && (
           <div>
-            <Photo item={active} photo={active.photos?.[shown] ?? active.photo} className="max-h-[60vh] w-full" />
+            <Photo item={active} photo={active.photos?.[shown] ?? active.photo} className="h-[60vh] max-h-[36rem] w-full" />
             {(active.photos?.length ?? 0) > 1 && (
               <div className="flex gap-2 overflow-x-auto px-5 pt-4">
                 {active.photos!.map((p, i) => (

@@ -55,11 +55,16 @@ export default function Cropper({ img, name, onDone, onSkip }: {
   const slide = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const cc = card.current, sc = slide.current;
-    if (cc) { // card: 4:3, photo fills it (edges trimmed if needed)
+    if (cc) { // card: 4:3, the whole crop shown, with a blurred copy filling the bars (like the site's Photo)
       const ctx = cc.getContext("2d")!;
-      const r = 4 / 3, cr = crop.w / crop.h;
-      const sw = cr > r ? crop.h * r : crop.w, sh = cr > r ? crop.h : crop.w / r;
-      ctx.drawImage(img, crop.x + (crop.w - sw) / 2, crop.y + (crop.h - sh) / 2, sw, sh, 0, 0, cc.width, cc.height);
+      const W = cc.width, H = cc.height, cr = crop.w / crop.h;
+      const coverW = cr > W / H ? H * cr : W, coverH = cr > W / H ? H : W / cr;
+      ctx.clearRect(0, 0, W, H);
+      ctx.filter = "blur(8px) brightness(.55)";
+      ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, (W - coverW * 1.1) / 2, (H - coverH * 1.1) / 2, coverW * 1.1, coverH * 1.1);
+      ctx.filter = "none";
+      const fitW = cr > W / H ? W : H * cr, fitH = cr > W / H ? W / cr : H;
+      ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, (W - fitW) / 2, (H - fitH) / 2, fitW, fitH);
     }
     if (sc) { // slideshow: the frame takes the photo's own shape
       const s = Math.min(150 / crop.w, 150 / crop.h);
