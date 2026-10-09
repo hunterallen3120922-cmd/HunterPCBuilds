@@ -188,7 +188,11 @@ function BuildEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: n
     setD((cur) => ({ ...cur, photos: cur.photos.filter((p) => p !== path) }));
   };
 
+  // Anything changed since the dialog opened? (so closing never silently throws away new photos)
+  const dirty = JSON.stringify({ ...d, specs: specsText }) !== JSON.stringify({ ...draft, specs: draft.specs.join("\n") });
+
   const cancel = async () => {
+    if (dirty && !confirm("Close without saving? Photos you just added won't be kept.")) return;
     if (uploaded.current.length) await supabase!.storage.from(PHOTO_BUCKET).remove(uploaded.current);
     onClose(false);
   };
@@ -270,6 +274,11 @@ function BuildEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: n
         </fieldset>
 
         {error && <p className="mt-4 text-[.9rem] text-danger" role="alert">{error}</p>}
+        {dirty && !error && (
+          <p className="mt-4 rounded-card border border-accent/40 bg-accent/10 px-3 py-2 text-[.88rem] text-accent">
+            {uploading > 0 ? "Uploading photos…" : "Not on the site yet. Press Save to publish your changes."}
+          </p>
+        )}
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" className="btn btn-ghost" onClick={cancel} disabled={busy}>Cancel</button>
           <button type="button" className="btn" onClick={save} disabled={busy || uploading > 0}>{busy ? "Saving…" : "Save"}</button>
