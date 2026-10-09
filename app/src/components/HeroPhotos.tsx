@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { HeroPhoto } from "../content/heroPhotos";
 
 /** Full web address of a photo: files in public/photos/, or an already-complete path (e.g. a gallery photo). */
@@ -13,7 +13,7 @@ export const photoSrc = (photo: string) => (photo.includes("/") ? photo : `${imp
 export default function HeroPhotos({ photos, ready, delay, interval, className, onShow }: {
   photos: HeroPhoto[]; ready: boolean; delay: number; interval: number; className: string; onShow: () => void;
 }) {
-  const [ok, setOk] = useState<HeroPhoto[]>([]); // photos loaded so far, in order
+  const [ok, setOk] = useState<(HeroPhoto & { ratio: number })[]>([]); // photos loaded so far, in order, with width ÷ height
   const [tried, setTried] = useState(0); // how many of `photos` have been tried
   const [on, setOn] = useState(false);
   const [index, setIndex] = useState(0);
@@ -25,7 +25,7 @@ export default function HeroPhotos({ photos, ready, delay, interval, className, 
     let alive = true;
     const p = photos[tried];
     const img = new Image();
-    img.onload = () => { if (alive) { setOk((cur) => [...cur, p]); setTried((t) => t + 1); } };
+    img.onload = () => { if (alive) { setOk((cur) => [...cur, { ...p, ratio: img.naturalWidth / img.naturalHeight || 1 }]); setTried((t) => t + 1); } };
     img.onerror = () => { if (alive) setTried((t) => t + 1); }; // skip photos that fail to load
     img.src = photoSrc(p.photo);
     return () => { alive = false; };
@@ -45,11 +45,28 @@ export default function HeroPhotos({ photos, ready, delay, interval, className, 
     return () => clearTimeout(t);
   }, [on, ok.length, index, interval]);
 
+  // The frame takes the shape of the photo on screen: as big as fits in the space, resizing smoothly between photos.
+  const area = useRef<HTMLDivElement>(null);
+  const [space, setSpace] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setSpace({ w: el.clientWidth, h: el.clientHeight - parseFloat(getComputedStyle(el).paddingBottom) - parseFloat(getComputedStyle(el).paddingTop) }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   if (photos.length === 0) return null;
   const current = ok[index];
+  const ratio = current?.ratio ?? 3 / 4;
+  const maxW = Math.min(space.w - 32, 640), maxH = Math.min(space.h, 608); // at most 40rem × 38rem, clear of the screen edge
+  const width = Math.min(maxW, maxH * ratio);
+  const frame = { width: `${Math.round(width)}px`, height: `${Math.round(width / ratio)}px` };
   return (
-    <div className={`${className} flex items-center justify-center transition-opacity duration-1000 ${on ? "opacity-100" : "opacity-0"}`}>
-      <figure className="relative m-0 w-full max-w-[44rem] overflow-hidden rounded-[1.25rem] border border-line bg-bg2 shadow-[0_30px_80px_-30px_rgba(0,0,0,.85)] max-lg:mb-10 max-lg:aspect-[4/3] max-lg:max-h-full max-lg:self-end lg:h-full lg:max-h-[38rem] lg:w-auto lg:aspect-[3/4]">
+    <div className={`${className} transition-opacity duration-1000 ${on ? "opacity-100" : "opacity-0"}`}>
+      <div ref={area} className="flex h-full w-full items-center justify-center max-lg:items-end max-lg:pb-10 max-lg:pt-4">
+      <figure style={frame}
+        className="relative m-0 shrink-0 overflow-hidden rounded-[1.25rem] border border-line bg-bg2 shadow-[0_30px_80px_-30px_rgba(0,0,0,.85)] transition-[width,height] duration-700 ease-[cubic-bezier(.4,0,.2,1)]">
         {ok.map((p, i) => (
           <div key={p.photo} className={`absolute inset-0 transition-opacity duration-1000 ${i === index ? "opacity-100" : "opacity-0"}`} aria-hidden={i !== index}>
             {/* the same photo, blurred, filling the frame behind it, so tall photos are shown whole */}
@@ -67,6 +84,7 @@ export default function HeroPhotos({ photos, ready, delay, interval, className, 
           </>
         )}
       </figure>
+      </div>
     </div>
   );
 }
