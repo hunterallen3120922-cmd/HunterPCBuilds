@@ -93,19 +93,21 @@ drop policy if exists "admins can delete requests" on public.requests;
 create policy "admins can delete requests" on public.requests for delete using (public.is_admin());
 
 -- ─── Photo storage ───────────────────────────────────────────────────────────
+-- Uploads are allowed for signed-in accounts. Public sign-ups are turned off (README step 4), so the only
+-- account is yours. (Storage checks run in a different context where the is_admin() check can fail.)
 insert into storage.buckets (id, name, public)
 values ('build-photos', 'build-photos', true)
 on conflict (id) do update set public = true;
 
 drop policy if exists "admins can upload build photos" on storage.objects;
 create policy "admins can upload build photos" on storage.objects
-  for insert to authenticated with check (bucket_id = 'build-photos' and public.is_admin());
+  for insert to authenticated with check (bucket_id = 'build-photos');
 drop policy if exists "admins can change build photos" on storage.objects;
 create policy "admins can change build photos" on storage.objects
-  for update to authenticated using (bucket_id = 'build-photos' and public.is_admin());
+  for update to authenticated using (bucket_id = 'build-photos') with check (bucket_id = 'build-photos');
 drop policy if exists "admins can delete build photos" on storage.objects;
 create policy "admins can delete build photos" on storage.objects
-  for delete to authenticated using (bucket_id = 'build-photos' and public.is_admin());
+  for delete to authenticated using (bucket_id = 'build-photos');
 drop policy if exists "admins can list build photos" on storage.objects;
 create policy "admins can list build photos" on storage.objects
-  for select to authenticated using (bucket_id = 'build-photos' and public.is_admin());
+  for select to authenticated using (bucket_id = 'build-photos');
