@@ -1,4 +1,6 @@
-import { useLayoutEffect, useRef, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import HeroPhotos from "./HeroPhotos";
+import { heroPhotos, type HeroPhoto } from "../content/heroPhotos";
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
 const EASE = {
@@ -27,6 +29,8 @@ export interface AnimatedHeroProps {
   /** Pause on the finished drawing before it slides aside and the text arrives, in milliseconds. During the pause
    *  the stage has data-hold="true", so the drawing can do something (see the repair readouts in index.css). */
   hold?: number;
+  /** Real photos the finished drawing fades into after a few seconds (see content/heroPhotos.ts). */
+  photos?: HeroPhoto[];
   /** Where the drawing sits above the text on phones/tablets once done, e.g. "max-lg:group-data-[phase=done]:bottom-[27rem]". */
   doneMobileClass: string;
   /** The page's heading, text and buttons. They fade in once the animation is done. */
@@ -38,8 +42,11 @@ export interface AnimatedHeroProps {
  * doesn't depend on scrolling. When it finishes, the drawing slides to the right (or above the text on phones and
  * tablets) and the page text fades in. Visitors who prefer reduced motion get the finished layout straight away.
  */
-export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, doneAt, hold = 0, doneMobileClass, children }: AnimatedHeroProps) {
+export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, doneAt, hold = 0, photos = [], doneMobileClass, children }: AnimatedHeroProps) {
   const stage = useRef<HTMLDivElement>(null);
+  const [done, setDone] = useState(false);
+  const [photosOn, setPhotosOn] = useState(false);
+  const showPhotos = useCallback(() => setPhotosOn(true), []);
 
   useLayoutEffect(() => {
     const s = stage.current;
@@ -51,7 +58,8 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
       for (const [k, [a, b, e = "out"]] of Object.entries(parts)) set(`--q-${k}`, EASE[e](clamp((p - a) / (b - a))));
       if (extra) for (const [k, v] of Object.entries(extra(p))) set(k, v);
     };
-    const finish = () => { apply(1); s.dataset.phase = "done"; if (spinAt !== undefined) s.dataset.spin = "true"; };
+    const markDone = () => { if (s.dataset.phase !== "done") { s.dataset.phase = "done"; setDone(true); } };
+    const finish = () => { apply(1); markDone(); if (spinAt !== undefined) s.dataset.spin = "true"; };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
     let timer = 0;
     s.dataset.phase = "building";
@@ -61,7 +69,7 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
       if (!start) start = now + START_DELAY;
       const p = clamp((now - start) / duration);
       apply(p);
-      if (doneAt !== undefined && p >= doneAt && s.dataset.phase !== "done") s.dataset.phase = "done";
+      if (doneAt !== undefined && p >= doneAt) markDone();
       if (p < 1) frame = requestAnimationFrame(tick);
       else if (hold > 0) { s.dataset.hold = "true"; timer = window.setTimeout(finish, hold); }
       else finish();
@@ -72,6 +80,10 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Where the drawing (and later the photos) sit
+  const box = `pointer-events-none absolute inset-x-0 bottom-8 top-16 -z-10 px-4 lg:group-data-[phase=done]:bottom-10
+    lg:group-data-[phase=done]:left-[46%] lg:group-data-[phase=done]:right-0 ${doneMobileClass}`;
+
   return (
     <header className="relative border-b border-line">
       <div ref={stage} data-phase="building" data-spin="false"
@@ -80,11 +92,12 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
         <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
         {/* The drawing: big and centered while it plays, then it slides to the right (or up above the text on phones and tablets). */}
-        <div aria-hidden
-          className={`pointer-events-none absolute inset-x-0 bottom-8 top-16 -z-10 px-4 transition-all duration-[800ms] ease-[cubic-bezier(.4,0,.2,1)]
-            lg:group-data-[phase=done]:bottom-10 lg:group-data-[phase=done]:left-[46%] lg:group-data-[phase=done]:right-0 ${doneMobileClass}`}>
+        <div aria-hidden className={`${box} transition-all duration-[800ms] ease-[cubic-bezier(.4,0,.2,1)] ${photosOn ? "opacity-0" : ""}`}>
           {scene}
         </div>
+
+        {/* Real photos, fading in over the finished drawing */}
+        <HeroPhotos photos={photos} ready={done} delay={heroPhotos.delay} interval={heroPhotos.interval} className={box} onShow={showPhotos} />
 
         {/* The page's heading, text and buttons */}
         <div className="anim-text wrap relative w-full">

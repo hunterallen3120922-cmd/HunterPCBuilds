@@ -1,6 +1,7 @@
 import AnimatedHero from "./AnimatedHero";
 import RepairScene from "./RepairScene";
 import Icon from "./Icon";
+import { heroPhotos } from "../content/heroPhotos";
 
 /** When each piece of the repair happens, as [start, end] fractions of the duration. */
 const PARTS: Record<string, [number, number]> = {
@@ -30,7 +31,7 @@ const PARTS: Record<string, [number, number]> = {
  */
 export default function RepairHero() {
   return (
-    <AnimatedHero scene={<RepairScene />} parts={PARTS} duration={3400}
+    <AnimatedHero scene={<RepairScene />} parts={PARTS} duration={3400} photos={heroPhotos.techRepair}
       hold={window.matchMedia("(max-width: 639px)").matches ? 250 : 1100}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[23rem]">
       <p className="eyebrow mb-5 flex items-center gap-2"><span className="h-px w-6 bg-accent2" aria-hidden />Tech repair</p>

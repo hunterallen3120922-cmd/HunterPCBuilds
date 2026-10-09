@@ -145,6 +145,9 @@
 .diag-tag { transform-box: fill-box; transform-origin: center; transition: opacity .45s ease-in, transform .5s cubic-bezier(.5,0,.75,0); }
 [data-hold="true"] .diag-tag { animation: tagpop .55s cubic-bezier(.3,1.6,.5,1) var(--td, 0s) both; }
 [data-phase="done"] .diag-tag { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) scale(.55); animation: none; }
+/* Real photos at the top of the PC Builds / Tech Repair pages: a slow zoom while each one shows */
+@keyframes photo-zoom { from { transform: scale(1.07); } to { transform: scale(1); } }
+.photo-zoom { animation: photo-zoom 6s ease-out both; }
 @keyframes tagpop { 40% { transform: scale(1.08); } }
 
 /* The PC's fans: they start turning shortly before power-on (data-spin is set on the stage) and never stop. */

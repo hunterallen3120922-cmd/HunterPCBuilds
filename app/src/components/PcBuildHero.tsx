@@ -1,6 +1,12 @@
 import AnimatedHero, { type Part } from "./AnimatedHero";
 import BuildScene from "./BuildScene";
 import Icon from "./Icon";
+import { heroPhotos } from "../content/heroPhotos";
+import { gallery } from "../content/gallery";
+
+/** Real photos for the end of the animation: heroPhotos.pcBuilds, or else the real (non-example) Past builds photos. */
+const PHOTOS = heroPhotos.pcBuilds.length > 0 ? heroPhotos.pcBuilds
+  : gallery.filter((g) => !g.photo.startsWith("example-")).map((g) => ({ photo: `${import.meta.env.BASE_URL}gallery/${g.photo}`, alt: g.title, caption: g.title }));
 
 /**
  * The timeline, as [start, end] fractions of the duration. It plays as one continuous motion: the case fades in while
@@ -46,7 +52,7 @@ function motion(p: number) {
  */
 export default function PcBuildHero() {
   return (
-    <AnimatedHero scene={<BuildScene />} parts={PARTS} extra={motion} duration={3200} spinAt={SPIN_AT} doneAt={DONE_AT}
+    <AnimatedHero scene={<BuildScene />} parts={PARTS} extra={motion} duration={3200} spinAt={SPIN_AT} doneAt={DONE_AT} photos={PHOTOS}
       doneMobileClass="max-lg:group-data-[phase=done]:bottom-[27rem]">
       {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
       <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">

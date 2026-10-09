@@ -41,6 +41,8 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Tech Repair page opening:** every time you arrive, a broken laptop gets fixed in about 3.5 seconds: new parts (screen, fan, SSD, battery, a security shield) float around it, readouts show the problems in red, old parts pop out as the new ones fly in, it reboots to "All systems normal" and the readouts turn green, then it slides aside as the page text fades in. The drawing is `app/src/components/RepairScene.tsx`; speed and timing are in `app/src/components/RepairHero.tsx`.
 
+**Real photos after the openings:** a few seconds after each opening animation finishes, the drawing can fade into your real photos, which then slowly rotate with a small caption. Put photos in `app/public/photos/` and list them in `app/src/content/heroPhotos.ts` (instructions are at the top of that file). The PC Builds page also uses your real Past builds photos automatically if its own list is empty. With no photos, the drawing just stays.
+
 Floating parts are in `app/src/components/Floaters.tsx` (start positions are the `FLOATS` lists in each scene). Both use `app/src/components/AnimatedHero.tsx`, so another page can get its own animated opening the same way. Visitors who turn on "reduce motion" see the finished layout straight away.
 
 **Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
