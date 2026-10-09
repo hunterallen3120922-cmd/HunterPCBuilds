@@ -54,12 +54,15 @@ function motion(p: number) {
  * fans keep turning. How long it takes is `duration` below, in milliseconds.
  */
 export default function PcBuildHero() {
-  // Slideshow photos: builds marked "Slideshow" in the admin portal if there are any, otherwise the built-in ones.
+  // Slideshow photos: builds marked "Slideshow" in the admin portal if there are any (highlights first), otherwise the built-in ones.
   // Nothing is passed until we know which, so the slideshow never switches lists halfway.
   const builds = useBuilds();
   const photos = useMemo(() => {
     if (builds === undefined) return [];
+    // Highlights first: builds also on the home carousel, then ones in Past builds, then the rest (each group in list order).
+    const rank = (b: { featured: boolean; in_gallery: boolean }) => (b.featured ? 0 : b.in_gallery ? 1 : 2);
     const fromPortal = (builds ?? []).filter((b) => b.in_slideshow)
+      .map((b, i) => ({ b, i })).sort((x, y) => rank(x.b) - rank(y.b) || x.i - y.i).map(({ b }) => b)
       .flatMap((b) => b.photos.map((p) => ({ photo: photoUrl(p), alt: b.title })));
     return fromPortal.length > 0 ? fromPortal : BUILT_IN_PHOTOS;
   }, [builds]);
