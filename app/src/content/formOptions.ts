@@ -15,11 +15,10 @@ export const deviceTypes: Option[] = [
 ];
 
 export const budgets: Option[] = [
-  { value: "Under $600" },
-  { value: "$600 – $900" },
-  { value: "$900 – $1,300" },
-  { value: "$1,300 – $2,000" },
-  { value: "$2,000+" },
+  { value: "$300 – $600" },
+  { value: "$750 – $1,000" },
+  { value: "$1,000+" },
+  { value: "Not sure yet" },
 ];
 
 export const useCases: Option[] = [

@@ -13,6 +13,8 @@ interface Props {
   /** Inside a popup: no card styling, and the success screen offers "Close" */
   bare?: boolean;
   onClose?: () => void;
+  /** Answers to start with (e.g. a package picked with "Build now") */
+  prefill?: FormValues;
 }
 
 function display(v: FieldValue | undefined): string {
@@ -24,15 +26,15 @@ function display(v: FieldValue | undefined): string {
 }
 
 /** Generic multi-step request form. What it asks is defined in src/forms/. */
-export default function MultiStepForm({ config, onSubmit, bare = false, onClose }: Props) {
+export default function MultiStepForm({ config, onSubmit, bare = false, onClose, prefill }: Props) {
   const total = config.steps.length + 1; // + review step
   const initial = useMemo<FormValues>(() => {
     const v: FormValues = {};
     for (const s of config.steps) for (const f of s.fields) {
       v[f.name] = f.kind === "pills" ? [] : f.kind === "windows" ? [{ date: "", time: "" }] : f.defaultValue ?? "";
     }
-    return v;
-  }, [config]);
+    return { ...v, ...prefill };
+  }, [config, prefill]);
 
   const [values, setValues] = useState<FormValues>(initial);
   const [step, setStep] = useState(0);

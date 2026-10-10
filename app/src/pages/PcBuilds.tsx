@@ -1,11 +1,14 @@
+import { useState } from "react";
 import PcBuildHero from "../components/PcBuildHero";
+import TierDialog from "../components/TierDialog";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
 import Gallery from "../components/Gallery";
 import Icon from "../components/Icon";
 import RequestSection from "../components/RequestSection";
 import { useSeo } from "../lib/seo";
-import { buildForm } from "../forms/buildForm";
+import { buildForm, packageLabel } from "../forms/buildForm";
+import type { BuildTier, FormValues } from "../types";
 import { buildIncludes, buildProcess, buildTiers } from "../content/buildTiers";
 import { gallery } from "../content/gallery";
 import { toGalleryItem, useBuilds } from "../lib/useBuilds";
@@ -16,6 +19,19 @@ export default function PcBuilds() {
   const builds = useBuilds();
   const fromPortal = builds?.filter((b) => b.in_gallery && b.photos.length > 0) ?? [];
   const pastBuilds = fromPortal.length > 0 ? fromPortal.map(toGalleryItem) : gallery;
+
+  // Package cards: click for details; "Build now" fills the request form with that package and its specs
+  const [openTier, setOpenTier] = useState<BuildTier | null>(null);
+  const [prefill, setPrefill] = useState<FormValues | undefined>(undefined);
+  const buildNow = (t: BuildTier) => {
+    setOpenTier(null);
+    setPrefill({
+      package: packageLabel(t),
+      budget: t.budget,
+      preferences: `Starting from the ${t.name} package. Recommended specs:\n${t.recommendedSpecs.map((s) => `- ${s}`).join("\n")}\n\nAnything you'd change or add: `,
+    });
+    requestAnimationFrame(() => document.getElementById("request")?.scrollIntoView());
+  };
   useSeo(`Custom PC Builds | ${site.name}`, "Custom gaming, school and workstation PC builds. Free consultation, parts at cost, 30-day labor guarantee.");
   return (
     <>
@@ -23,21 +39,25 @@ export default function PcBuilds() {
 
       <section className="section">
         <div className="wrap">
-          <SectionHead eyebrow="Packages" title="Build packages" sub="Starting points. Every build is customized, and you approve the parts list before I order anything." />
+          <SectionHead eyebrow="Packages" title="Build packages" sub="Pick a starting point and tap it for details. Every build is customized, and you approve the parts list before I order anything." />
           <div className="grid gap-5 md:grid-cols-3">
             {buildTiers.map((t, i) => (
               <Reveal key={t.name} delay={i * 80}>
-                <div className="card lift flex h-full flex-col p-7">
+                <button type="button" onClick={() => setOpenTier(t)} aria-label={`${t.name} package details`}
+                  className="card lift group flex h-full w-full cursor-pointer flex-col p-7 text-left text-ink hover:border-accent/50">
                   <p className="eyebrow">{t.name}</p>
                   <p className="mb-1 mt-3 font-heading text-[2rem] leading-tight">{t.budget}</p>
                   <p className="mb-6 text-[.95rem] text-muted">{t.bestFor}</p>
                   <ul className="mb-6 space-y-2 text-[.92rem]">
-                    {t.exampleSpecs.map((s) => (
+                    {t.recommendedSpecs.map((s) => (
                       <li key={s} className="flex gap-3"><Icon name="check" className="mt-[3px] h-4 w-4 shrink-0 text-accent" />{s}</li>
                     ))}
                   </ul>
-                  <p className="mt-auto border-t border-line pt-4 text-[.88rem] text-muted">Labor <span className="font-mono text-ink">{t.laborPrice}</span> + parts at cost</p>
-                </div>
+                  <p className="mt-auto flex items-center justify-between border-t border-line pt-4 text-[.88rem] text-muted">
+                    <span>Labor <span className="font-mono text-ink">{t.laborPrice}</span> + parts</span>
+                    <span className="inline-flex items-center gap-1 transition-colors group-hover:text-accent">Details <Icon name="arrow" className="h-3.5 w-3.5" /></span>
+                  </p>
+                </button>
               </Reveal>
             ))}
           </div>
@@ -75,7 +95,8 @@ export default function PcBuilds() {
         </div>
       </section>
 
-      <div className="alt"><RequestSection type="build" config={buildForm} title="Start a build request" /></div>
+      <TierDialog tier={openTier} onClose={() => setOpenTier(null)} onBuild={buildNow} />
+      <div className="alt"><RequestSection type="build" config={buildForm} title="Start a build request" prefill={prefill} /></div>
     </>
   );
 }

@@ -5,12 +5,13 @@ import SectionHead from "./SectionHead";
 import { submitRequest } from "../lib/submit";
 import { site } from "../content/site";
 
-export default function RequestSection({ type, config, title }: { type: "build" | "repair"; config: FormConfig; title: string }) {
+/** The request form at the bottom of a page. `prefill` starts it with some answers filled in (the form restarts when it changes). */
+export default function RequestSection({ type, config, title, prefill }: { type: "build" | "repair"; config: FormConfig; title: string; prefill?: FormValues }) {
   return (
     <section id="request" className="section scroll-mt-20">
       <div className="wrap">
         <SectionHead center eyebrow="Request" title={title} sub={site.responseTime} />
-        <div data-reveal="up"><MultiStepForm config={config} onSubmit={(v: FormValues) => submitRequest(type, config, v)} /></div>
+        <div data-reveal="up"><MultiStepForm key={JSON.stringify(prefill ?? {})} config={config} prefill={prefill} onSubmit={(v: FormValues) => submitRequest(type, config, v)} /></div>
       </div>
     </section>
   );

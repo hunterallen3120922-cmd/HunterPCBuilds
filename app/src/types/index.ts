@@ -15,7 +15,10 @@ export interface BuildTier {
   name: string;
   budget: string;
   bestFor: string;
-  exampleSpecs: string[];
+  /** Shown when the card is clicked */
+  description: string;
+  /** Shown on the card and in its details, and filled into the request when you press "Build now" */
+  recommendedSpecs: string[];
   laborPrice: string;
 }
 
