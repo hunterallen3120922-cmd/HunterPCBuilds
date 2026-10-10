@@ -12,7 +12,7 @@ export const buildTiers: BuildTier[] = [
     bestFor: "School, everyday use and 1080p esports gaming",
     description:
       "The most PC for the least money. Great for schoolwork, streaming, and popular games like Fortnite, Valorant and Minecraft at 1080p. Easy to upgrade later.",
-    recommendedSpecs: ["GTX 1660 graphics card"],
+    recommendedSpecs: ["GTX 1660 graphics card", "Core i7 7th gen OR Ryzen 5 (AM4)", "512 GB SSD", "16 GB DDR4 RAM", "650W power supply"],
     laborPrice: "$75",
   },
   {
@@ -21,7 +21,7 @@ export const buildTiers: BuildTier[] = [
     bestFor: "Smooth 1080p/1440p gaming and streaming",
     description:
       "The sweet spot for most gamers: high settings at 1080p, solid 1440p, and enough power to stream or record while you play.",
-    recommendedSpecs: ["6–8 core CPU", "16–32 GB RAM", "1 TB NVMe SSD", "Mid-range graphics card"],
+    recommendedSpecs: ["RTX 3060 graphics card", "Ryzen 7 (AM4)", "512 GB NVMe SSD + 1 TB SSD", "32 GB DDR4 RAM", "650W – 750W power supply"],
     laborPrice: "$75",
   },
   {
@@ -29,8 +29,9 @@ export const buildTiers: BuildTier[] = [
     budget: "$1,000+",
     bestFor: "High-refresh 1440p/4K, video editing and 3D work",
     description:
-      "No compromises: high frame rates at 1440p and 4K, fast video editing and 3D work, with room to grow for years.",
-    recommendedSpecs: ["Fast 8–16 core CPU", "32 GB RAM", "2 TB NVMe SSD", "High-end graphics card"],
+      "No compromises: high frame rates at 1440p and 4K, fast video editing and 3D work, with room to grow for years. Slide to your budget and I'll match balanced parts to it, or swap any part yourself.",
+    recommendedSpecs: ["Choose your budget: $1,000 to $3,000+", "RTX 3070 up to RTX 5080", "Ryzen 7 / Intel Core 7 / Ryzen 9 X3D, DDR5", "Up to 4.5 TB storage", "Optional water cooling + LCD"],
+    builder: true,
     laborPrice: "$75",
   },
 ];

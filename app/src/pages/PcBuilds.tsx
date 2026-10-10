@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PcBuildHero from "../components/PcBuildHero";
-import TierDialog from "../components/TierDialog";
+import TierDialog, { type BuildChoice } from "../components/TierDialog";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
 import Gallery from "../components/Gallery";
@@ -23,12 +23,12 @@ export default function PcBuilds() {
   // Package cards: click for details; "Build now" fills the request form with that package and its specs
   const [openTier, setOpenTier] = useState<BuildTier | null>(null);
   const [prefill, setPrefill] = useState<FormValues | undefined>(undefined);
-  const buildNow = (t: BuildTier) => {
+  const buildNow = (t: BuildTier, choice: BuildChoice) => {
     setOpenTier(null);
     setPrefill({
       package: packageLabel(t),
-      budget: t.budget,
-      preferences: `Starting from the ${t.name} package. Recommended specs:\n${t.recommendedSpecs.map((s) => `- ${s}`).join("\n")}\n\nAnything you'd change or add: `,
+      budget: choice.budget,
+      preferences: `Starting from the ${t.name} package.${choice.note ? ` ${choice.note}` : ""}\nSpecs:\n${choice.specs.map((s) => `- ${s}`).join("\n")}\n\nAnything you'd change or add: `,
     });
     requestAnimationFrame(() => document.getElementById("request")?.scrollIntoView());
   };

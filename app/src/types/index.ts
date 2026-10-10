@@ -20,6 +20,8 @@ export interface BuildTier {
   /** Shown on the card and in its details, and filled into the request when you press "Build now" */
   recommendedSpecs: string[];
   laborPrice: string;
+  /** true = the details show the budget slider and part picker (content/customParts.ts) instead of fixed specs */
+  builder?: boolean;
 }
 
 export interface GalleryItem {
