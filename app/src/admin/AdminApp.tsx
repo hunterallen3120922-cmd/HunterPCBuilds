@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
 import BuildsTab from "./BuildsTab";
 import RequestsTab from "./RequestsTab";
+import Showcase from "./Showcase";
 import { Logo } from "../components/Nav";
 
 /**
@@ -16,6 +17,13 @@ export default function AdminApp() {
   const [isAdmin, setIsAdmin] = useState<boolean | undefined>(undefined);
   const [tab, setTab] = useState<"builds" | "requests">("builds");
   const [newCount, setNewCount] = useState(0);
+  const [showcase, setShowcase] = useState(false);
+  const closeShowcase = useCallback(() => setShowcase(false), []);
+  const openShowcase = () => {
+    // Fullscreen has to be asked for right inside the click
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    setShowcase(true);
+  };
 
   useEffect(() => {
     document.title = "Admin | HunterPCBuilds";
@@ -78,12 +86,17 @@ export default function AdminApp() {
             ))}
           </nav>
           <div className="flex items-center gap-3 text-[.85rem] text-muted">
+            <button type="button" onClick={openShowcase} title="Animated full-screen showcase for the projector"
+              className="rounded-full border border-line px-3 py-1 text-ink hover:border-accent hover:text-accent">
+              ▶ Showcase
+            </button>
             <span className="hidden sm:inline">{session.user.email}</span>
             <button type="button" className="underline hover:text-ink" onClick={() => supabase!.auth.signOut()}>Sign out</button>
           </div>
         </>
       }>
       {tab === "builds" ? <BuildsTab /> : <RequestsTab onChange={refreshNewCount} />}
+      {showcase && <Showcase onClose={closeShowcase} />}
     </Shell>
   );
 }

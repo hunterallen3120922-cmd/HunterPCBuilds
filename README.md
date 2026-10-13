@@ -75,6 +75,8 @@ A private page at **`/#/admin`** on your site (for example `https://YOUR-SITE.ne
   Photos are shrunk automatically when you upload them. Changes show the next time someone loads the page, no rebuild needed. If the list is empty, an **Import** button brings in the photos already in your slideshow.
 - **Requests:** every build/repair request from the site's forms (you still get the emails). Filter by status (new → quoted → scheduled → done → archived), search, read every answer, reply by email/call/text, and keep private notes.
 
+- **▶ Showcase** (button in the admin top bar): fills the screen with an animated Hanover Lawn Co | HunterPCBuilds wallpaper for a projector or video calls: leaves fall, snow drifts, light pulses run along the circuits into the logo, and the cursor blinks. The screen stays awake while it's showing. Press **Esc** (or the ✕ in the corner) to leave. The artwork is in `app/public/showcase/` (`plate.webp` is the background, `text.webp` is the words on top), the animation is `app/src/admin/Showcase.tsx` (leaf/snow counts and pulse speed are at the top), and `app/src/admin/showcaseData.ts` holds the positions it animates.
+
 It runs on [Supabase](https://supabase.com) (free). Until it's set up, the site simply uses the files in `app/src/content/`, and it falls back to them if Supabase is ever unreachable. Free Supabase projects pause after about a week with no visits; normal site traffic keeps it awake, and if it does pause, open the Supabase dashboard and press "Restore".
 
 **One-time setup:**
