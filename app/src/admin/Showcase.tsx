@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { showcase as S } from "./showcaseData";
+import { buildEvents, type Ev, type LogoFx } from "./showcaseEvents";
 
 /**
  * Animated full-screen showcase (Hanover Lawn Co | HunterPCBuilds) for a projector or video calls.
@@ -14,7 +15,9 @@ import { showcase as S } from "./showcaseData";
  *   5 glint    - a flash of light runs down the dividing line and both logos glow
  *   6 mower    - a little mower drives across the grass
  *   7 terminal - a new line types itself under "get a quote fast"
- * Press the number keys 1-7 while it's open to play one right away.
+ * ...plus 50 more in showcaseEvents.ts (bunny, rain, dusk, code rain, UFO and so on).
+ * While it's open: number keys 1-7 play the events above, → / ← step through every event in order
+ * (its name shows at the bottom), and E plays a random one.
  *
  * Layers, back to front: plate.webp (background art) → <canvas> (everything that moves) → text.webp (words).
  * The art lives in app/public/showcase/; positions the canvas uses are in showcaseData.ts.
@@ -37,9 +40,15 @@ const LEAF_COLORS = ["#d67828", "#e8a032", "#be5028", "#c88c2d", "#aa4623"];
 const EVENTS = { gust: 6, flurry: 9, surge: 2.8, spin: 1.8, glint: 2.4, mower: 10, terminal: 7 } as const; // name: seconds
 type EventName = keyof typeof EVENTS;
 const EVENT_KEYS = Object.keys(EVENTS) as EventName[];
+const BUILTIN_LABELS: Record<EventName, string> = {
+  gust: "A gust of wind blows leaves across", flurry: "Snow flurry", surge: "Power surge through the circuits",
+  spin: "A logo hops and spins", glint: "A flash runs down the dividing line", mower: "A mower drives across the grass",
+  terminal: "A new terminal line types itself",
+};
+const newFx = (): LogoFx => ({ dx: 0, dy: 0, rot: 0, scale: 1, alpha: 1, glitch: 0 });
 
 type Pt = readonly [number, number];
-type Path = { pts: Pt[]; cum: number[]; len: number };
+type Path = { pts: readonly Pt[]; cum: number[]; len: number };
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)];
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
@@ -164,14 +173,22 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
 
     const leftClip = new Path2D();
     leftClip.moveTo(0, 0); leftClip.lineTo(SEAM_TOP - 4, 0); leftClip.lineTo(SEAM_BOT - 4, FH); leftClip.lineTo(0, FH); leftClip.closePath();
+    const rightClip = new Path2D();
+    rightClip.moveTo(SEAM_TOP + 4, 0); rightClip.lineTo(FW, 0); rightClip.lineTo(FW, FH); rightClip.lineTo(SEAM_BOT + 4, FH); rightClip.closePath();
 
     // ---- events ----
     let t = 0;
-    let ev: { name: EventName; t0: number; dur: number; data: { logo?: "lawn" | "pc"; line?: string } } | null = null;
-    let nextEvent = FIRST_EVENT, lastEvent: EventName | null = null;
-    const startEvent = (name: EventName) => {
-      ev = { name, t0: t, dur: EVENTS[name], data: {} };
+    let ev: { name: string; t0: number; dur: number; data: { logo?: "lawn" | "pc"; line?: string }; extra?: Ev } | null = null;
+    let nextEvent = FIRST_EVENT, lastEvent: string | null = null;
+    let extras: Ev[] = [];          // the 50 events from showcaseEvents.ts (filled in below)
+    const allNames = () => [...EVENT_KEYS, ...extras.map((x) => x.name)] as string[];
+    const labelOf = (name: string) => (name in BUILTIN_LABELS ? BUILTIN_LABELS[name as EventName] : extras.find((x) => x.name === name)?.label ?? name);
+    let label = "", labelT = -99, browse = -1;
+    const startEvent = (name: string) => {
       lastEvent = name;
+      const extra = extras.find((x) => x.name === name);
+      if (extra) { ev = { name, t0: t, dur: extra.dur, data: {}, extra }; extra.start?.(); return; }
+      ev = { name, t0: t, dur: EVENTS[name as EventName], data: {} };
       if (name === "spin") ev.data.logo = Math.random() < 0.5 ? "lawn" : "pc";
       if (name === "terminal") ev.data.line = pick(TERMINAL_LINES);
       if (name === "gust") for (let i = 0; i < 26; i++) gustLeaves.push(newGustLeaf());
@@ -185,9 +202,14 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
         pcBump = 1;
       }
     };
+    const play = (name: string, show: string) => { startEvent(name); nextEvent = t + rand(...EVENT_GAP); label = show; labelT = t; };
     const onKey = (e: KeyboardEvent) => {
-      const n = Number(e.key);
-      if (n >= 1 && n <= EVENT_KEYS.length) { startEvent(EVENT_KEYS[n - 1]); nextEvent = t + rand(...EVENT_GAP); }
+      const n = Number(e.key), names = allNames();
+      if (n >= 1 && n <= EVENT_KEYS.length) play(EVENT_KEYS[n - 1], `${n} · ${labelOf(EVENT_KEYS[n - 1])}`);
+      else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        browse = (browse + (e.key === "ArrowRight" ? 1 : -1) + names.length) % names.length;
+        play(names[browse], `${browse + 1} / ${names.length} · ${labelOf(names[browse])}`);
+      } else if (e.key === "e" || e.key === "E") { const nm = pick(names); play(nm, labelOf(nm)); }
     };
     window.addEventListener("keydown", onKey);
     const evP = (name: EventName) => (ev && ev.name === name ? clamp01((t - ev.t0) / ev.dur) : -1);
@@ -237,7 +259,7 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       if (still) draw(0);
     }).catch(() => {});
 
-    const drawLeaf = (l: Leaf, x: number) => {
+    const drawLeaf = (l: Pick<Leaf, "y" | "rot" | "flip" | "size" | "col">, x: number) => {
       ctx.save();
       ctx.translate(x, l.y); ctx.rotate(l.rot); ctx.scale(1, 0.35 + 0.65 * Math.abs(Math.cos(l.flip)));
       const L = l.size, wd = l.size * 0.5;
@@ -250,6 +272,20 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       ctx.beginPath(); ctx.moveTo(-L * 1.25, 0); ctx.lineTo(L * 0.95, 0); ctx.stroke();
       ctx.restore();
     };
+    const fx = { lawn: newFx(), pc: newFx() };
+    const logoAt: Record<"lawn" | "pc", { x: number; y: number; rot: number; s: number }> = { lawn: { x: lx, y: ly, rot: 0, s: 1 }, pc: { x: px, y: py, rot: 0, s: 1 } };
+    let termText: string | null = null, termAlpha = 1;
+    extras = buildEvents({
+      ctx, leftClip, rightClip, seamX, traces, radial, pointAt, quietFade,
+      drawLeaf: (x, y, size, rot, flip, col) => drawLeaf({ y, size, rot, flip, col }, x),
+      logoPos: (w) => logoAt[w],
+      withLogo: (w, fn) => { const L = logoAt[w]; ctx.save(); ctx.translate(L.x, L.y); ctx.rotate(L.rot); ctx.scale(L.s, L.s); fn(); ctx.restore(); },
+      fx,
+      bump: (w, a) => { if (w === "pc") pcBump = Math.max(pcBump, a); else lawnBump = Math.max(lawnBump, a); },
+      term: (text, a = 1) => { termText = text; termAlpha = a; },
+      pcSprite: () => pcSpr,
+      mono: `"JetBrains Mono", "DejaVu Sans Mono", monospace`,
+    });
     const drawMower = (x: number, y: number, bounce: number) => {
       ctx.save(); ctx.translate(x, y + bounce); ctx.scale(1.6, 1.6);
       ctx.fillStyle = "#8fd18a"; ctx.strokeStyle = "#8fd18a"; ctx.lineCap = "round";
@@ -274,7 +310,7 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       // pick the next event
       if (ev && t - ev.t0 > ev.dur) ev = null;
       if (!ev && t >= nextEvent && !still) {
-        startEvent(pick(EVENT_KEYS.filter((k) => k !== lastEvent)));
+        startEvent(pick(allNames().filter((k) => k !== lastEvent)));
         nextEvent = t + rand(...EVENT_GAP);
       }
       const gust = evP("gust"), fl = evP("flurry"), glint = evP("glint"), mower = evP("mower"), term = evP("terminal"), spin = evP("spin"), surge = evP("surge");
@@ -416,20 +452,44 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       }
       ctx.restore();
 
+      // the current library event: the part behind the logos
+      const xp = ev ? clamp01((t - ev.t0) / ev.dur) : 0, xe = ev ? t - ev.t0 : 0;
+      if (ev?.extra?.back) { ctx.save(); ev.extra.back(xp, xe, dt); ctx.restore(); }
+
       // ---- logos: always floating and swaying ----
       const logo = (spr: HTMLCanvasElement | null, x: number, y: number, ph: number, which: "lawn" | "pc", bump: number) => {
         if (!spr) return;
         let rot = Math.sin(t * 0.45 + ph) * 0.035, hop = 0, s = 1 + 0.015 * bump;
         if (spin >= 0 && ev?.data.logo === which) { rot += ease(spin) * Math.PI * 2; hop = -bell(spin) * 70; s += bell(spin) * 0.05; }
         if (which === "lawn" && wind) rot += Math.sin(t * 9) * 0.05 * wind;
+        const f = fx[which];
+        rot += f.rot; s *= f.scale;
+        const L = logoAt[which];
+        L.x = x + f.dx; L.y = y + Math.sin(t * 0.6 + ph) * 12 + hop + f.dy; L.rot = rot; L.s = s;
         ctx.save();
-        ctx.translate(x, y + Math.sin(t * 0.6 + ph) * 12 + hop);
+        ctx.translate(L.x, L.y);
         ctx.rotate(rot); ctx.scale(s, s);
-        ctx.drawImage(spr, -spr.width / 2, -spr.height / 2);
+        ctx.globalAlpha = f.alpha;
+        const w = spr.width, h = spr.height;
+        if (f.glitch > 0) {
+          // sliced and shifted, with a colored ghost
+          for (let k = 0; k < 9; k++) {
+            const sy = (h / 9) * k, off = Math.random() < 0.5 ? rand(-40, 40) : 0;
+            ctx.drawImage(spr, 0, sy, w, h / 9, -w / 2 + off, -h / 2 + sy, w, h / 9);
+          }
+          ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = 0.35;
+          ctx.drawImage(spr, -w / 2 + rand(8, 20), -h / 2, w, h);
+        } else {
+          ctx.drawImage(spr, -w / 2, -h / 2);
+        }
         ctx.restore();
       };
       logo(lawnSpr, lx, ly, 0, "lawn", lawnBump);
       logo(pcSpr, px, py, 2, "pc", pcBump);
+      Object.assign(fx.lawn, newFx()); Object.assign(fx.pc, newFx());
+
+      // the current library event: the part in front of the logos
+      if (ev?.extra?.front) { ctx.save(); ev.extra.front(xp, xe, dt); ctx.restore(); }
 
       // ---- terminal: blinking cursor, and now and then a new line types itself ----
       ctx.save();
@@ -438,15 +498,32 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       ctx.shadowColor = "rgba(56,189,248,.6)"; ctx.shadowBlur = 10;
       let [cx, cy] = S.cursor;
       const [, , cw, ch] = S.cursor;
+      let line: string | null = null;
       if (term >= 0 && ev?.data.line) {
-        const line = ev.data.line, [tx, ty] = S.term;
-        const shown = line.slice(0, Math.floor(clamp01(term / 0.45) * line.length));
+        line = ev.data.line.slice(0, Math.floor(clamp01(term / 0.45) * ev.data.line.length));
         ctx.globalAlpha = clamp01((1 - term) / 0.15);
-        ctx.fillText(shown, tx, ty + 66);
-        cx = tx + ctx.measureText(shown).width; cy += 66;
+      } else if (termText !== null) {
+        line = termText; ctx.globalAlpha = termAlpha;
       }
+      if (line !== null) {
+        const [tx, ty] = S.term;
+        ctx.fillText(line, tx, ty + 66);
+        cx = tx + ctx.measureText(line).width; cy += 66;
+      }
+      termText = null;
       if (t % 1.06 < 0.6) ctx.fillRect(cx, cy, cw, Math.max(ch, 6));
       ctx.restore();
+
+      // name of the event you just picked with the keyboard
+      const la = clamp01((t - labelT) < 2.2 ? 1 : 1 - (t - labelT - 2.2) / 0.5);
+      if (la > 0 && label) {
+        ctx.save(); ctx.globalAlpha = la;
+        ctx.font = `600 46px Inter, system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        const w = ctx.measureText(label).width + 80;
+        ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.beginPath(); ctx.roundRect(FW / 2 - w / 2, 40, w, 84, 42); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.fillText(label, FW / 2, 82);
+        ctx.restore();
+      }
     }
 
     if (still) {
