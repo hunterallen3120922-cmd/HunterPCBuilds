@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { showcase as S } from "./showcaseData";
 import { buildEvents, type Ev, type LogoFx } from "./showcaseEvents";
+import { buildTakeovers, playTakeover, type Takeover } from "./showcaseTakeovers";
 
 /**
  * Animated full-screen showcase (Hanover Lawn Co | HunterPCBuilds) for a projector or video calls.
@@ -16,7 +17,9 @@ import { buildEvents, type Ev, type LogoFx } from "./showcaseEvents";
  *   6 mower    - a little mower drives across the grass
  *   7 terminal - a new line types itself under "get a quote fast"
  * ...plus 50 more in showcaseEvents.ts (bunny, rain, dusk, code rain, UFO and so on).
- * While it's open: number keys 1-7 play the events above, → / ← step through every event in order
+ * ...and 10 rare TAKEOVERS in showcaseTakeovers.ts, where one side floods the whole screen with a big show
+ * (at most one every TAKEOVER_MIN_GAP seconds, and only TAKEOVER_CHANCE of the time after that).
+ * While it's open: T plays a random takeover (L = a Lawn Co one, P = a PC Builds one), number keys 1-7 play the events above, → / ← step through every event in order
  * (its name shows at the bottom), and E plays a random one.
  *
  * Layers, back to front: plate.webp (background art) → <canvas> (everything that moves) → text.webp (words).
@@ -34,6 +37,8 @@ const SNOW = 24;              // snow specks always drifting in the winter corne
 const PULSE_EVERY = 2.6;      // seconds between calm circuit pulses (on average)
 const EVENT_GAP: [number, number] = [20, 40];   // seconds between events (random in this range)
 const FIRST_EVENT = 8;        // seconds until the first event
+const TAKEOVER_CHANCE = 0.12; // chance that an event slot becomes a takeover (once allowed)
+const TAKEOVER_MIN_GAP = 150; // seconds that must pass between takeovers (the first can happen after ~1.5 min)
 const TERMINAL_LINES = ["> all systems online ✓", "> running diagnostics... ok", "> new build queued", "> fans spinning up...", "> drivers updated ✓"];
 const LEAF_COLORS = ["#d67828", "#e8a032", "#be5028", "#c88c2d", "#aa4623"];
 
@@ -121,6 +126,7 @@ function loadImg(src: string) {
 export default function Showcase({ onClose }: { onClose: () => void }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const topRef = useRef<HTMLCanvasElement>(null);
   const [idle, setIdle] = useState(false);
 
   // Leave when fullscreen ends (Esc), on Esc key, and keep the screen awake while showing
@@ -157,7 +163,8 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
 
   // The animation
   useEffect(() => {
-    const canvas = canvasRef.current!, frame = frameRef.current!;
+    const canvas = canvasRef.current!, frame = frameRef.current!, top = topRef.current!;
+    const topCtx = top.getContext("2d")!;
     const ctx = canvas.getContext("2d")!;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0, stopped = false, scale = 1;
@@ -166,6 +173,7 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       const dpr = window.devicePixelRatio || 1;
       const w = Math.min(FW, Math.round(frame.clientWidth * dpr));
       canvas.width = w; canvas.height = Math.round((w * FH) / FW);
+      top.width = canvas.width; top.height = canvas.height;
       scale = w / FW;
     };
     const ro = new ResizeObserver(resize);
@@ -178,14 +186,19 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
 
     // ---- events ----
     let t = 0;
-    let ev: { name: string; t0: number; dur: number; data: { logo?: "lawn" | "pc"; line?: string }; extra?: Ev } | null = null;
+    let ev: { name: string; t0: number; dur: number; data: { logo?: "lawn" | "pc"; line?: string }; extra?: Ev; take?: Takeover } | null = null;
+    let takeovers: Takeover[] = [];   // filled in below
+    let lastTakeover = TAKEOVER_MIN_GAP > 90 ? 90 - TAKEOVER_MIN_GAP : 0, lastTakeName = "";
     let nextEvent = FIRST_EVENT, lastEvent: string | null = null;
     let extras: Ev[] = [];          // the 50 events from showcaseEvents.ts (filled in below)
-    const allNames = () => [...EVENT_KEYS, ...extras.map((x) => x.name)] as string[];
-    const labelOf = (name: string) => (name in BUILTIN_LABELS ? BUILTIN_LABELS[name as EventName] : extras.find((x) => x.name === name)?.label ?? name);
+    const allNames = () => [...EVENT_KEYS, ...extras.map((x) => x.name), ...takeovers.map((x) => x.name)] as string[];
+    const labelOf = (name: string) => (name in BUILTIN_LABELS ? BUILTIN_LABELS[name as EventName]
+      : extras.find((x) => x.name === name)?.label ?? takeovers.find((x) => x.name === name)?.label ?? name);
     let label = "", labelT = -99, browse = -1;
     const startEvent = (name: string) => {
       lastEvent = name;
+      const take = takeovers.find((x) => x.name === name);
+      if (take) { ev = { name, t0: t, dur: take.dur, data: {}, take }; lastTakeover = t; lastTakeName = name; take.start?.(); return; }
       const extra = extras.find((x) => x.name === name);
       if (extra) { ev = { name, t0: t, dur: extra.dur, data: {}, extra }; extra.start?.(); return; }
       ev = { name, t0: t, dur: EVENTS[name as EventName], data: {} };
@@ -210,6 +223,10 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
         browse = (browse + (e.key === "ArrowRight" ? 1 : -1) + names.length) % names.length;
         play(names[browse], `${browse + 1} / ${names.length} · ${labelOf(names[browse])}`);
       } else if (e.key === "e" || e.key === "E") { const nm = pick(names); play(nm, labelOf(nm)); }
+      else if ("tTlLpP".includes(e.key) && takeovers.length) {
+        const k = e.key.toLowerCase(), pool = takeovers.filter((x) => (k === "t" || x.side === (k === "l" ? "lawn" : "pc")) && x.name !== lastTakeName);
+        const nm = pick(pool.length ? pool : takeovers).name; play(nm, labelOf(nm));
+      }
     };
     window.addEventListener("keydown", onKey);
     const evP = (name: EventName) => (ev && ev.name === name ? clamp01((t - ev.t0) / ev.dur) : -1);
@@ -252,8 +269,10 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
 
     // ---- logos ----
     let lawnSpr: HTMLCanvasElement | null = null, pcSpr: HTMLCanvasElement | null = null;
+    let lawnImg: HTMLImageElement | null = null, pcImg: HTMLImageElement | null = null;
     const [lx, ly] = S.logoLawn, [px, py] = S.logoPc;
     Promise.all([loadImg(`${dir}lawnco-logo.png`), loadImg(`${dir}pcbuilds-logo.png`)]).then(([a, b]) => {
+      lawnImg = a; pcImg = b;
       lawnSpr = logoSprite(a, S.logoLawn[2], "rgba(0,0,0,.6)", 40, 16);
       pcSpr = logoSprite(b, S.logoPc[2], "rgba(56,220,160,.5)", 40, 10);
       if (still) draw(0);
@@ -286,6 +305,7 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       pcSprite: () => pcSpr,
       mono: `"JetBrains Mono", "DejaVu Sans Mono", monospace`,
     });
+    takeovers = buildTakeovers({ ctx: topCtx, lawnLogo: () => lawnImg, pcLogo: () => pcImg, mono: `"JetBrains Mono", "DejaVu Sans Mono", monospace` });
     const drawMower = (x: number, y: number, bounce: number) => {
       ctx.save(); ctx.translate(x, y + bounce); ctx.scale(1.6, 1.6);
       ctx.fillStyle = "#8fd18a"; ctx.strokeStyle = "#8fd18a"; ctx.lineCap = "round";
@@ -302,17 +322,47 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       ctx.restore();
     };
 
+    let topDirty = false;
     function draw(dt: number) {
+      // pick the next event (now and then a rare takeover instead)
+      if (ev && t - ev.t0 > ev.dur) ev = null;
+      if (!ev && t >= nextEvent && !still) {
+        if (takeovers.length && t - lastTakeover > TAKEOVER_MIN_GAP && Math.random() < TAKEOVER_CHANCE) {
+          startEvent(pick(takeovers.filter((x) => x.name !== lastTakeName)).name);
+        } else {
+          const regular = [...EVENT_KEYS, ...extras.map((x) => x.name)] as string[];
+          startEvent(pick(regular.filter((k) => k !== lastEvent)));
+        }
+        nextEvent = t + rand(...EVENT_GAP);
+      }
+      const te = ev?.take ? t - ev.t0 : -1;
+      // while a takeover fully covers the screen, the wallpaper underneath doesn't need drawing
+      const covered = !!ev?.take && te > 1.7 && te < ev.dur - 1.2;
+      if (!covered) drawBase(dt);
+
+      // top layer: the takeover and the event name you picked with the keyboard
+      const la = label ? clamp01(t - labelT < 2.2 ? 1 : 1 - (t - labelT - 2.2) / 0.5) : 0;
+      if (ev?.take || la > 0 || topDirty) {
+        topCtx.setTransform(1, 0, 0, 1, 0, 0);
+        topCtx.clearRect(0, 0, top.width, top.height);
+        topCtx.setTransform(scale, 0, 0, scale, 0, 0);
+        topDirty = false;
+        if (ev?.take) { playTakeover(topCtx, ev.take, te, dt); topDirty = true; }
+        if (la > 0) {
+          topCtx.save(); topCtx.globalAlpha = la;
+          topCtx.font = `600 46px Inter, system-ui, sans-serif`; topCtx.textAlign = "center"; topCtx.textBaseline = "middle";
+          const w = topCtx.measureText(label).width + 80;
+          topCtx.fillStyle = "rgba(0,0,0,.6)"; topCtx.beginPath(); topCtx.roundRect(FW / 2 - w / 2, 40, w, 84, 42); topCtx.fill();
+          topCtx.fillStyle = "#fff"; topCtx.fillText(label, FW / 2, 82);
+          topCtx.restore(); topDirty = true;
+        }
+      }
+    }
+
+    function drawBase(dt: number) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
-
-      // pick the next event
-      if (ev && t - ev.t0 > ev.dur) ev = null;
-      if (!ev && t >= nextEvent && !still) {
-        startEvent(pick(allNames().filter((k) => k !== lastEvent)));
-        nextEvent = t + rand(...EVENT_GAP);
-      }
       const gust = evP("gust"), fl = evP("flurry"), glint = evP("glint"), mower = evP("mower"), term = evP("terminal"), spin = evP("spin"), surge = evP("surge");
       const wind = gust >= 0 ? bell(gust) : 0;
       if (glint >= 0 && glint > 0.35) { pcBump = Math.max(pcBump, bell((glint - 0.35) / 0.65)); lawnBump = Math.max(lawnBump, bell((glint - 0.35) / 0.65)); }
@@ -514,16 +564,6 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       if (t % 1.06 < 0.6) ctx.fillRect(cx, cy, cw, Math.max(ch, 6));
       ctx.restore();
 
-      // name of the event you just picked with the keyboard
-      const la = clamp01((t - labelT) < 2.2 ? 1 : 1 - (t - labelT - 2.2) / 0.5);
-      if (la > 0 && label) {
-        ctx.save(); ctx.globalAlpha = la;
-        ctx.font = `600 46px Inter, system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        const w = ctx.measureText(label).width + 80;
-        ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.beginPath(); ctx.roundRect(FW / 2 - w / 2, 40, w, 84, 42); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.fillText(label, FW / 2, 82);
-        ctx.restore();
-      }
     }
 
     if (still) {
@@ -551,6 +591,7 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
         <img src={`${dir}plate.webp`} alt="" className="absolute inset-0 h-full w-full select-none" draggable={false} />
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
         <img src={`${dir}text.webp`} alt="Hanover Lawn Co and HunterPCBuilds" className="absolute inset-0 h-full w-full select-none" draggable={false} />
+        <canvas ref={topRef} className="absolute inset-0 h-full w-full" />
       </div>
       <button type="button" onClick={onClose} aria-label="Close showcase"
         className="absolute right-4 top-4 rounded-full bg-black/50 px-3.5 py-1.5 text-[.85rem] text-white/80 backdrop-blur transition-opacity duration-500 hover:text-white"
