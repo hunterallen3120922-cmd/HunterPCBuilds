@@ -167,13 +167,18 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
     const topCtx = top.getContext("2d")!;
     const ctx = canvas.getContext("2d")!;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let raf = 0, stopped = false, scale = 1;
+    let raf = 0, stopped = false, scale = 1, topQ = 1, topScale = 1, slow = 0;
 
+    // The takeover layer drops its resolution a little if a computer can't keep up, then goes back to full after
+    const sizeTop = () => {
+      top.width = Math.round(canvas.width * topQ); top.height = Math.round(canvas.height * topQ);
+      topScale = top.width / FW;
+    };
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       const w = Math.min(FW, Math.round(frame.clientWidth * dpr));
       canvas.width = w; canvas.height = Math.round((w * FH) / FW);
-      top.width = canvas.width; top.height = canvas.height;
+      sizeTop();
       scale = w / FW;
     };
     const ro = new ResizeObserver(resize);
@@ -345,7 +350,7 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
       if (ev?.take || la > 0 || topDirty) {
         topCtx.setTransform(1, 0, 0, 1, 0, 0);
         topCtx.clearRect(0, 0, top.width, top.height);
-        topCtx.setTransform(scale, 0, 0, scale, 0, 0);
+        topCtx.setTransform(topScale, 0, 0, topScale, 0, 0);
         topDirty = false;
         if (ev?.take) { playTakeover(topCtx, ev.take, te, dt); topDirty = true; }
         if (la > 0) {
@@ -574,6 +579,10 @@ export default function Showcase({ onClose }: { onClose: () => void }) {
         if (stopped) return;
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now; t += dt;
+        if (ev?.take) {
+          slow = slow * 0.95 + (dt > 1 / 40 ? 1 : 0) * 0.05;          // share of recent frames slower than 40 fps
+          if (slow > 0.5 && topQ > 0.55) { topQ = Math.max(0.55, topQ - 0.15); sizeTop(); slow = 0; }
+        } else if (topQ < 1) { topQ = 1; slow = 0; sizeTop(); }
         draw(dt);
         raf = requestAnimationFrame(loop);
       };
