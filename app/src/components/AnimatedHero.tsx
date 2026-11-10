@@ -85,7 +85,7 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
     lg:group-data-[phase=done]:left-[46%] lg:group-data-[phase=done]:right-0 ${doneMobileClass}`;
 
   return (
-    <header className="relative border-b border-line">
+    <header className="relative">
       <div ref={stage} data-phase="building" data-spin="false"
         className="group relative isolate flex min-h-[100svh] items-center overflow-x-clip pt-16 max-lg:items-end max-lg:pb-10">
         <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />

@@ -43,7 +43,7 @@ export default function Carousel({ label, items }: { label: string; items: React
   const manual = (dir: 1 | -1) => { step(dir); setBump((b) => b + 1); };
   const goTo = (i: number) => { setActive(i); setBump((b) => b + 1); };
 
-  const arrow = "grid h-11 w-11 shrink-0 place-items-center rounded-card border border-ink/40 bg-card text-ink transition hover:border-ink hover:text-accent";
+  const arrow = "grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-card text-ink transition duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:text-accent";
   return (
     <section aria-roledescription="carousel" aria-label={label}
       onKeyDown={(e) => { if (e.key === "ArrowLeft") manual(-1); if (e.key === "ArrowRight") manual(1); }}>

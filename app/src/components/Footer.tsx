@@ -3,12 +3,12 @@ import { site } from "../content/site";
 
 export default function Footer() {
   const socials = Object.entries(site.social).filter(([, url]) => url);
-  const col = "text-[.9rem] text-muted no-underline hover:text-ink";
+  const col = "text-[.92rem] text-muted no-underline transition-colors hover:text-accent";
   return (
-    <footer className="theme-dark border-t border-line bg-bg pt-14 text-[.9rem] text-muted">
+    <footer className="theme-dark border-t border-line bg-bg pt-16 text-[.9rem] text-muted">
       <div className="wrap grid gap-10 pb-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <img src={`${import.meta.env.BASE_URL}logo.svg`} alt={`${site.name} logo`} width={112} height={112} className="h-28 w-28" loading="lazy" />
+          <img src={`${import.meta.env.BASE_URL}logo.svg`} alt={`${site.name} logo`} width={112} height={112} className="h-20 w-20" loading="lazy" />
           <p className="mt-4 max-w-[34ch]">{site.tagline}.</p>
         </div>
         <div>
@@ -31,6 +31,10 @@ export default function Footer() {
             ))}
           </ul>
         </div>
+      </div>
+      {/* the name, large and faint, as a sign-off */}
+      <div className="wrap pointer-events-none select-none" aria-hidden>
+        <p className="footer-word font-heading font-semibold leading-[.82] tracking-[-0.05em]"><b>Hunter<span>PC</span>Builds</b></p>
       </div>
       <div className="border-t border-line py-5">
         <div className="wrap flex flex-wrap justify-between gap-3 text-[.82rem]">

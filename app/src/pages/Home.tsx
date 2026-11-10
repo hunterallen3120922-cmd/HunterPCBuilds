@@ -83,15 +83,20 @@ export default function Home() {
           <SectionHead eyebrow="Get started" title="What do you need?" />
           <div className="grid gap-5 md:grid-cols-2">
             {[
-              { to: "/pc-builds", icon: "chip", title: "Build me a PC", text: "Custom builds for your budget: gaming, school, editing and more. I plan the parts, build it and test it.", cta: "See builds & request" },
-              { to: "/tech-repair", icon: "wrench", title: "Fix my device", text: "Slow, broken or overheating? Repairs and upgrades with a firm quote before I start.", cta: "See prices & request" },
+              { to: "/pc-builds", icon: "desktop", tag: "Custom builds", title: "Build me a PC", text: "Custom builds for your budget: gaming, school, editing and more. I plan the parts, build it and test it.", cta: "See builds & request" },
+              { to: "/tech-repair", icon: "wrench", tag: "Repairs & upgrades", title: "Fix my device", text: "Slow, broken or overheating? Repairs and upgrades with a firm quote before I start.", cta: "See prices & request" },
             ].map((p, i) => (
               <Reveal key={p.to} delay={i * 100} as={i ? "right" : "left"}>
-                <Link to={p.to} className="card lift group block h-full p-8 no-underline">
-                  <IconTile name={p.icon} size="h-12 w-12" />
-                  <h3 className="mb-2 mt-6 text-[1.7rem] text-ink">{p.title}</h3>
-                  <p className="mb-6 max-w-[44ch] text-muted">{p.text}</p>
-                  <span className="inline-flex items-center gap-2 text-[.92rem] font-medium text-accent">{p.cta} <Icon name="arrow" className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+                <Link to={p.to} className="card lift group relative block h-full overflow-hidden p-8 no-underline sm:p-10">
+                  {/* large faint icon as artwork */}
+                  <Icon name={p.icon} className="pointer-events-none absolute -right-8 -top-8 h-56 w-56 text-accent opacity-[.07] transition-all duration-700 ease-out group-hover:-translate-x-2 group-hover:translate-y-2 group-hover:opacity-[.14]" />
+                  <p className="eyebrow relative">{p.tag}</p>
+                  <h3 className="relative mb-3 mt-16 text-[clamp(1.8rem,3vw,2.4rem)] tracking-[-0.03em] text-ink">{p.title}</h3>
+                  <p className="relative mb-8 max-w-[42ch] text-muted">{p.text}</p>
+                  <span className="relative inline-flex items-center gap-3 text-[.95rem] font-medium text-ink">
+                    {p.cta}
+                    <span className="grid h-9 w-9 place-items-center rounded-full border border-line text-accent transition-all duration-500 group-hover:translate-x-1 group-hover:border-accent group-hover:bg-accent group-hover:text-onaccent"><Icon name="arrow" className="h-4 w-4" /></span>
+                  </span>
                 </Link>
               </Reveal>
             ))}
@@ -102,13 +107,15 @@ export default function Home() {
       <section className="section alt">
         <div className="wrap">
           <SectionHead eyebrow="Process" title="How it works" sub={`Three steps from "it's broken" to "it works."`} />
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="relative grid gap-10 md:grid-cols-3 md:gap-8">
+            {/* the line the steps sit on */}
+            <div className="absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-accent/50 via-line to-transparent md:block" aria-hidden />
             {howItWorks.map((s, i) => (
-              <Reveal key={s.title} delay={i * 80}>
-                <div className="h-full border-t border-line pt-6">
-                  <div className="font-mono text-[.8rem] text-accent2">{String(i + 1).padStart(2, "0")}</div>
-                  <h3 className="mb-2 mt-3 text-[1.35rem]">{s.title}</h3>
-                  <p className="text-[.95rem] text-muted">{s.text}</p>
+              <Reveal key={s.title} delay={i * 120}>
+                <div className="relative">
+                  <div className="relative grid h-12 w-12 place-items-center rounded-full border border-accent/40 bg-bg font-mono text-[.85rem] text-accent shadow-[0_0_0_6px_var(--bg2)]">{String(i + 1).padStart(2, "0")}</div>
+                  <h3 className="mb-2 mt-6 text-[1.4rem]">{s.title}</h3>
+                  <p className="max-w-[34ch] text-muted">{s.text}</p>
                 </div>
               </Reveal>
             ))}
@@ -126,12 +133,14 @@ export default function Home() {
       <section className="section alt">
         <div className="wrap">
           <SectionHead eyebrow="Why me" title="Why people pick me" />
-          <div className="grid overflow-hidden rounded-card border border-line bg-card sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {trustPoints.map((t, i) => (
-              <Reveal key={t.title} delay={i * 80} className="border-b border-line p-7 last:border-b-0 sm:odd:border-r lg:border-b-0 lg:border-r lg:last:border-r-0">
-                <IconTile name={t.icon} />
-                <h3 className="mb-2 mt-5 text-[1.15rem]">{t.title}</h3>
-                <p className="text-[.92rem] text-muted">{t.text}</p>
+              <Reveal key={t.title} delay={i * 90} className="h-full">
+                <div className="card lift h-full p-7">
+                  <IconTile name={t.icon} size="h-11 w-11" />
+                  <h3 className="mb-2 mt-6 text-[1.15rem]">{t.title}</h3>
+                  <p className="text-[.93rem] text-muted">{t.text}</p>
+                </div>
               </Reveal>
             ))}
           </div>
@@ -141,12 +150,12 @@ export default function Home() {
       <section className="section">
         <div className="wrap grid items-center gap-12 lg:grid-cols-2">
           <div data-reveal-group="blur">
-            <p className="eyebrow mb-3">Local</p>
-            <h2 className="text-[clamp(1.8rem,3.6vw,2.6rem)]">{site.localTitle}</h2>
+            <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Local</p>
+            <h2 className="text-[clamp(2rem,4.2vw,3.1rem)]">{site.localTitle}</h2>
             <p className="mt-4 max-w-[52ch] text-muted">{site.localText}</p>
             {site.serviceArea && <p className="mt-4 text-[.9rem] text-muted">Serving {site.serviceArea}.</p>}
           </div>
-          <ul data-reveal="right" className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card">
+          <ul data-reveal="right" className="card divide-y divide-line overflow-hidden !p-0">
             {meetingMethods.map((m) => (
               <li key={m.value} className="flex items-center gap-4 p-5">
                 <IconTile name={m.icon ?? "pin"} />
@@ -165,14 +174,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section theme-dark relative overflow-hidden bg-bg text-center text-ink">
-        <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden />
-        <div data-reveal-group="zoom" className="wrap relative">
-          <h2 className="text-[clamp(2rem,4.4vw,3.2rem)]">Ready when <em className="grad-text">you are.</em></h2>
-          <p className="mx-auto mb-8 mt-4 max-w-[48ch] text-muted">{site.responseTime} Tell me what you need.</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/pc-builds" className="btn">Build me a PC</Link>
-            <Link to="/tech-repair" className="btn btn-ghost">Fix my device</Link>
+      <section className="section">
+        <div className="wrap">
+          <div data-reveal="zoom" className="cta-panel relative overflow-hidden rounded-[1.75rem] border border-line px-6 py-16 text-center sm:py-24">
+            <div className="hero-grid pointer-events-none absolute inset-0 !opacity-40" aria-hidden />
+            <div className="relative">
+              <p className="pill mb-7"><span className="pill-dot" aria-hidden />{site.responseTime}</p>
+              <h2 className="text-[clamp(2.3rem,5.4vw,4rem)]">Ready when <em className="grad-text">you are.</em></h2>
+              <p className="mx-auto mb-9 mt-5 max-w-[44ch] text-[1.05rem] text-muted">Tell me what you need. You get a firm quote before any work starts.</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link to="/pc-builds" className="btn !px-8 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
+                <Link to="/tech-repair" className="btn btn-ghost !px-8 !py-3.5">Fix my device</Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

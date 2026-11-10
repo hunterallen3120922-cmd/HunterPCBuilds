@@ -16,11 +16,11 @@ export const theme = {
     success: "#3ecf9a", // "fixed / all good" states (Tech Repair animation)
   },
   fonts: {
-    heading: '"Inter Tight", Inter, system-ui, sans-serif',
-    body: 'Inter, system-ui, sans-serif',
-    mono: '"JetBrains Mono", ui-monospace, monospace',
+    heading: 'Geist, Inter, system-ui, sans-serif',
+    body: 'Geist, Inter, system-ui, sans-serif',
+    mono: '"Geist Mono", ui-monospace, monospace',
   },
-  radius: "3px",
+  radius: "14px", // corner roundness of cards
 };
 
 /** Copies the theme into CSS variables. Called once at startup. */

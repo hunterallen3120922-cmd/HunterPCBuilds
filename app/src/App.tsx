@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import ScrollMotion from "./components/ScrollMotion";
+import Polish from "./components/Polish";
 import Home from "./pages/Home";
 import PcBuilds from "./pages/PcBuilds";
 import TechRepair from "./pages/TechRepair";
@@ -42,8 +43,10 @@ export default function App() {
       </a>
       <ScrollManager />
       <ScrollMotion />
+      <Polish />
       <Nav />
-      <main id="main" tabIndex={-1} className="outline-none">
+      {/* key = the page eases in again on every page change */}
+      <main id="main" tabIndex={-1} key={pathname} className="page-in outline-none">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pc-builds" element={<PcBuilds />} />
