@@ -269,9 +269,6 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
 @keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
 .page-in { animation: page-in .6s var(--ease) both; }
 
-/* Thin reading-progress line at the very top (see Polish.tsx) */
-.scroll-progress { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 40; transform-origin: 0 50%; transform: scaleX(var(--sp, 0)); background: linear-gradient(90deg, var(--accent), color-mix(in srgb, #fff 35%, var(--accent))); pointer-events: none; }
-
 /* Headline lines that rise out of a mask when a page opens */
 .line-rise { display: block; overflow: hidden; padding-bottom: .12em; margin-bottom: -.12em; }
 .line-rise > * { display: block; animation: line-rise 1.1s var(--ease) both; animation-delay: var(--d, 0ms); }

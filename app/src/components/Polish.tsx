@@ -1,28 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 /**
- * Small site-wide touches:
- *  - a thin progress line at the top that fills as you scroll down the page
- *  - a soft spotlight that follows the mouse across interactive cards (sets --mx / --my, used by .card in index.css)
- * Neither runs for visitors who prefer reduced motion or on touch screens (the spotlight needs a mouse).
+ * A small site-wide touch: a soft spotlight that follows the mouse across interactive cards
+ * (sets --mx / --my, used by .card in index.css). It only runs where there is a mouse.
  */
 export default function Polish() {
-  const bar = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      bar.current?.style.setProperty("--sp", (max > 0 ? Math.min(1, window.scrollY / max) : 0).toFixed(4));
-    };
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); cancelAnimationFrame(frame); };
-  }, []);
-
   useEffect(() => {
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     let last: HTMLElement | null = null;
@@ -39,5 +21,5 @@ export default function Polish() {
     return () => window.removeEventListener("pointermove", move);
   }, []);
 
-  return <div ref={bar} className="scroll-progress" aria-hidden />;
+  return null;
 }

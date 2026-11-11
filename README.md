@@ -58,7 +58,7 @@ Keep the commas. Example, a new repair service:
 
 **Icons:** wherever you see `icon: "shield"`, use any name from the list at the top of `app/src/components/Icon.tsx` (search, shield, shield-check, disc, chip, battery, monitor, fan, laptop, desktop, gamepad, phone, help, graduation, tag, chat, pin, box, video, save, wrench, clock, mail).
 
-**Look & feel:** colors, fonts and corner roundness are all in `app/src/content/theme.ts`. Buttons, cards and the motion styles (scroll reveals, page transitions, the home ticker) are in `app/src/index.css`; the progress line and card spotlight are in `app/src/components/Polish.tsx`. The home page "at a glance" card and the "Local, not a call center" text are in `app/src/content/site.ts`.
+**Look & feel:** colors, fonts and corner roundness are all in `app/src/content/theme.ts`. Buttons, cards and the motion styles (scroll reveals, page transitions, the home ticker) are in `app/src/index.css`; the card spotlight is in `app/src/components/Polish.tsx`. The home page "at a glance" card and the "Local, not a call center" text are in `app/src/content/site.ts`.
 
 Questions asked in the forms live in `app/src/forms/` (`repairForm.ts`, `buildForm.ts`).
 
