@@ -10,35 +10,20 @@ const asset = (name: string) => `${import.meta.env.BASE_URL}hero/${name}`;
 /**
  * The big, minimal opening of the home page.
  * As you scroll, the circuit traces inside the badge turn while its icon and name stay upright,
- * and a large faint circuit ring behind the headline turns the other way.
+ * and the mesh backdrop behind the headline fades away.
  * (The scroll progress is written to the CSS variable --p; the motion itself lives in index.css.)
  */
 /**
- * What sits behind the headline. Two options are being compared; add ?bg=mesh (or ?bg=ring for the old
- * circuit ring) to the address to see the others. Once one is picked, the rest get deleted.
+ * Behind the headline: a PC case's front mesh panel. A faint honeycomb (small cells around the headline,
+ * bigger toward the edges) with soft green light drifting behind it, so parts of the mesh glow as it passes.
+ * The artwork is public/hero/mesh.svg; the glow and its motion are .hero-mesh in index.css.
  */
 function HeroBackdrop() {
-  const bg = new URLSearchParams(window.location.search).get("bg");
-  if (bg === "ring") {
-    return (
-      <div className="hero-ring pointer-events-none absolute left-1/2 top-[46%] -z-10 aspect-square w-[min(73.75rem,150vw)]" aria-hidden>
-        <img src={asset("ring.svg")} alt="" className="ring-drift h-full w-full" />
-      </div>
-    );
-  }
-  if (bg === "mesh") {
-    // A PC case's front mesh panel, lit from behind by slowly shifting RGB glow
-    return (
-      <div className="hero-mesh pointer-events-none absolute inset-0 -z-10" aria-hidden>
-        <div className="mesh-glow absolute inset-0" />
-        <img src={asset("mesh.svg")} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      </div>
-    );
-  }
-  // Default: motherboard traces running in from the edges, with little pulses of data travelling along them
   return (
-    <div className="hero-board pointer-events-none absolute inset-0 -z-10" aria-hidden>
-      <img src={asset("board.svg")} alt="" className="h-full w-full object-cover" />
+    <div className="hero-mesh pointer-events-none absolute inset-0 -z-10" aria-hidden>
+      <div className="mesh-glow absolute inset-0" />
+      <img src={asset("mesh.svg")} alt="" className="mesh-base absolute inset-0 h-full w-full object-cover" />
+      <div className="mesh-lit absolute inset-0"><div className="mesh-light absolute inset-[-20%]" /></div>
     </div>
   );
 }

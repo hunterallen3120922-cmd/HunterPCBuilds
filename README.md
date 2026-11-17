@@ -35,7 +35,7 @@ text between the quotes, save. You never need to touch the other folders.
 
 **Home page carousel:** it shows the "At a glance" card, every build in `gallery.ts` with `featured: true`, and every repair in `repairServices.ts` with `featured: true`. Set `featured: true` on any entry to add it, remove the line to take it out. The glance rows are in `site.ts`. The carousel is centered, loops forever and rotates by itself; change the speed with `INTERVAL` at the top of `app/src/components/Carousel.tsx` (3500 = 3.5 seconds).
 
-**Home page opening:** your logo, headline and buttons, with a large faint circuit ring behind them. As you scroll, the circuit lines in the badge turn and the ring turns the other way. Speeds are the `deg` numbers in the `.hero-spin` and `.hero-ring` rules in `app/src/index.css`; the artwork is in `app/public/hero/`; the component is `app/src/components/HomeHero.tsx`.
+**Home page opening:** your logo, headline and buttons, in front of a PC case's front mesh: a faint green honeycomb (small cells near the headline, bigger toward the edges) with soft green light drifting slowly behind it so parts of the mesh glow. As you scroll, the circuit lines in the badge turn and the mesh fades away. The honeycomb drawing is `app/public/hero/mesh.svg`; the light, its speed (`26s`) and brightness are the `.hero-mesh` / `.mesh-*` rules in `app/src/index.css`; the component is `app/src/components/HomeHero.tsx`.
 
 **PC builds page opening:** every time you arrive, a modern glass-panel PC builds itself in about 3 seconds as one continuous motion (the parts float around the case and spiral in together, the PC bounces from the impact, the glass goes on and it powers on as it slides aside), then slides to the right as the page's heading, text and button fade in (on phones and tablets the PC sits above them). The fans keep turning. The drawing is `app/src/components/BuildScene.tsx`; speed (`duration`, in milliseconds), when each part appears (`PARTS`), the bounce and glow (`motion`) and the page text are in `app/src/components/PcBuildHero.tsx`. Fan speed is `.fan-spin` in `app/src/index.css`.
 
@@ -45,7 +45,7 @@ text between the quotes, save. You never need to touch the other folders.
 
 Floating parts are in `app/src/components/Floaters.tsx` (start positions are the `FLOATS` lists in each scene). Both use `app/src/components/AnimatedHero.tsx`, so another page can get its own animated opening the same way. Visitors who turn on "reduce motion" see the finished layout straight away.
 
-**Top menu:** it floats invisibly over the top of each page, then condenses into a glass pill once you scroll. Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
+**Top menu:** it floats invisibly over the top of each page, then slides into a glass pill once you scroll (the look and timing are under "Top menu" in `app/src/index.css`). Links are the `links` list at the top of `app/src/components/Nav.tsx` (FAQ is in the footer).
 
 **Overall size:** the whole site is sized in `rem`, so one number scales everything. It's the `html { font-size }` rules at the top of `app/src/index.css`: 90% on laptop-sized windows (1024 to 1599px wide), 100% on phones, tablets and big monitors. Make 90% smaller or larger to taste.
 
