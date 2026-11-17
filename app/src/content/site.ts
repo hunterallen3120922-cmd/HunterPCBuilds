@@ -7,7 +7,7 @@ export const site = {
   tagline: "Student-run computer repair & custom PC builds",
   /** Public contact email shown to customers. Leave "" to hide it everywhere. (Request emails go to the inbox set in Web3Forms.) */
   contactEmail: "",
-  serviceArea: "Shippensburg, PA and the surrounding area", // e.g. "Your city and the nearby campus". Leave "" to hide it everywhere.
+  serviceArea: "Hanover, PA, Shippensburg, PA and the areas around them", // e.g. "Your city and the nearby campus". Leave "" to hide it everywhere.
   paymentMethods: ["Cash", "Zelle"],
   social: {
     // Leave a value as "" to hide that link.
