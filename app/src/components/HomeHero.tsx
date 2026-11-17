@@ -13,6 +13,36 @@ const asset = (name: string) => `${import.meta.env.BASE_URL}hero/${name}`;
  * and a large faint circuit ring behind the headline turns the other way.
  * (The scroll progress is written to the CSS variable --p; the motion itself lives in index.css.)
  */
+/**
+ * What sits behind the headline. Two options are being compared; add ?bg=mesh (or ?bg=ring for the old
+ * circuit ring) to the address to see the others. Once one is picked, the rest get deleted.
+ */
+function HeroBackdrop() {
+  const bg = new URLSearchParams(window.location.search).get("bg");
+  if (bg === "ring") {
+    return (
+      <div className="hero-ring pointer-events-none absolute left-1/2 top-[46%] -z-10 aspect-square w-[min(73.75rem,150vw)]" aria-hidden>
+        <img src={asset("ring.svg")} alt="" className="ring-drift h-full w-full" />
+      </div>
+    );
+  }
+  if (bg === "mesh") {
+    // A PC case's front mesh panel, lit from behind by slowly shifting RGB glow
+    return (
+      <div className="hero-mesh pointer-events-none absolute inset-0 -z-10" aria-hidden>
+        <div className="mesh-glow absolute inset-0" />
+        <img src={asset("mesh.svg")} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      </div>
+    );
+  }
+  // Default: motherboard traces running in from the edges, with little pulses of data travelling along them
+  return (
+    <div className="hero-board pointer-events-none absolute inset-0 -z-10" aria-hidden>
+      <img src={asset("board.svg")} alt="" className="h-full w-full object-cover" />
+    </div>
+  );
+}
+
 export default function HomeHero() {
   const hero = useRef<HTMLElement>(null);
 
@@ -48,10 +78,7 @@ export default function HomeHero() {
       <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
       <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
-      {/* Big circuit ring behind the headline: drifts slowly, and turns the opposite way as you scroll */}
-      <div className="hero-ring pointer-events-none absolute left-1/2 top-[46%] -z-10 aspect-square w-[min(73.75rem,150vw)]" aria-hidden>
-        <img src={asset("ring.svg")} alt="" className="ring-drift h-full w-full" />
-      </div>
+      <HeroBackdrop />
 
       <div className="wrap relative flex flex-1 flex-col items-center justify-center py-12 text-center">
         {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}

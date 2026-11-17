@@ -218,6 +218,31 @@
 .floater .fan-spin, .floater .fan-spin-rev { animation-play-state: running; }
 @media (prefers-reduced-motion: reduce) { .float-bob { animation: none !important; } }
 
+/*
+ * Top menu (see Nav.tsx). The nav is always laid out as the narrow pill. At the top of the page the logo and the
+ * links are slid outward to the full page width and the glass is hidden; scrolling slides them in and drops the
+ * glass into place. Only transform and opacity change, so the motion stays smooth.
+ *   --nav-spread  how far each side moves (half the difference between the wide and the pill width)
+ *   --nav-pad     the gap at the page edge when the menu is wide
+ */
+.nav-wrap { container-type: inline-size; }
+.nav-bar {
+  --nav-spread: calc((min(70rem, 100cqw) - min(45rem, 100cqw)) / 2);
+  --nav-pad: .25rem;
+  --nav-ease: cubic-bezier(.22, 1, .36, 1);
+}
+@media (min-width: 640px) { .nav-bar { --nav-pad: 2rem; } }
+.nav-glass, .nav-left, .nav-right, .nav-num {
+  transition: transform .6s var(--nav-ease), opacity .45s var(--nav-ease);
+  will-change: transform;
+}
+.nav-bar[data-pill="false"] .nav-glass { opacity: 0; transform: translateY(-10px) scale(.98); }
+.nav-bar[data-pill="false"] .nav-left { transform: translateX(calc(var(--nav-pad) - 1rem - var(--nav-spread))); }
+.nav-bar[data-pill="false"] .nav-right { transform: translateX(calc(var(--nav-spread) + .5rem - var(--nav-pad))); }
+.nav-num { transform: translate(-.3rem, -50%); }
+.nav-bar[data-pill="true"] .nav-num { opacity: 0; transform: translate(.9rem, -50%); }
+@media (prefers-reduced-motion: reduce) { .nav-glass, .nav-left, .nav-right, .nav-num { transition: none; } }
+
 /* Home page opening: as you scroll, the badge's circuit traces turn and a faint circuit ring behind the headline
    turns the other way. --p is 0 at the top and 1 once the opening has scrolled away. */
 .hero-badge { transform: translateY(calc(var(--p, 0) * 70px)) scale(calc(1 - var(--p, 0) * 0.2)); opacity: calc(1 - var(--p, 0) * 0.7); will-change: transform, opacity; }
@@ -229,6 +254,34 @@
   mask-image: radial-gradient(circle, #000 52%, transparent 71%);
   will-change: transform;
 }
+
+/* Home opening backdrop, motherboard option: traces fade from the middle so the headline stays clear,
+   and drift up and away as you scroll */
+.hero-board {
+  transform: translateY(calc(var(--p, 0) * -70px)) scale(calc(1 + var(--p, 0) * 0.06));
+  opacity: calc(0.6 - var(--p, 0) * 0.4);
+  -webkit-mask-image: radial-gradient(ellipse 46% 42% at 50% 48%, transparent 30%, #000 100%);
+  mask-image: radial-gradient(ellipse 46% 42% at 50% 48%, transparent 30%, #000 100%);
+  will-change: transform, opacity;
+}
+/* Phones: the board is shown wider than the screen (cropped to its middle) so the trace ends still show */
+@media (max-width: 639px) {
+  .hero-board { -webkit-mask-image: radial-gradient(ellipse 60% 30% at 50% 50%, transparent 20%, #000 100%); mask-image: radial-gradient(ellipse 60% 30% at 50% 50%, transparent 20%, #000 100%); }
+  .hero-board img { position: absolute; left: 50%; top: 50%; width: 210%; height: auto; max-width: none; transform: translate(-50%, -50%); }
+}
+/* Home opening backdrop, case-mesh option: hex mesh lit by drifting green / gold glow */
+.hero-mesh { opacity: calc(1 - var(--p, 0) * 0.7); }
+.hero-mesh img { opacity: .45; }
+.mesh-glow {
+  background:
+    radial-gradient(38% 46% at 30% 40%, rgb(62 207 154 / .22), transparent 70%),
+    radial-gradient(30% 40% at 72% 62%, rgb(214 179 112 / .14), transparent 70%),
+    radial-gradient(26% 30% at 60% 28%, rgb(62 160 207 / .12), transparent 70%);
+  animation: mesh-glow 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes mesh-glow { 50% { transform: translate(4%, -3%) scale(1.06); } 100% { transform: translate(-3%, 3%) scale(.97); } }
+@media (prefers-reduced-motion: reduce) { .mesh-glow { animation: none; } }
 
 /* Scroll motion (see ScrollMotion.tsx): things ease in as they scroll into view and back out as they leave. */
 html.rv-on [data-reveal][data-rv="in"] {

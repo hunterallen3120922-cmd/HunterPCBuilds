@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs>
+  <pattern id="hex" width="28" height="48.5" patternUnits="userSpaceOnUse">
+    <path d="M14 0 L28 8.08 L28 24.25 L14 32.33 L0 24.25 L0 8.08 Z M14 32.33 L14 48.5 M0 24.25 L0 48.5 M28 24.25 L28 48.5" fill="none" stroke="#3ecf9a" stroke-width="1.1" opacity=".55"/>
+  </pattern>
+  <radialGradient id="fade" cx="50%" cy="50%" r="60%">
+    <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
+    <stop offset=".55" stop-color="#fff" stop-opacity=".35"/>
+    <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </radialGradient>
+  <mask id="m"><rect width="1600" height="1000" fill="url(#fade)"/></mask>
+</defs>
+<rect width="1600" height="1000" fill="url(#hex)" mask="url(#m)"/>
+</svg>
