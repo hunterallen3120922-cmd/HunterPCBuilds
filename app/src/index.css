@@ -249,16 +249,22 @@
 .hero-spin { transform: rotate(calc(var(--p, 0) * 240deg)); will-change: transform; }
 
 /*
- * Home opening backdrop: a PC case's front mesh (public/hero/mesh.svg) with soft green light drifting behind it.
- *   .mesh-glow   the light seen through the gaps
- *   .mesh-base   the honeycomb itself, faint
- *   .mesh-lit    the same honeycomb lit up where .mesh-light passes behind it
+ * Home opening backdrop: a PC case's front mesh with soft green light drifting behind it (see HomeHero.tsx).
+ * Bottom to top:
+ *   .mesh-light  the moving light (only ever slid around, never redrawn)
+ *   stencil      public/hero/mesh-stencil.svg: page colour with the honeycomb cut out, so light shows only in the lines
+ *   .mesh-fade   page colour fading in toward the edges, so the lit lines fade out there
+ *   .mesh-top    holds the two below so they fade as one layer
+ *   .mesh-glow   the faint light seen through the gaps
+ *   .mesh-base   the honeycomb itself, faint (public/hero/mesh.svg)
  * Light speed is the 26s in .mesh-light; brightness is the opacities. It fades away as you scroll (--p).
  */
-.hero-mesh {
-  opacity: calc(1 - var(--p, 0) * 0.75);
-  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 46%, #000 45%, transparent 100%);
-  mask-image: radial-gradient(ellipse 75% 70% at 50% 46%, #000 45%, transparent 100%);
+.hero-mesh { --mesh-fade: radial-gradient(ellipse 75% 70% at 50% 46%, #000 45%, transparent 100%); }
+.mesh-lit { opacity: calc(.9 * (1 - var(--p, 0) * 0.75)); }
+.mesh-fade { background: radial-gradient(ellipse 75% 70% at 50% 46%, rgb(11 16 23 / 0) 45%, #0b1017 100%); }
+.mesh-glow, .mesh-base {
+  -webkit-mask-image: var(--mesh-fade);
+  mask-image: var(--mesh-fade);
 }
 .mesh-glow {
   background:
@@ -266,11 +272,8 @@
     radial-gradient(60% 60% at 50% 100%, rgb(31 143 106 / .10), transparent 70%);
 }
 .mesh-base { opacity: .13; }
-.mesh-lit {
-  -webkit-mask: url("/hero/mesh.svg") center / cover no-repeat;
-  mask: url("/hero/mesh.svg") center / cover no-repeat;
-  opacity: .9;
-}
+/* glow + honeycomb fade together as one ready-drawn layer, so scrolling never has to redraw the honeycomb */
+.mesh-top { opacity: calc(1 - var(--p, 0) * 0.75); will-change: opacity; }
 .mesh-light {
   background:
     radial-gradient(22% 26% at 28% 38%, rgb(62 207 154 / .85), transparent 70%),
@@ -285,6 +288,12 @@
   100% { transform: translate(3%, -5%); }
 }
 @media (prefers-reduced-motion: reduce) { .mesh-light { animation: none; } }
+
+/* Paused off screen (see lib/usePauseOffscreen.ts): never-ending animations stop while their section is far out of view */
+[data-offscreen="true"] .mesh-light, [data-offscreen="true"] .ticker, [data-offscreen="true"] .fan-spin,
+[data-offscreen="true"] .fan-spin-rev, [data-offscreen="true"] .float-bob, [data-offscreen="true"] .pill-dot::after {
+  animation-play-state: paused !important;
+}
 
 /* Scroll motion (see ScrollMotion.tsx): things ease in as they scroll into view and back out as they leave. */
 html.rv-on [data-reveal][data-rv="in"] {
