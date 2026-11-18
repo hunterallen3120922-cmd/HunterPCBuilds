@@ -2,6 +2,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import { site } from "../content/site";
+import { usePauseOffscreen } from "../lib/usePauseOffscreen";
 import { repairServices } from "../content/repairServices";
 import { buildTiers } from "../content/buildTiers";
 
@@ -10,28 +11,57 @@ const asset = (name: string) => `${import.meta.env.BASE_URL}hero/${name}`;
 /**
  * The big, minimal opening of the home page.
  * As you scroll, the circuit traces inside the badge turn while its icon and name stay upright,
- * and a large faint circuit ring behind the headline turns the other way.
+ * and the mesh backdrop behind the headline fades away.
  * (The scroll progress is written to the CSS variable --p; the motion itself lives in index.css.)
  */
+/**
+ * Behind the headline: a PC case's front mesh panel. A faint honeycomb (small cells around the headline,
+ * bigger toward the edges) with soft green light drifting behind it, so parts of the mesh glow as it passes.
+ *
+ * Built for speed: the moving light sits at the bottom and a solid "stencil" (the page colour with the
+ * honeycomb cut out, public/hero/mesh-stencil.svg) lies on top of it, so the light only shows through the
+ * lines. Nothing has to be redrawn while the light moves; the graphics card just slides one layer.
+ * The honeycomb drawing is public/hero/mesh.svg; the glow and its motion are .hero-mesh / .mesh-* in index.css.
+ */
+function HeroBackdrop() {
+  return (
+    <div className="hero-mesh pointer-events-none absolute inset-0 -z-30" aria-hidden>
+      <div className="mesh-lit absolute inset-0 overflow-hidden"><div className="mesh-light absolute inset-[-20%]" /></div>
+      <img src={asset("mesh-stencil.svg")} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <div className="mesh-fade absolute inset-0" />
+      <div className="mesh-top absolute inset-0">
+        <div className="mesh-glow absolute inset-0" />
+        <img src={asset("mesh.svg")} alt="" className="mesh-base absolute inset-0 h-full w-full object-cover" />
+      </div>
+    </div>
+  );
+}
+
 export default function HomeHero() {
   const hero = useRef<HTMLElement>(null);
+  usePauseOffscreen(hero);
 
   useEffect(() => {
     const el = hero.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let frame = 0;
+    // --p goes only on the pieces that use it (not the whole opening), so each scroll step restyles as little as possible
+    const targets = el.querySelectorAll<HTMLElement>(".hero-badge, .hero-mesh");
+    let frame = 0, height = el.offsetHeight, last = "";
     const update = () => {
       frame = 0;
-      const p = Math.min(1, Math.max(0, window.scrollY / Math.max(1, el.offsetHeight)));
-      el.style.setProperty("--p", p.toFixed(4));
+      const p = Math.min(1, Math.max(0, window.scrollY / Math.max(1, height))).toFixed(4);
+      if (p === last) return; // past the opening nothing changes, so skip the work
+      last = p;
+      targets.forEach((t) => t.style.setProperty("--p", p));
     };
+    const onResize = () => { height = el.offsetHeight; onScroll(); };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
@@ -48,10 +78,7 @@ export default function HomeHero() {
       <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
       <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
-      {/* Big circuit ring behind the headline: drifts slowly, and turns the opposite way as you scroll */}
-      <div className="hero-ring pointer-events-none absolute left-1/2 top-[46%] -z-10 aspect-square w-[min(73.75rem,150vw)]" aria-hidden>
-        <img src={asset("ring.svg")} alt="" className="ring-drift h-full w-full" />
-      </div>
+      <HeroBackdrop />
 
       <div className="wrap relative flex flex-1 flex-col items-center justify-center py-12 text-center">
         {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}
