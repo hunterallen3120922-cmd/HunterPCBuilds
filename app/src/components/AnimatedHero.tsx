@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import HeroPhotos from "./HeroPhotos";
+import { usePauseOffscreen } from "../lib/usePauseOffscreen";
 import { heroPhotos, type HeroPhoto } from "../content/heroPhotos";
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
@@ -44,6 +45,7 @@ export interface AnimatedHeroProps {
  */
 export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, doneAt, hold = 0, photos = [], doneMobileClass, children }: AnimatedHeroProps) {
   const stage = useRef<HTMLDivElement>(null);
+  usePauseOffscreen(stage);
   const [done, setDone] = useState(false);
   const [photosOn, setPhotosOn] = useState(false);
   const showPhotos = useCallback(() => setPhotosOn(true), []);

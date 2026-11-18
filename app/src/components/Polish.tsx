@@ -8,7 +8,11 @@ export default function Polish() {
   useEffect(() => {
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     let last: HTMLElement | null = null;
-    const move = (e: PointerEvent) => {
+    let ev: PointerEvent | null = null, frame = 0;
+    // At most once per screen refresh, however fast the mouse reports
+    const apply = () => {
+      frame = 0;
+      const e = ev!;
       const card = (e.target as Element | null)?.closest?.<HTMLElement>(".lift") ?? null;
       if (last && last !== card) { last.style.removeProperty("--mx"); last.style.removeProperty("--my"); }
       last = card;
@@ -17,8 +21,9 @@ export default function Polish() {
       card.style.setProperty("--mx", `${e.clientX - r.left}px`);
       card.style.setProperty("--my", `${e.clientY - r.top}px`);
     };
+    const move = (e: PointerEvent) => { ev = e; if (!frame) frame = requestAnimationFrame(apply); };
     window.addEventListener("pointermove", move, { passive: true });
-    return () => window.removeEventListener("pointermove", move);
+    return () => { window.removeEventListener("pointermove", move); if (frame) cancelAnimationFrame(frame); };
   }, []);
 
   return null;
