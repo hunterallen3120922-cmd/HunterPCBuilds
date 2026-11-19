@@ -373,13 +373,23 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
   box-shadow: inset 0 1px 0 rgb(255 255 255 / .05), 0 40px 80px -40px rgb(0 0 0 / .8);
 }
 
-/* Footer sign-off: outlined letters that fade toward the bottom */
+/* Footer sign-off: outlined letters that fade toward the bottom.
+   The outline is drawn with a small static copy of Geist (just these letters). The variable
+   Geist from Google Fonts keeps overlapping shapes inside each letter, so a text stroke drew
+   their seams (an X through the H, a doubled bar on the t). */
+@font-face {
+  font-family: "Geist Wordmark"; font-weight: 600; font-display: swap;
+  src: url("./assets/fonts/geist-600-wordmark.woff2") format("woff2");
+}
 .footer-word {
+  font-family: "Geist Wordmark", var(--font-heading);
+  /* a touch looser than the headings so neighbouring outlines (P/C, C/B) don't cross */
+  letter-spacing: -0.03em;
   color: transparent; -webkit-text-stroke: 1px color-mix(in srgb, var(--text) 16%, transparent);
   -webkit-mask-image: linear-gradient(180deg, #000 20%, transparent 95%); mask-image: linear-gradient(180deg, #000 20%, transparent 95%);
   white-space: nowrap; margin-bottom: -.06em;
   /* sized so the whole name always spans the page width exactly */
   container-type: inline-size; font-size: 1rem;
 }
-.footer-word > b { display: block; font-weight: inherit; font-size: 12.9cqw; }
+.footer-word > b { display: block; font-weight: inherit; font-size: 13.2cqw; }
 .footer-word b span { -webkit-text-stroke-color: color-mix(in srgb, var(--accent) 55%, transparent); }
