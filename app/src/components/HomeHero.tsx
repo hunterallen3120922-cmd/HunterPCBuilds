@@ -3,40 +3,17 @@ import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import { site } from "../content/site";
 import { usePauseOffscreen } from "../lib/usePauseOffscreen";
+import CircuitBackdrop from "./CircuitBackdrop";
+import BuildStack from "./BuildStack";
 import { repairServices } from "../content/repairServices";
 import { buildTiers } from "../content/buildTiers";
 
-const asset = (name: string) => `${import.meta.env.BASE_URL}hero/${name}`;
-
 /**
- * The big, minimal opening of the home page.
- * As you scroll, the circuit traces inside the badge turn while its icon and name stay upright,
- * and the mesh backdrop behind the headline fades away.
- * (The scroll progress is written to the CSS variable --p; the motion itself lives in index.css.)
+ * The big opening of the home page: the headline on the left and a stack of real build photos on the right
+ * (side by side on wide screens, photos under the buttons on phones), over green circuit traces.
+ * As you scroll, the circuit backdrop fades away. (The scroll progress is written to the CSS variable --p;
+ * the fade itself lives in index.css.)
  */
-/**
- * Behind the headline: a PC case's front mesh panel. A faint honeycomb (small cells around the headline,
- * bigger toward the edges) with soft green light drifting behind it, so parts of the mesh glow as it passes.
- *
- * Built for speed: the moving light sits at the bottom and a solid "stencil" (the page colour with the
- * honeycomb cut out, public/hero/mesh-stencil.svg) lies on top of it, so the light only shows through the
- * lines. Nothing has to be redrawn while the light moves; the graphics card just slides one layer.
- * The honeycomb drawing is public/hero/mesh.svg; the glow and its motion are .hero-mesh / .mesh-* in index.css.
- */
-function HeroBackdrop() {
-  return (
-    <div className="hero-mesh pointer-events-none absolute inset-0 -z-30" aria-hidden>
-      <div className="mesh-lit absolute inset-0 overflow-hidden"><div className="mesh-light absolute inset-[-20%]" /></div>
-      <img src={asset("mesh-stencil.svg")} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      <div className="mesh-fade absolute inset-0" />
-      <div className="mesh-top absolute inset-0">
-        <div className="mesh-glow absolute inset-0" />
-        <img src={asset("mesh.svg")} alt="" className="mesh-base absolute inset-0 h-full w-full object-cover" />
-      </div>
-    </div>
-  );
-}
-
 export default function HomeHero() {
   const hero = useRef<HTMLElement>(null);
   usePauseOffscreen(hero);
@@ -45,7 +22,7 @@ export default function HomeHero() {
     const el = hero.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     // --p goes only on the pieces that use it (not the whole opening), so each scroll step restyles as little as possible
-    const targets = el.querySelectorAll<HTMLElement>(".hero-badge, .hero-mesh");
+    const targets = el.querySelectorAll<HTMLElement>(".hero-circuit");
     let frame = 0, height = el.offsetHeight, last = "";
     const update = () => {
       frame = 0;
@@ -75,39 +52,33 @@ export default function HomeHero() {
 
   return (
     <header ref={hero} className="relative isolate flex min-h-[100svh] flex-col overflow-hidden pt-16">
-      <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
       <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
-      <HeroBackdrop />
+      <CircuitBackdrop />
 
-      <div className="wrap relative flex flex-1 flex-col items-center justify-center py-12 text-center">
-        {/* Badge: three stacked layers so the traces can spin while the icon and name stay upright */}
-        <div className="hero-badge fade-up mb-6 h-[5.5rem] w-[5.5rem] sm:h-[6.5rem] sm:w-[6.5rem]">
-          <div className="relative h-full w-full">
-            <img src={asset("badge-base.svg")} alt="" className="absolute inset-0 h-full w-full" />
-            <img src={asset("badge-spin.svg")} alt="" className="hero-spin absolute inset-0 h-full w-full" />
-            <img src={asset("badge-front.svg")} alt={`${site.name} logo`} className="absolute inset-0 h-full w-full" />
+      <div className="wrap relative grid flex-1 content-center items-center gap-12 py-12 text-center lg:grid-cols-[1.12fr_.88fr] lg:gap-16 lg:text-left">
+        <div>
+          <p className="pill fade-up mb-7" style={{ "--d": "80ms" } as CSSProperties}>
+            <span className="pill-dot" aria-hidden />Open for requests<span className="hidden text-line sm:inline" aria-hidden>/</span><span className="hidden sm:inline">{site.localTag}</span>
+          </p>
+          <h1 className="text-[clamp(2.6rem,7vw,5.4rem)] lg:text-[clamp(2.6rem,4.6vw,4.3rem)] leading-[1.02]">
+            <span className="line-rise" style={{ "--d": "120ms" } as CSSProperties}><span>Busted laptop? Dream PC?</span></span>
+            <span className="line-rise" style={{ "--d": "240ms" } as CSSProperties}><em className="grad-text">Let's fix it, or build it.</em></span>
+          </h1>
+          <p className="fade-up mx-auto mb-9 mt-7 max-w-[46ch] lg:mx-0 text-[1.15rem] text-muted" style={{ "--d": "420ms" } as CSSProperties}>
+            Repairs, upgrades and custom PC builds for students and locals. Fair prices, explained in plain English.
+          </p>
+          <div className="fade-up mx-auto flex w-full max-w-[19rem] flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:justify-start" style={{ "--d": "520ms" } as CSSProperties}>
+            <Link to="/pc-builds" className="btn !px-8 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
+            <Link to="/tech-repair" className="btn btn-ghost !px-8 !py-3.5">Fix my device</Link>
           </div>
+          <ul className="fade-up mt-10 flex list-none flex-wrap justify-center gap-x-7 lg:justify-start gap-y-2 p-0 text-[.9rem] text-muted" style={{ "--d": "640ms" } as CSSProperties}>
+            {proof.map((t) => (
+              <li key={t} className="flex items-center gap-2"><Icon name="check" className="h-4 w-4 text-accent" />{t}</li>
+            ))}
+          </ul>
         </div>
-        <p className="pill fade-up mb-7" style={{ "--d": "80ms" } as CSSProperties}>
-          <span className="pill-dot" aria-hidden />Open for requests<span className="hidden text-line sm:inline" aria-hidden>/</span><span className="hidden sm:inline">{site.localTag}</span>
-        </p>
-        <h1 className="text-[clamp(2.6rem,7vw,5.4rem)] leading-[1.02]">
-          <span className="line-rise" style={{ "--d": "120ms" } as CSSProperties}><span>Busted laptop? Dream PC?</span></span>
-          <span className="line-rise" style={{ "--d": "240ms" } as CSSProperties}><em className="grad-text">Let's fix it, or build it.</em></span>
-        </h1>
-        <p className="fade-up mx-auto mb-9 mt-7 max-w-[46ch] text-[1.15rem] text-muted" style={{ "--d": "420ms" } as CSSProperties}>
-          Repairs, upgrades and custom PC builds for students and locals. Fair prices, explained in plain English.
-        </p>
-        <div className="fade-up mx-auto flex w-full max-w-[19rem] flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:justify-center" style={{ "--d": "520ms" } as CSSProperties}>
-          <Link to="/pc-builds" className="btn !px-8 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
-          <Link to="/tech-repair" className="btn btn-ghost !px-8 !py-3.5">Fix my device</Link>
-        </div>
-        <ul className="fade-up mt-10 flex list-none flex-wrap justify-center gap-x-7 gap-y-2 p-0 text-[.9rem] text-muted" style={{ "--d": "640ms" } as CSSProperties}>
-          {proof.map((t) => (
-            <li key={t} className="flex items-center gap-2"><Icon name="check" className="h-4 w-4 text-accent" />{t}</li>
-          ))}
-        </ul>
+        <div className="fade-up" style={{ "--d": "300ms" } as CSSProperties}><BuildStack /></div>
       </div>
 
       {/* Services and prices, sliding past */}
