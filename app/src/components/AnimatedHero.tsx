@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import HeroPhotos from "./HeroPhotos";
 import { usePauseOffscreen } from "../lib/usePauseOffscreen";
 import { heroPhotos, type HeroPhoto } from "../content/heroPhotos";
@@ -28,22 +28,23 @@ export interface AnimatedHeroProps {
    *  overlap the end of the animation (so it all flows as one motion). Defaults to the very end. */
   doneAt?: number;
   /** Pause on the finished drawing before it slides aside and the text arrives, in milliseconds. During the pause
-   *  the stage has data-hold="true", so the drawing can do something (see the repair readouts in index.css). */
+   *  the stage has data-hold="true", so the drawing can do something during it. */
   hold?: number;
   /** Real photos the finished drawing fades into after a few seconds (see content/heroPhotos.ts). */
   photos?: HeroPhoto[];
-  /** Where the drawing sits above the text on phones/tablets once done, e.g. "max-lg:group-data-[phase=done]:bottom-[27rem]". */
-  doneMobileClass: string;
-  /** The page's heading, text and buttons. They fade in once the animation is done. */
+  /** Where the drawing sits above the text on phones/tablets, e.g. "max-lg:bottom-[27rem]". */
+  mobileClass: string;
+  /** The page's heading, text and buttons. They're there from the start, rising in while the drawing plays. */
   children: ReactNode;
 }
 
 /**
- * A page opening that plays a short animation (a couple of seconds) every time you arrive. It never reverses and
- * doesn't depend on scrolling. When it finishes, the drawing slides to the right (or above the text on phones and
- * tablets) and the page text fades in. Visitors who prefer reduced motion get the finished layout straight away.
+ * A page opening that plays a short animation (a few seconds) every time you arrive. It never reverses and doesn't
+ * depend on scrolling. The drawing plays on the right (or above the text on phones and tablets) while the page text
+ * rises in beside it, so nothing is hidden behind it. Visitors who prefer reduced motion get the finished drawing
+ * straight away.
  */
-export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, doneAt, hold = 0, photos = [], doneMobileClass, children }: AnimatedHeroProps) {
+export default function AnimatedHero({ scene, parts, extra, duration = 2500, spinAt, doneAt, hold = 0, photos = [], mobileClass, children }: AnimatedHeroProps) {
   const stage = useRef<HTMLDivElement>(null);
   usePauseOffscreen(stage);
   const [done, setDone] = useState(false);
@@ -82,9 +83,8 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Where the drawing (and later the photos) sit
-  const box = `pointer-events-none absolute inset-x-0 bottom-8 top-16 -z-10 px-4 lg:group-data-[phase=done]:bottom-10
-    lg:group-data-[phase=done]:left-[46%] lg:group-data-[phase=done]:right-0 ${doneMobileClass}`;
+  // Where the drawing (and later the photos) sit: on the right beside the text, or above it on phones and tablets
+  const box = `pointer-events-none absolute inset-x-0 bottom-8 top-16 -z-10 px-10 py-6 lg:bottom-10 lg:px-12 lg:py-10 lg:left-[46%] lg:right-0 ${mobileClass}`;
 
   return (
     <header className="relative">
@@ -93,8 +93,8 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
         <div className="hero-grid pointer-events-none absolute inset-0 -z-20" aria-hidden />
         <div className="hero-ambient pointer-events-none absolute inset-0 -z-20" aria-hidden />
 
-        {/* The drawing: big and centered while it plays, then it slides to the right (or up above the text on phones and tablets). */}
-        <div aria-hidden className={`${box} transition-all duration-[800ms] ease-[cubic-bezier(.4,0,.2,1)] ${photosOn ? "opacity-0" : ""}`}>
+        {/* The drawing, playing beside the text */}
+        <div aria-hidden className={`${box} transition-opacity duration-[800ms] ${photosOn ? "opacity-0" : ""}`}>
           {scene}
         </div>
 
@@ -102,7 +102,7 @@ export default function AnimatedHero({ scene, parts, extra, duration = 2500, spi
         <HeroPhotos photos={photos} ready={done} delay={heroPhotos.delay} interval={heroPhotos.interval} className={box} onShow={showPhotos} />
 
         {/* The page's heading, text and buttons */}
-        <div className="anim-text wrap relative w-full">
+        <div className="fade-up wrap relative w-full" style={{ "--d": "100ms" } as CSSProperties}>
           <div className="lg:max-w-[28rem]">{children}</div>
         </div>
 
