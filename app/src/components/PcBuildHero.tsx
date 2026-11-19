@@ -14,8 +14,8 @@ const BUILT_IN_PHOTOS = heroPhotos.pcBuilds.length > 0 ? heroPhotos.pcBuilds
 /**
  * The timeline, as [start, end] fractions of the duration. It plays as one continuous motion: the case fades in while
  * the parts, floating around it, are already drifting inward; they spiral in together, speeding up ("in" easing) to
- * land with a thud; the PC bounces, the glass slides on and it lights up, and while it settles it slides aside for
- * the text (DONE_AT).
+ * land with a thud; the PC bounces, the glass slides on and it lights up. DONE_AT is when it counts as finished
+ * (the photo slideshow waits for that).
  */
 const LAND = 0.62; // when the parts hit the case
 const FLY: Part = [0, LAND, "in"];
@@ -50,8 +50,8 @@ function motion(p: number) {
 }
 
 /**
- * The PC builds page opening: a PC builds itself (see BuildScene), then the page text fades in beside it and the
- * fans keep turning. How long it takes is `duration` below, in milliseconds.
+ * The PC builds page opening: a PC builds itself (see BuildScene) beside the page text, which is there from the
+ * start, and the fans keep turning. How long it takes is `duration` below, in milliseconds.
  */
 export default function PcBuildHero() {
   // Slideshow photos: builds marked "Slideshow" in the admin portal if there are any (highlights first), otherwise the built-in ones.
@@ -68,8 +68,8 @@ export default function PcBuildHero() {
   }, [builds]);
   return (
     <AnimatedHero scene={<BuildScene />} parts={PARTS} extra={motion} duration={3200} spinAt={SPIN_AT} doneAt={DONE_AT} photos={photos}
-      doneMobileClass="max-lg:group-data-[phase=done]:bottom-[27rem]">
-      {/* The brand name, large. It fades in with the rest of the text once the PC is built. */}
+      mobileClass="max-lg:bottom-[27rem]">
+      {/* The brand name, large. It rises in with the rest of the text while the PC builds beside it. */}
       <p className="mb-6 font-heading text-[clamp(2.4rem,5.2vw,3.4rem)] font-medium leading-none tracking-tight text-ink lg:text-[clamp(2.2rem,3.6vw,3.2rem)]">
         Hunter<span className="text-accent">PC</span>Builder
       </p>

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { Floater, usePortrait } from "./Floaters";
+import { Floater } from "./Floaters";
 
 /**
  * A modern glass-panel PC case in three-quarter view that assembles as you scroll.
@@ -90,16 +90,19 @@ function FloatFan() {
   return <Fan cx={0} cy={0} r={36} />;
 }
 
-/** Where each floating part starts (beside the case on wide screens, above/below it on tall ones) and where it lands. */
-const FLOATS: { id: string; wide: [number, number]; tall: [number, number]; to: [number, number]; bob: number; el: ReactNode }[] = [
-  { id: "rear", wide: [-120, 110], tall: [180, 790], to: [188, 226], bob: 0.9, el: <FloatFan /> },
-  { id: "board", wide: [-40, 300], tall: [560, -20], to: [328, 281], bob: 0.2, el: <FloatBoard /> },
-  { id: "psu", wide: [-20, 480], tall: [210, 660], to: [310, 511], bob: 1.1, el: <FloatPsu /> },
-  { id: "ram", wide: [40, 110], tall: [170, -30], to: [388, 224], bob: 0.7, el: <FloatRam /> },
-  { id: "cooler", wide: [740, 100], tall: [300, -70], to: [302, 232], bob: 1.6, el: <FloatCooler /> },
-  { id: "topfans", wide: [800, 250], tall: [440, -60], to: [385, 112], bob: 0.4, el: <FloatFan /> },
-  { id: "gpu", wide: [760, 410], tall: [400, 700], to: [306, 359], bob: 2.1, el: <FloatGpu /> },
-  { id: "front", wide: [790, 545], tall: [600, 655], to: [545, 344], bob: 1.3, el: <FloatFan /> },
+/**
+ * Where each floating part starts and where it lands. They hover in a tight ring around the case so they stay beside
+ * the page text (never over it) while the PC builds.
+ */
+const FLOATS: { id: string; from: [number, number]; to: [number, number]; bob: number; el: ReactNode }[] = [
+  { id: "rear", from: [135, 95], to: [188, 226], bob: 0.9, el: <FloatFan /> },
+  { id: "board", from: [118, 330], to: [328, 281], bob: 0.2, el: <FloatBoard /> },
+  { id: "psu", from: [160, 590], to: [310, 511], bob: 1.1, el: <FloatPsu /> },
+  { id: "ram", from: [300, 45], to: [388, 224], bob: 0.7, el: <FloatRam /> },
+  { id: "cooler", from: [520, 50], to: [302, 232], bob: 1.6, el: <FloatCooler /> },
+  { id: "topfans", from: [655, 150], to: [385, 112], bob: 0.4, el: <FloatFan /> },
+  { id: "gpu", from: [660, 410], to: [306, 359], bob: 2.1, el: <FloatGpu /> },
+  { id: "front", from: [560, 600], to: [545, 344], bob: 1.3, el: <FloatFan /> },
 ];
 
 /** Wraps flat parts so they sit on one face of the case. */
@@ -117,7 +120,6 @@ const FRONT = "matrix(.6 -.08 0 1 470 140)"; // local u 0..250, v 0..430
 const TOP = "matrix(1 .09375 .5769 -.0769 150 110)"; // local x 0..320, y 0..260
 
 export default function BuildScene() {
-  const portrait = usePortrait();
   return (
     <svg viewBox="110 56 550 548" preserveAspectRatio="xMidYMid meet" className="h-full w-full overflow-visible" aria-hidden="true"
       fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -281,7 +283,7 @@ export default function BuildScene() {
 
       {/* the parts floating around the case, spiralling in together */}
       {FLOATS.map((f) => (
-        <Floater key={f.id} id={f.id} from={portrait ? f.tall : f.wide} to={f.to} appear="case" bob={f.bob} swirl={0.22}>{f.el}</Floater>
+        <Floater key={f.id} id={f.id} from={f.from} to={f.to} appear="case" bob={f.bob} swirl={0.22}>{f.el}</Floater>
       ))}
     </svg>
   );

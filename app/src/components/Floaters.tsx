@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 /**
  * A part that floats (gently bobbing) around a drawing, then swoops into place and fades as it arrives.
@@ -25,17 +25,4 @@ export function Floater({ id, from, to, appear, bob = 0, swirl = 0, children }: 
       <g className="float-bob" style={{ animationDelay: `${-bob}s`, ["--bob" as string]: `calc(1 - ${q})` }}>{children}</g>
     </g>
   );
-}
-
-/** True when the screen is taller than wide: there is room above/below the drawing rather than beside it. */
-export function usePortrait() {
-  const query = "(max-aspect-ratio: 1/1)";
-  const [portrait, setPortrait] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const m = window.matchMedia(query);
-    const on = () => setPortrait(m.matches);
-    m.addEventListener("change", on);
-    return () => m.removeEventListener("change", on);
-  }, []);
-  return portrait;
 }

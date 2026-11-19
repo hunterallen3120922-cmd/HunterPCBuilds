@@ -189,10 +189,6 @@
       transparent 100%);
 }
 
-/* Animated page openings (see AnimatedHero.tsx); data-phase flips to "done"
-   afterwards, which slides the drawing aside and fades the page text in. */
-.anim-text { opacity: 0; visibility: hidden; transform: translateY(1rem); transition: opacity .6s ease .15s, transform .6s ease .15s, visibility 0s linear .15s; }
-[data-phase="done"] .anim-text { opacity: 1; visibility: visible; transform: none; }
 /* Repair diagnostic panel (see RepairHero.tsx). Each piece waits --d, then plays once and stays put. */
 .rx-panel { animation: rx-panel .8s var(--ease) both; animation-delay: var(--d, 0ms); }
 @keyframes rx-panel { from { opacity: 0; transform: translateY(18px) scale(.97); } }
