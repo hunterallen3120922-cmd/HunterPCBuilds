@@ -2,7 +2,7 @@ import { useEffect, type RefObject } from "react";
 
 /**
  * Marks an element with data-offscreen="true" while it is scrolled out of view, so its never-ending
- * animations (fans, the home mesh light, the ticker) can pause there. Nothing visible changes:
+ * animations (fans, the home circuit pulses, the ticker) can pause there. Nothing visible changes:
  * they pick up again before they scroll back into view. Rules are under "Paused off screen" in index.css.
  */
 export function usePauseOffscreen(ref: RefObject<HTMLElement | null>) {
