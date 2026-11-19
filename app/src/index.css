@@ -193,14 +193,29 @@
    afterwards, which slides the drawing aside and fades the page text in. */
 .anim-text { opacity: 0; visibility: hidden; transform: translateY(1rem); transition: opacity .6s ease .15s, transform .6s ease .15s, visibility 0s linear .15s; }
 [data-phase="done"] .anim-text { opacity: 1; visibility: visible; transform: none; }
-/* Repair readouts: a quick "all clear" pop while the finished laptop holds, then they tuck into it and disappear. */
-.diag-tag { transform-box: fill-box; transform-origin: center; transition: opacity .45s ease-in, transform .5s cubic-bezier(.5,0,.75,0); }
-[data-hold="true"] .diag-tag { animation: tagpop .55s cubic-bezier(.3,1.6,.5,1) var(--td, 0s) both; }
-[data-phase="done"] .diag-tag { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) scale(.55); animation: none; }
-/* Real photos at the top of the PC Builds / Tech Repair pages: a slow zoom while each one shows */
+/* Repair diagnostic panel (see RepairHero.tsx). Each piece waits --d, then plays once and stays put. */
+.rx-panel { animation: rx-panel .8s var(--ease) both; animation-delay: var(--d, 0ms); }
+@keyframes rx-panel { from { opacity: 0; transform: translateY(18px) scale(.97); } }
+.rx-out { animation: rx-out .3s ease both; animation-delay: var(--d, 0ms); }
+@keyframes rx-out { to { opacity: 0; transform: translateY(-6px); } }
+.rx-in { animation: rx-in .45s var(--ease) both; animation-delay: var(--d, 0ms); }
+@keyframes rx-in { from { opacity: 0; transform: translateY(6px); } }
+.rx-bar { transform-origin: left; animation: rx-bar 1.35s cubic-bezier(.45,0,.2,1) both; animation-delay: var(--d, 0ms); }
+@keyframes rx-bar { from { transform: scaleX(0); } }
+.rx-scan {
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent) 14%, transparent) 85%, color-mix(in srgb, var(--accent) 70%, transparent) 100%);
+  border-bottom: 1px solid var(--accent); opacity: 0;
+  animation: rx-scan .75s cubic-bezier(.45,0,.55,1) both; animation-delay: var(--d, 0ms);
+}
+@keyframes rx-scan { 0% { opacity: 0; transform: translateY(-3.5rem); } 15%, 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(calc(var(--rx-h, 15rem))); } }
+.rx-ping::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: rx-ping .7s ease-out both; animation-delay: inherit; }
+@keyframes rx-ping { from { transform: scale(1); opacity: .7; } to { transform: scale(3); opacity: 0; } }
+.rx-pop { animation: rx-pop .55s cubic-bezier(.3,1.6,.5,1) both; animation-delay: var(--d, 0ms); }
+@keyframes rx-pop { from { opacity: 0; transform: scale(.4); } }
+.rx-glow { background: radial-gradient(60% 100% at 50% 100%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%); animation: rx-in .8s ease both; animation-delay: var(--d, 0ms); }
+/* Real photos at the top of the PC Builds page: a slow zoom while each one shows */
 @keyframes photo-zoom { from { transform: scale(1.07); } to { transform: scale(1); } }
 .photo-zoom { animation: photo-zoom 6s ease-out both; }
-@keyframes tagpop { 40% { transform: scale(1.08); } }
 
 /* The PC's fans: they start turning shortly before power-on (data-spin is set on the stage) and never stop. */
 @keyframes spin360 { to { transform: rotate(360deg); } }
@@ -209,7 +224,7 @@
 [data-spin="true"] .fan-spin, [data-spin="true"] .fan-spin-rev { animation-play-state: running; }
 @media (prefers-reduced-motion: reduce) { .fan-spin, .fan-spin-rev { animation: none !important; } }
 
-/* Parts floating around the PC / laptop before they fly in (see Floaters.tsx) */
+/* Parts floating around the PC before they fly in (see Floaters.tsx) */
 @keyframes bob {
   0%, 100% { transform: translateY(calc(-6px * var(--bob, 1))) rotate(calc(-3deg * var(--bob, 1))); }
   50% { transform: translateY(calc(6px * var(--bob, 1))) rotate(calc(3deg * var(--bob, 1))); }

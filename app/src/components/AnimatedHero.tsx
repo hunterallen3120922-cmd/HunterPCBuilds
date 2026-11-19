@@ -28,7 +28,7 @@ export interface AnimatedHeroProps {
    *  overlap the end of the animation (so it all flows as one motion). Defaults to the very end. */
   doneAt?: number;
   /** Pause on the finished drawing before it slides aside and the text arrives, in milliseconds. During the pause
-   *  the stage has data-hold="true", so the drawing can do something (see the repair readouts in index.css). */
+   *  the stage has data-hold="true", so the drawing can do something during it. */
   hold?: number;
   /** Real photos the finished drawing fades into after a few seconds (see content/heroPhotos.ts). */
   photos?: HeroPhoto[];
