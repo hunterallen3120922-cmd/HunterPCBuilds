@@ -155,6 +155,8 @@
   mask-image: radial-gradient(ellipse 75% 85% at 70% 0%, #000 0%, rgb(0 0 0 / .8) 22%, rgb(0 0 0 / .5) 45%, rgb(0 0 0 / .22) 65%, rgb(0 0 0 / .06) 82%, transparent 100%);
   opacity: .55;
 }
+/* The home opening has the hexagon mesh behind it, so it leaves out the dot grid (the two patterns fight) */
+.hero-grid:has(~ .hero-mesh) { display: none; }
 
 /* Page heroes and the closing call to action: grain plus one broad, quiet tonal wash */
 .hero-glow {
