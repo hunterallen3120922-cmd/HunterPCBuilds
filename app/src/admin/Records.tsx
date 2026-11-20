@@ -7,7 +7,7 @@ type Row = { id: string } & Record<string, unknown>;
 export interface Field {
   key: string;
   label: string;
-  type: "text" | "money" | "date" | "number" | "select" | "textarea";
+  type: "text" | "money" | "date" | "number" | "select" | "textarea" | "checkbox";
   options?: readonly (string | { value: string; label: string })[];
   required?: boolean;
   /** Show as a column in the list (desktop) */
@@ -30,7 +30,7 @@ const optLabel = (o: string | { value: string; label: string }) => (typeof o ===
  * Used by the Jobs, Expenses, 3D prints and Inventory tabs.
  */
 export default function Records<T extends Row>({
-  table, title, intro, noun, fields, order, blank, filter, summary, rowTitle, rowSub, rowRight, onChange, compact,
+  table, title, intro, noun, fields, order, blank, filter, summary, rowTitle, rowSub, rowRight, onChange, compact, editorExtra, flags, sortBy,
 }: {
   table: string;
   title: string;
@@ -46,12 +46,19 @@ export default function Records<T extends Row>({
   rowRight?: (r: T) => ReactNode;
   onChange?: () => void;
   compact?: boolean;
+  /** Extra content at the bottom of the editor (e.g. a job's parts list). Gets the record and a setter for its fields. */
+  editorExtra?: (draft: Partial<T>, set: (key: string, value: unknown) => void) => ReactNode;
+  /** Extra toggle filters shown after the main filter (e.g. "Needs a check") */
+  flags?: { label: string; test: (r: T) => boolean }[];
+  /** Sort the list in the browser (after loading) */
+  sortBy?: (a: T, b: T) => number;
 }) {
   const [rows, setRows] = useState<T[] | null>(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [pick, setPick] = useState(filter?.initial ?? "all");
   const [editing, setEditing] = useState<Partial<T> | null>(null);
+  const [flag, setFlag] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     let q = supabase!.from(table).select("*");
@@ -63,16 +70,19 @@ export default function Records<T extends Row>({
 
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (rows ?? []).filter((r) =>
+    const list = (rows ?? []).filter((r) =>
       (!filter || pick === "all" || r[filter.key] === pick) &&
+      (!flag || !!flags?.find((f) => f.label === flag)?.test(r)) &&
       (!q || fields.some((f) => String(r[f.key] ?? "").toLowerCase().includes(q))));
-  }, [rows, search, pick, filter, fields]);
+    return sortBy ? [...list].sort(sortBy) : list;
+  }, [rows, search, pick, filter, fields, flag, flags, sortBy]);
 
   const save = async (draft: Partial<T>) => {
     const body: Record<string, unknown> = {};
     for (const f of fields) {
       const v = draft[f.key];
       if (f.type === "money" || f.type === "number") body[f.key] = v === "" || v == null ? (f.required ? 0 : null) : num(v);
+      else if (f.type === "checkbox") body[f.key] = !!v;
       else body[f.key] = v === "" || v === undefined ? null : v;
     }
     for (const k of READ_ONLY) delete body[k];
@@ -118,6 +128,12 @@ export default function Records<T extends Row>({
               {o === "all" ? "All" : o} <span className="font-mono text-[.72rem] opacity-70">{count(o)}</span>
             </button>
           ))}
+          {flags?.map((f) => (
+            <button key={f.label} type="button" onClick={() => setFlag(flag === f.label ? null : f.label)} aria-pressed={flag === f.label}
+              className={`rounded-full border px-3 py-1 text-[.8rem] ${flag === f.label ? "border-accent2/70 bg-accent2/10 text-accent2" : "border-line text-muted hover:text-ink"}`}>
+              {f.label} <span className="font-mono text-[.72rem] opacity-70">{(rows ?? []).filter(f.test).length}</span>
+            </button>
+          ))}
           <input className="input !w-auto min-w-[12rem] flex-1 !py-2 sm:ml-auto sm:flex-none" type="search" placeholder="Search…"
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
@@ -144,15 +160,16 @@ export default function Records<T extends Row>({
       </ul>
 
       {editing && (
-        <Editor key={String(editing.id ?? "new")} draft={editing} fields={fields} noun={noun}
+        <Editor key={String(editing.id ?? "new")} draft={editing} fields={fields} noun={noun} extra={editorExtra}
           onCancel={() => setEditing(null)} onSave={save} onDelete={editing.id ? () => remove(editing) : undefined} />
       )}
     </section>
   );
 }
 
-function Editor<T extends Row>({ draft, fields, noun, onCancel, onSave, onDelete }: {
+function Editor<T extends Row>({ draft, fields, noun, onCancel, onSave, onDelete, extra }: {
   draft: Partial<T>; fields: Field[]; noun: string;
+  extra?: (draft: Partial<T>, set: (key: string, value: unknown) => void) => ReactNode;
   onCancel: () => void; onSave: (d: Partial<T>) => Promise<string>; onDelete?: () => void;
 }) {
   const [d, setD] = useState<Record<string, unknown>>(() => ({ ...draft }));
@@ -176,7 +193,7 @@ function Editor<T extends Row>({ draft, fields, noun, onCancel, onSave, onDelete
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={onCancel}>
       <form onSubmit={submit} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={`${d.id ? "Edit" : "Add"} ${noun}`}
-        className="card max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-b-none p-6 sm:rounded-b-card">
+        className={`card max-h-[92vh] w-full ${extra ? "max-w-4xl" : "max-w-2xl"} overflow-y-auto rounded-b-none p-6 sm:rounded-b-card`}>
         <h2 className="text-xl">{d.id ? `Edit ${noun}` : `Add ${noun}`}</h2>
         <div className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
           {fields.map((f) => (
@@ -186,6 +203,7 @@ function Editor<T extends Row>({ draft, fields, noun, onCancel, onSave, onDelete
             </label>
           ))}
         </div>
+        {extra?.(d as Partial<T>, set)}
         {error && <p className="mt-4 text-[.9rem] text-danger" role="alert">{error}</p>}
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <button type="submit" className="btn !py-2" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
@@ -201,6 +219,13 @@ function FieldInput({ f, value, onChange }: { f: Field; value: unknown; onChange
   const v = value == null ? "" : String(value);
   const listId = f.suggest ? `suggest-${f.key}` : undefined;
   switch (f.type) {
+    case "checkbox":
+      return (
+        <span className="flex min-h-[3rem] items-center gap-2 text-[.9rem]">
+          <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={!!value} onChange={(e) => onChange(e.target.checked)} />
+          {f.placeholder}
+        </span>
+      );
     case "textarea":
       return <textarea className="input min-h-[5rem]" value={v} maxLength={5000} placeholder={f.placeholder} onChange={(e) => onChange(e.target.value)} />;
     case "select":
