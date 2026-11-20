@@ -4,7 +4,13 @@ export const JOB_KINDS = ["build", "upgrade", "repair", "rental", "resale", "per
 export const JOB_STATUSES = ["quote", "in progress", "done", "cancelled"] as const;
 export const INVENTORY_STATUSES = ["on hand", "used", "sold"] as const;
 export const EXPENSE_CATEGORIES = ["Tools", "Shipping & supplies", "Fees", "Software", "Filament", "Advertising", "Travel", "Other"] as const;
-export const PART_CATEGORIES = ["CPU", "GPU", "Motherboard", "RAM", "Storage", "PSU", "Case", "CPU cooler", "Fans", "Other"] as const;
+/** Part categories, in the order a parts list is shown. Add new ones at the end of the right group. */
+export const PART_CATEGORIES = [
+  "CPU", "GPU", "Motherboard", "RAM", "Storage", "PSU", "Case", "CPU cooler", "Fans", "Wi-Fi", "Windows",
+  "Prebuilt PC", "Accessories", "Other",
+] as const;
+export const PART_STATUSES = ["needed", "ordered", "bought", "have", "customer's"] as const;
+export const PART_SOURCES = ["eBay", "Amazon", "Newegg", "AliExpress", "Micro Center", "Best Buy", "Facebook Marketplace", "On hand", "Customer's"] as const;
 
 export interface JobRow {
   id: string;
@@ -19,7 +25,31 @@ export interface JobRow {
   profit: number;
   notes: string | null;
   created_at: string;
+  started_on: string | null;
+  sheet_url: string | null;
+  batch: string | null;
+  needs_review: boolean;
 }
+
+export interface PartRow {
+  id: string;
+  job_id: string;
+  category: string;
+  name: string;
+  price: number;
+  qty: number;
+  source: string | null;
+  status: (typeof PART_STATUSES)[number];
+  sort: number;
+  notes: string | null;
+}
+
+/** "Ryzen 5 5600 · RTX 3060" from a parts list: the CPU and GPU (or the prebuilt PC). */
+export const specLine = (parts: Pick<PartRow, "category" | "name">[]) =>
+  ["Prebuilt PC", "CPU", "GPU"].map((c) => parts.find((p) => p.category === c)?.name).filter(Boolean).join(" · ");
+
+/** The date a job counts in month-by-month stats: when it sold, or else when it was started. */
+export const jobDay = (j: Pick<JobRow, "date" | "started_on">) => j.date ?? j.started_on;
 
 export interface ExpenseRow {
   id: string;

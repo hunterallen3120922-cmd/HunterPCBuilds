@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
+import PartsEditor from "./PartsEditor";
 import { supabase } from "./client";
 import Records, { Signed, Totals, type Field } from "./Records";
 import {
   EXPENSE_CATEGORIES, INVENTORY_STATUSES, JOB_KINDS, JOB_STATUSES, PART_CATEGORIES,
-  countsTowardProfit, day, money, num, pct, today,
-  type ExpenseRow, type InventoryRow, type JobRow, type PrinterRow, type PrintRow,
+  countsTowardProfit, day, jobDay, money, num, pct, specLine, today,
+  type ExpenseRow, type InventoryRow, type JobRow, type PartRow, type PrinterRow, type PrintRow,
 } from "./money";
 
 const CHANNELS = ["In person", "eBay", "Facebook Marketplace", "Referral", "Other"];
@@ -19,16 +20,36 @@ const JOB_FIELDS: Field[] = [
   { key: "revenue", label: "You were paid", type: "money", required: true },
   { key: "cost", label: "You spent", type: "money", required: true },
   { key: "channel", label: "Sold through", type: "text", suggest: CHANNELS },
+  { key: "started_on", label: "Started", type: "date" },
+  { key: "batch", label: "Batch", type: "text", placeholder: "eBay mini PCs, batch 3" },
+  { key: "sheet_url", label: "Old Google Sheet link", type: "text" },
+  { key: "needs_review", label: "Needs a check", type: "checkbox", placeholder: "Flag this job to double-check" },
   { key: "notes", label: "Notes", type: "textarea" },
 ];
-const JOB_ORDER = [{ key: "date", ascending: false }, { key: "created_at", ascending: false }];
+const JOB_ORDER = [{ key: "created_at", ascending: false }];
+/** Newest first by sold date, or start date for unfinished jobs; undated jobs last. */
+const byJobDay = (a: JobRow, b: JobRow) => (jobDay(b) ?? "").localeCompare(jobDay(a) ?? "");
 
 export function JobsTab({ onChange }: { onChange?: () => void }) {
+  // Each job's parts, for the CPU/GPU line in the list (the full list loads in the editor)
+  const [specs, setSpecs] = useState<Record<string, string>>({});
+  const loadSpecs = useCallback(async () => {
+    const { data } = await supabase!.from("job_parts").select("job_id, category, name").order("sort").limit(10000);
+    const by: Record<string, Pick<PartRow, "category" | "name">[]> = {};
+    for (const p of (data ?? []) as Pick<PartRow, "job_id" | "category" | "name">[]) (by[p.job_id] ??= []).push(p);
+    setSpecs(Object.fromEntries(Object.entries(by).map(([id, parts]) => [id, specLine(parts)])));
+  }, []);
+  useEffect(() => { loadSpecs(); }, [loadSpecs]);
+  const changed = () => { loadSpecs(); onChange?.(); };
+
   return (
     <Records<JobRow & Record<string, unknown>>
-      table="jobs" title="Jobs" noun="job" fields={JOB_FIELDS} order={JOB_ORDER} onChange={onChange}
-      intro="Every build, upgrade, repair, rental and resale. Profit is worked out for you."
-      blank={() => ({ kind: "build", status: "in progress", date: today(), revenue: 0, cost: 0 })}
+      table="jobs" title="Jobs" noun="job" fields={JOB_FIELDS} order={JOB_ORDER} onChange={changed}
+      intro="Every build, upgrade, repair, rental and resale, with its parts. Profit is worked out for you."
+      flags={[{ label: "Needs a check", test: (j) => !!j.needs_review }]}
+      sortBy={byJobDay}
+      editorExtra={(d, set) => <PartsEditor jobId={d.id as string | undefined} onUseTotal={(t) => set("cost", t)} />}
+      blank={() => ({ kind: "build", status: "in progress", started_on: today(), revenue: 0, cost: 0 })}
       filter={{ key: "status", label: "Status", options: JOB_STATUSES }}
       summary={(rows) => {
         const done = rows.filter(countsTowardProfit);
@@ -42,8 +63,8 @@ export function JobsTab({ onChange }: { onChange?: () => void }) {
           { label: "Spent on unfinished jobs", value: money(tiedUp) },
         ]} />;
       }}
-      rowTitle={(j) => j.title}
-      rowSub={(j) => [j.customer, j.kind, j.status !== "done" ? j.status : null, j.channel, day(j.date) || "no date"].filter(Boolean).join(" · ")}
+      rowTitle={(j) => <>{j.needs_review && <span className="mr-1.5 text-accent2" title="Needs a check">●</span>}{j.title}</>}
+      rowSub={(j) => [specs[j.id], j.customer, j.kind, j.status !== "done" ? j.status : null, j.channel, day(j.date ?? j.started_on) || "no date"].filter(Boolean).join(" · ")}
       rowRight={(j) => (
         <>
           <Signed value={j.profit} />

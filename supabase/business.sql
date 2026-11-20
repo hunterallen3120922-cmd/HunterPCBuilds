@@ -100,3 +100,35 @@ begin
     execute format('create trigger touch_updated_at before update on public.%I for each row execute function public.touch_updated_at()', t);
   end loop;
 end $$;
+
+-- ─── Added in phase 2: parts lists and build details ─────────────────────────
+-- Safe to run again (and safe on a database that already ran the part above).
+
+alter table public.jobs add column if not exists started_on   date;                                   -- when the job / build sheet began
+alter table public.jobs add column if not exists sheet_url    text check (char_length(sheet_url) <= 500); -- the old Google Sheet it came from
+alter table public.jobs add column if not exists batch        text check (char_length(batch) <= 120);  -- e.g. "eBay mini PCs, batch 2"
+alter table public.jobs add column if not exists needs_review boolean not null default false;          -- something to double-check
+
+-- Every part in a job, with a category so you can see what you spend on each kind of part.
+create table if not exists public.job_parts (
+  id          uuid primary key default gen_random_uuid(),
+  job_id      uuid not null references public.jobs on delete cascade,
+  category    text not null default 'Other' check (char_length(category) between 1 and 40),
+  name        text not null check (char_length(name) between 1 and 200),
+  price       numeric(10, 2) not null default 0,          -- price for one, before tax
+  qty         integer not null default 1 check (qty >= 0),
+  source      text check (char_length(source) <= 80),     -- eBay, Amazon, on hand, customer's…
+  status      text not null default 'bought' check (status in ('needed', 'ordered', 'bought', 'have', 'customer''s')),
+  sort        integer not null default 0,
+  notes       text check (char_length(notes) <= 2000),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists job_parts_job_id on public.job_parts (job_id);
+create index if not exists job_parts_category on public.job_parts (category);
+
+alter table public.job_parts enable row level security;
+drop policy if exists "admins only" on public.job_parts;
+create policy "admins only" on public.job_parts for all using (public.is_admin()) with check (public.is_admin());
+drop trigger if exists touch_updated_at on public.job_parts;
+create trigger touch_updated_at before update on public.job_parts for each row execute function public.touch_updated_at();

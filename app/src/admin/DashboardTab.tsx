@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "./client";
 import {
-  countsTowardProfit, money, moneyShort, num, pct,
+  countsTowardProfit, jobDay, money, moneyShort, num, pct,
   type ExpenseRow, type InventoryRow, type JobRow, type PrinterRow, type PrintRow,
 } from "./money";
 
@@ -11,7 +11,7 @@ const monthKey = (iso: string) => iso.slice(0, 7);
 const monthLabel = (key: string) => new Date(`${key}-15T12:00:00`).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
 
 /** The big picture: money in, money out, profit, and how it changes month to month. */
-export default function DashboardTab({ go }: { go: (tab: "jobs" | "expenses" | "prints" | "inventory") => void }) {
+export default function DashboardTab({ go }: { go: (tab: "jobs" | "expenses" | "prints" | "inventory" | "parts") => void }) {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState("");
 
@@ -52,7 +52,7 @@ export default function DashboardTab({ go }: { go: (tab: "jobs" | "expenses" | "
       m[k] += v;
       months.set(monthKey(iso), m);
     };
-    done.forEach((j) => add(j.date, "jobs", num(j.profit)));
+    done.forEach((j) => add(jobDay(j), "jobs", num(j.profit)));
     data.prints.forEach((p) => add(p.date, "prints", num(p.profit)));
     data.expenses.forEach((e) => add(e.date, "expenses", num(e.amount)));
     const keys = [...months.keys()].sort();
@@ -67,7 +67,8 @@ export default function DashboardTab({ go }: { go: (tab: "jobs" | "expenses" | "
         series.push({ key, ...v, net: v.jobs + v.prints - v.expenses });
       }
     }
-    const undated = done.filter((j) => !j.date).length;
+    const undated = done.filter((j) => !jobDay(j)).length;
+    const review = data.jobs.filter((j) => j.needs_review).length;
 
     const byKind = new Map<string, { n: number; profit: number; revenue: number }>();
     for (const j of done) {
@@ -80,7 +81,7 @@ export default function DashboardTab({ go }: { go: (tab: "jobs" | "expenses" | "
 
     return {
       revenue, net, jobRev, jobProfit: jobRev - jobCost, printRev, printProfit: printRev - printCost, overhead,
-      printerCost, tiedUp, stock, series: series.slice(-12), undated, byKind, top, losers,
+      printerCost, tiedUp, stock, review, series: series.slice(-12), undated, byKind, top, losers,
       jobsDone: done.length, prints: data.prints.length, avgProfit: done.length ? (jobRev - jobCost) / done.length : 0,
       open: data.jobs.filter((j) => j.status === "in progress" || j.status === "quote").length,
     };
@@ -112,7 +113,7 @@ export default function DashboardTab({ go }: { go: (tab: "jobs" | "expenses" | "
             <div className="card p-5">
               <h2 className="text-[1.05rem]">Net profit by month</h2>
               <p className="text-[.8rem] text-muted">
-                Last 12 months with dated entries.
+                Last 12 months with dated entries. Jobs count in the month they sold, or the month they started if there's no sold date.
                 {s.undated > 0 && <> {s.undated} finished jobs have no date yet, so they're in the totals but not here.</>}
               </p>
               <MonthChart series={s.series} />
@@ -152,6 +153,7 @@ export default function DashboardTab({ go }: { go: (tab: "jobs" | "expenses" | "
             </div>
             <div className="grid content-start gap-3">
               <Tile label="Open jobs and quotes" value={String(s.open)} sub={`${money(s.tiedUp)} spent on unfinished builds`} onClick={() => go("jobs")} />
+              {s.review > 0 && <Tile label="Jobs to double-check" value={String(s.review)} sub="flagged when imported from your sheets" onClick={() => go("jobs")} />}
               <Tile label="Inventory on hand" value={money(s.stock)} sub="what you paid" onClick={() => go("inventory")} />
               <Tile label="3D printers" value={money(s.printerCost)} sub={s.printerCost ? `${pct(Math.min(1, Math.max(0, s.printProfit) / s.printerCost))} paid back by prints` : "none added"} onClick={() => go("prints")} />
             </div>
