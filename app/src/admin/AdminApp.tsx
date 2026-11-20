@@ -4,6 +4,8 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
 import BuildsTab from "./BuildsTab";
 import RequestsTab from "./RequestsTab";
+import DashboardTab from "./DashboardTab";
+import { ExpensesTab, InventoryTab, JobsTab, PrintsTab } from "./BusinessTabs";
 import Showcase from "./Showcase";
 import { Logo } from "../components/Nav";
 
@@ -15,7 +17,11 @@ import { Logo } from "../components/Nav";
 export default function AdminApp() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [isAdmin, setIsAdmin] = useState<boolean | undefined>(undefined);
-  const [tab, setTab] = useState<"builds" | "requests">("builds");
+  const [tab, setTab] = useState<Tab>(() => {
+    try { const t = sessionStorage.getItem("admin-tab") as Tab | null; if (t && TABS.some((x) => x.id === t)) return t; } catch { /* storage blocked */ }
+    return "dashboard";
+  });
+  useEffect(() => { try { sessionStorage.setItem("admin-tab", tab); } catch { /* storage blocked */ } }, [tab]);
   const [newCount, setNewCount] = useState(0);
   const [showcase, setShowcase] = useState(false);
   const closeShowcase = useCallback(() => setShowcase(false), []);
@@ -74,11 +80,11 @@ export default function AdminApp() {
     <Shell
       bar={
         <>
-          <nav className="flex gap-1 rounded-full border border-line bg-bg2 p-1" aria-label="Admin sections">
-            {(["builds", "requests"] as const).map((t) => (
+          <nav className="order-last flex w-full gap-1 overflow-x-auto rounded-full border border-line bg-bg2 p-1" aria-label="Admin sections">
+            {TABS.map(({ id: t, label }) => (
               <button key={t} type="button" onClick={() => setTab(t)} aria-current={tab === t ? "page" : undefined}
-                className={`rounded-full px-4 py-1.5 text-[.9rem] capitalize ${tab === t ? "bg-card text-ink" : "text-muted hover:text-ink"}`}>
-                {t}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[.88rem] ${tab === t ? "bg-card text-ink" : "text-muted hover:text-ink"}`}>
+                {label}
                 {t === "requests" && newCount > 0 && (
                   <span className="ml-2 rounded-full bg-accent px-1.5 py-px font-mono text-[.7rem] text-onaccent">{newCount}</span>
                 )}
@@ -95,11 +101,28 @@ export default function AdminApp() {
           </div>
         </>
       }>
-      {tab === "builds" ? <BuildsTab /> : <RequestsTab onChange={refreshNewCount} />}
+      {tab === "dashboard" && <DashboardTab go={setTab} />}
+      {tab === "jobs" && <JobsTab />}
+      {tab === "expenses" && <ExpensesTab />}
+      {tab === "prints" && <PrintsTab />}
+      {tab === "inventory" && <InventoryTab />}
+      {tab === "builds" && <BuildsTab />}
+      {tab === "requests" && <RequestsTab onChange={refreshNewCount} />}
       {showcase && <Showcase onClose={closeShowcase} />}
     </Shell>
   );
 }
+
+const TABS = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "jobs", label: "Jobs" },
+  { id: "expenses", label: "Expenses" },
+  { id: "prints", label: "3D prints" },
+  { id: "inventory", label: "Inventory" },
+  { id: "builds", label: "Site builds" },
+  { id: "requests", label: "Requests" },
+] as const;
+type Tab = (typeof TABS)[number]["id"];
 
 /** Page frame: top bar with the logo, a link back to the site, and (when signed in) the tabs. */
 function Shell({ bar, children }: { bar?: React.ReactNode; children: React.ReactNode }) {
@@ -138,7 +161,7 @@ function SignIn() {
   return (
     <form onSubmit={submit} className="card mx-auto mt-10 max-w-md p-7">
       <h1 className="text-2xl">Sign in</h1>
-      <p className="mb-6 mt-1 text-[.92rem] text-muted">Admin portal for builds and requests.</p>
+      <p className="mb-6 mt-1 text-[.92rem] text-muted">Admin portal for your jobs, money, builds and requests.</p>
       <label className="mb-1 block text-[.85rem] text-muted" htmlFor="admin-email">Email</label>
       <input id="admin-email" className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       <label className="mb-1 mt-4 block text-[.85rem] text-muted" htmlFor="admin-password">Password</label>
