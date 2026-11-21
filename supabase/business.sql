@@ -181,3 +181,15 @@ begin
     execute format('create trigger touch_updated_at before update on public.%I for each row execute function public.touch_updated_at()', t);
   end loop;
 end $$;
+
+-- ─── Added later: quotes for builds you sell yourself (eBay, Marketplace…) ───
+-- Safe to run again.
+alter table public.quotes add column if not exists purpose    text not null default 'customer' check (purpose in ('customer', 'resale'));
+alter table public.quotes add column if not exists platform   text check (char_length(platform) <= 60);   -- eBay, Facebook Marketplace…
+alter table public.quotes add column if not exists list_price numeric(10, 2) not null default 0;            -- what you'll list it for
+alter table public.quotes add column if not exists fee_pct    numeric(6, 4) not null default 0;             -- the site's cut, e.g. 0.136 for 13.6%
+alter table public.quotes add column if not exists fee_fixed  numeric(10, 2) not null default 0;            -- per-order fee, e.g. $0.40
+alter table public.quotes add column if not exists shipping   numeric(10, 2) not null default 0;            -- what shipping costs you
+alter table public.quotes drop constraint if exists quotes_status_check;
+alter table public.quotes add constraint quotes_status_check
+  check (status in ('draft', 'sent', 'accepted', 'declined', 'building', 'listed', 'sold'));
