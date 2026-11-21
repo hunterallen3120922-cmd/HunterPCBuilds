@@ -31,7 +31,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose,
   const initial = useMemo<FormValues>(() => {
     const v: FormValues = {};
     for (const s of config.steps) for (const f of s.fields) {
-      v[f.name] = f.kind === "pills" ? [] : f.kind === "windows" ? [{ date: "", time: "" }] : f.defaultValue ?? "";
+      v[f.name] = f.kind === "pills" || (f.kind === "cards" && f.multi) ? [] : f.kind === "windows" ? [{ date: "", time: "" }] : f.defaultValue ?? "";
     }
     return { ...v, ...prefill };
   }, [config, prefill]);
@@ -88,8 +88,9 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose,
     );
   }
 
-  return (
-    <div ref={top} className={`mx-auto max-w-[47.5rem] scroll-mt-24 ${bare ? "" : "rounded-card border border-line bg-card p-8 max-sm:p-[1.375rem]"}`}>
+  const Aside = config.aside;
+  const form = (
+    <div ref={Aside ? undefined : top} className={Aside ? "flex flex-col p-8 max-sm:p-[1.375rem]" : `mx-auto max-w-[47.5rem] scroll-mt-24 ${bare ? "" : "rounded-card border border-line bg-card p-8 max-sm:p-[1.375rem]"}`}>
       <div className="mb-7 flex gap-2" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`}>
         {Array.from({ length: total }, (_, n) => (
           <div key={n} className={`h-[5px] flex-1 rounded-card transition-colors duration-300 ${n <= step ? "bg-accent" : "bg-line"}`} />
@@ -103,6 +104,7 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose,
         <div key={step} className="step-in">
           {!isReview ? (
             <>
+              {current.eyebrow && <p className="eyebrow mb-1">{current.eyebrow}</p>}
               <h3 className="mb-1 text-[1.6rem]">{current.title}</h3>
               {current.sub && <p className="mb-[1.375rem] text-[.95rem] text-muted">{current.sub}</p>}
               {current.fields.map((f) => (
@@ -140,10 +142,18 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose,
         <div className="mt-[1.625rem] flex justify-between gap-[0.625rem]">
           <button type="button" className={`btn btn-ghost ${step === 0 ? "invisible" : ""}`} onClick={() => go(step - 1)} disabled={sending}>Back</button>
           <button type="submit" className="btn" disabled={sending}>
-            {sending ? "Sending…" : isReview ? "Send request" : "Next"}
+            {sending ? "Sending…" : isReview ? "Send request" : current.next ?? "Next"}
           </button>
         </div>
       </form>
+    </div>
+  );
+  if (!Aside) return form;
+  // With a side panel (the build form's PC): the questions on the left, the panel on the right (on top on phones)
+  return (
+    <div ref={top} className="mx-auto grid max-w-[68rem] scroll-mt-24 overflow-clip rounded-card border border-line bg-card lg:grid-cols-[1fr_1fr]">
+      {form}
+      <div className="border-line max-lg:order-first max-lg:border-b lg:border-l"><Aside values={values} step={step} /></div>
     </div>
   );
 }

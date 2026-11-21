@@ -49,6 +49,8 @@ export interface Option {
   label?: string;
   description?: string;
   icon?: string;
+  /** A small drawing shown on picture cards (see components/build/PartArt.tsx), e.g. "case-atx" */
+  art?: string;
 }
 
 export interface PreferredWindow {

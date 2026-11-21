@@ -10,9 +10,6 @@ import TechRepair from "./pages/TechRepair";
 import Faq from "./pages/Faq";
 import Privacy from "./pages/Privacy";
 import About from "./pages/About";
-import BuilderLab from "./lab/BuilderLab";
-import RequestLab from "./lab/RequestLab";
-import WalkLab from "./lab/WalkLab";
 
 /** The admin portal is a separate download, so visitors never load it. */
 const AdminApp = lazy(() => import("./admin/AdminApp"));
@@ -57,9 +54,6 @@ export default function App() {
           <Route path="/faq" element={<Faq />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/about" element={<About />} />
-          <Route path="/builder-lab" element={<BuilderLab />} />
-          <Route path="/request-lab" element={<RequestLab />} />
-          <Route path="/walk-lab" element={<WalkLab />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

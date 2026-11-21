@@ -20,7 +20,7 @@ export function validateStep(fields: FieldDef[], values: FormValues): Errors {
       continue;
     }
     const s = Array.isArray(v) ? "" : String(v ?? "").trim();
-    const empty = f.kind === "pills" ? !(Array.isArray(v) && v.length) : s === "";
+    const empty = f.kind === "pills" || (f.kind === "cards" && f.multi) ? !(Array.isArray(v) && v.length) : s === "";
     if (f.required && empty) { errors[f.name] = f.requiredMessage ?? "This is required."; continue; }
     if (empty) continue;
     if (f.kind === "email" && !emailRe.test(s)) errors[f.name] = "Enter a valid email address.";

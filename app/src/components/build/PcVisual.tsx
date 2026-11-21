@@ -1,10 +1,10 @@
 import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
-import { Blades, Defs, Fan, GLOW, Hub, REAR_LOCAL, VIEW, VIEWBOX, boxAt, mul, pct, svgMatrix, type Matrix, type Mode } from "../components/BuildScene";
-import { customParts } from "../content/customParts";
-import type { Category, Pick } from "../lib/configurator";
+import { Blades, Defs, Fan, GLOW, Hub, REAR_LOCAL, VIEW, VIEWBOX, boxAt, mul, pct, svgMatrix, type Matrix, type Mode } from "../BuildScene";
+import { customParts } from "../../content/customParts";
+import type { Category, Pick } from "../../lib/configurator";
 
 /**
- * DRAFT: a live PC that fills in as parts are chosen. Every part option is its own pre-drawn layer, so choosing a part
+ * A PC that fills in as parts are chosen (the build request form's workbench, see Workbench.tsx). Every part option is its own pre-drawn layer, so choosing a part
  * only fades/slides layers (opacity + transform). Nothing is redrawn, so it stays as cheap as the PC Builds animation.
  *
  * The case has a real shape per size (ITX, Micro-ATX, ATX): its width, height and depth, its fans and the size of
@@ -262,12 +262,11 @@ export default function PcVisual({ pick, installed, powered, highlight, children
     <div className="flex h-full w-full items-center justify-center [container-type:size]">
       <div className="relative aspect-[550/548] w-[min(100cqw,calc(100cqh*550/548))]">
         <svg width="0" height="0" className="absolute"><Defs /><GeoDefs /></svg>
-        <style>{`@keyframes pv-pop { 0% { transform: scale(.94); opacity: .4 } 60% { transform: scale(1.02) } 100% { transform: none; opacity: 1 } }`}</style>
         <div className="absolute inset-0" style={{ opacity: powered ? 0.3 + 0.7 * lights : 0.4, transition: "opacity .6s" }}>
           <svg viewBox={VIEWBOX} className="h-full w-full overflow-visible"><ellipse cx="395" cy="575" rx={(g.W + 0.6 * g.D) * 0.55} ry="20" fill="url(#bs-floor)" /></svg>
         </div>
         <GeoCtx.Provider value={g}>
-        <div key={g.key} className="absolute inset-0" style={{ transformOrigin: "52% 95%", animation: has("case") ? "pv-pop .5s cubic-bezier(.2,1.4,.4,1) both" : undefined }}>
+        <div key={g.key} className="absolute inset-0" style={{ transformOrigin: "52% 95%" }} data-pop={has("case") || undefined}>
           <Layer on style={{ opacity: has("case") ? 1 : 0.35, transform: "none" }}><CaseBack /></Layer>
           <Layer on={has("case")}><CaseFans mode="unlit" /></Layer>
           <Layer on={has("case") && powered} style={{ transform: "none", opacity: has("case") && powered ? 0.12 + 0.88 * lights : 0 }}><CaseFans mode="lit" /></Layer>

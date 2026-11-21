@@ -279,7 +279,7 @@
 
 /* Paused off screen (see lib/usePauseOffscreen.ts): never-ending animations stop while their section is far out of view */
 [data-offscreen="true"] .circuit-pulse, [data-offscreen="true"] .ticker, [data-offscreen="true"] .bfan-spin,
-[data-offscreen="true"] .pill-dot::after {
+[data-offscreen="true"] .pill-dot::after, [data-offscreen="true"] .wb-pulse {
   animation-play-state: paused !important;
 }
 
@@ -311,6 +311,20 @@ html.rv-on [data-reveal="blur"]:not([data-rv="in"]) { filter: blur(6px); }
 
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
 .step-in { animation: fade .3s; }
+
+/* Build request PC (components/build): the case snapping to a new size, the glow ring and tag when a part is
+   installed, the boot flash and the pulsing power button. Transform and opacity only, so they stay smooth. */
+[data-pop] { animation: pv-pop .5s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes pv-pop { 0% { transform: scale(.94); opacity: .4 } 60% { transform: scale(1.02) } 100% { transform: none; opacity: 1 } }
+.wb-ring { animation: wb-ring .7s ease-out both; }
+@keyframes wb-ring { from { transform: translate(-50%, -50%) scale(.3); opacity: 1 } to { transform: translate(-50%, -50%) scale(2.6); opacity: 0 } }
+.wb-toast { animation: wb-toast 1s ease both; }
+@keyframes wb-toast { 0% { transform: translate(-50%, 8px); opacity: 0 } 15%, 80% { transform: translate(-50%, 0); opacity: 1 } 100% { transform: translate(-50%, 0); opacity: 0 } }
+.wb-boot { animation: wb-boot 1.2s ease-out both; }
+@keyframes wb-boot { 0% { opacity: 0 } 8% { opacity: .9 } 100% { opacity: 0 } }
+.wb-pulse { animation: wb-pulse 1.6s ease-in-out infinite; }
+@keyframes wb-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent) } 50% { box-shadow: 0 0 0 18px transparent } }
+@media (prefers-reduced-motion: reduce) { [data-pop], .wb-ring, .wb-boot, .wb-pulse { animation: none !important; } }
 
 dialog::backdrop { background: rgba(4, 7, 11, .8); backdrop-filter: blur(6px); animation: backdrop-in .3s ease both; }
 /* Pop-ups ease up into place */
