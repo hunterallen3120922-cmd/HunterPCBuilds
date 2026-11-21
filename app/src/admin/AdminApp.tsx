@@ -26,6 +26,17 @@ export default function AdminApp() {
   useEffect(() => { try { sessionStorage.setItem("admin-tab", tab); } catch { /* storage blocked */ } }, [tab]);
   const [newCount, setNewCount] = useState(0);
   const [showcase, setShowcase] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportAll = async () => {
+    setExporting(true);
+    try {
+      const { downloadEverything } = await import("./exportAll");
+      await downloadEverything();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "The export didn't work. Try again.");
+    }
+    setExporting(false);
+  };
   const closeShowcase = useCallback(() => setShowcase(false), []);
   const openShowcase = () => {
     // Fullscreen has to be asked for right inside the click
@@ -98,6 +109,10 @@ export default function AdminApp() {
             <button type="button" onClick={openShowcase} title="Animated full-screen showcase for the projector"
               className="rounded-full border border-line px-3 py-1 text-ink hover:border-accent hover:text-accent">
               ▶ Showcase
+            </button>
+            <button type="button" onClick={exportAll} disabled={exporting} title="Download one Excel file with everything: a summary, jobs, parts, quotes, expenses, prints, inventory and requests"
+              className="rounded-full border border-line px-3 py-1 text-ink hover:border-accent hover:text-accent disabled:opacity-60">
+              {exporting ? "Exporting…" : "⬇ Export all (Excel)"}
             </button>
             <span className="hidden sm:inline">{session.user.email}</span>
             <button type="button" className="underline hover:text-ink" onClick={() => supabase!.auth.signOut()}>Sign out</button>
