@@ -22,7 +22,7 @@ let nextKey = 0;
 const key = () => `i${++nextKey}`;
 const blankItem = (category = "CPU"): Item => ({ key: key(), category, name: "", price: 0, qty: 1, source: "", link: "", optional: false });
 const blankQuote = (): Draft => ({
-  title: "", customer: "", contact: "", status: "draft", tax_rate: 0.06, build_fee: 0, extra_costs: 0, show_prices: true,
+  title: "", customer: "", contact: "", status: "draft", tax_rate: 0.06, build_fee: 0, extra_costs: 0, show_prices: false,
   valid_until: null, customer_note: "", notes: "", job_id: null,
 });
 /** A fresh parts list in the usual order: one empty line for each main part. */
@@ -383,10 +383,15 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
               <Row label="Margin" value={t.total ? pct(t.profit / t.total) : "–"} />
               {t.upgrades > 0 && <Row label="Optional upgrades" value={`+${money(t.upgrades * (1 + num(q.tax_rate)))}`} />}
             </dl>
-            <label className="mt-4 flex items-center gap-2 text-[.85rem]">
-              <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={q.show_prices} onChange={(e) => set("show_prices", e.target.checked)} />
-              Show each part's price on the customer quote
-            </label>
+            <fieldset className="mt-4 text-[.85rem]">
+              <legend className="mb-1.5 text-muted">Customer quote shows</legend>
+              {([[false, "Simple", "Parts list and one total price. No build fee or tax lines."], [true, "Full breakdown", "Each part's price, tax and the build fee."]] as const).map(([v, label, sub]) => (
+                <label key={label} className="mb-1.5 flex items-start gap-2">
+                  <input type="radio" name="quote-style" className="mt-1 h-4 w-4 accent-[var(--accent)]" checked={q.show_prices === v} onChange={() => set("show_prices", v)} />
+                  <span><b className="font-medium text-ink">{label}</b><span className="block text-[.75rem] text-muted">{sub}</span></span>
+                </label>
+              ))}
+            </fieldset>
           </div>
 
           <div className="card space-y-2 p-5">

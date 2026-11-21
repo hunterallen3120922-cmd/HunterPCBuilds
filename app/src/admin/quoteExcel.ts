@@ -36,7 +36,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
   // Columns: Category, Part, Qty, Price, Total (+ From, Link for your copy)
   const cols = internal
     ? [{ w: 14 }, { w: 40 }, { w: 6 }, { w: 12 }, { w: 12 }, { w: 16 }, { w: 40 }]
-    : prices ? [{ w: 16 }, { w: 46 }, { w: 6 }, { w: 13 }, { w: 13 }] : [{ w: 18 }, { w: 58 }, { w: 8 }];
+    : prices ? [{ w: 16 }, { w: 46 }, { w: 6 }, { w: 13 }, { w: 13 }] : [{ w: 18 }, { w: 56 }, { w: 12 }];
   ws.columns = cols.map((c) => ({ width: c.w }));
   const last = cols.length;
   const lastCol = String.fromCharCode(64 + last);
@@ -93,6 +93,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
       if (k === 6 && i.link) c.font = { color: { argb: "FF2563EB" }, underline: true };
       c.border = { bottom: { style: "thin", color: { argb: LINE } } };
     });
+    if (upgrade && !prices) { row.getCell(3).value = unit * num(i.qty); row.getCell(3).numFmt = '"+$"#,##0.00'; }
     if (num(i.price) === 0 && prices && !upgrade) row.getCell(4).value = internal ? 0 : "Included";
     r++;
   };
@@ -112,10 +113,20 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
     if (opts.note && internal) { ws.getCell(r, 6).value = opts.note; ws.getCell(r, 6).font = { color: { argb: MUTED }, italic: true }; }
     r++;
   };
-  total("Parts", t.parts);
-  total(`Sales tax (${taxPct})`, t.tax);
-  if (t.fee) total("Build fee", t.fee);
-  total("Total", t.total, { bold: true, color: GREEN });
+  if (prices) {
+    total("Parts", t.parts);
+    total(`Sales tax (${taxPct})`, t.tax);
+    if (t.fee) total("Build fee", t.fee);
+    total("Total", t.total, { bold: true, color: GREEN });
+  } else {
+    // Simple quote: one price for the finished PC, no breakdown
+    total("Total (tax included)", t.total, { bold: true, color: GREEN });
+    ws.mergeCells(r, 1, r, last);
+    ws.getCell(r, 1).value = "Includes every part listed, plus assembly, setup and testing.";
+    ws.getCell(r, 1).font = { color: { argb: MUTED }, italic: true };
+    ws.getCell(r, 1).alignment = { horizontal: "right" };
+    r++;
+  }
   if (internal) {
     r++;
     total("Your parts cost (with tax)", t.parts + t.tax);
@@ -132,7 +143,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
     r++;
     if (!internal) {
       ws.mergeCells(r, 1, r, last);
-      ws.getCell(r, 1).value = "Want any of these? Each one adds its price (tax included) to the total.";
+      ws.getCell(r, 1).value = prices ? "Want any of these? Each one adds its price (tax included) to the total." : "Want any of these? Each one adds its price to the total.";
       ws.getCell(r, 1).font = { color: { argb: MUTED }, italic: true };
       r++;
     }

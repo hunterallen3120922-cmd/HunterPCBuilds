@@ -145,7 +145,7 @@ create table if not exists public.quotes (
   tax_rate      numeric(5, 4) not null default 0.06 check (tax_rate between 0 and 0.5),
   build_fee     numeric(10, 2) not null default 0,                    -- what you charge for your work
   extra_costs   numeric(10, 2) not null default 0,                    -- your costs the customer doesn't see (shipping, fees)
-  show_prices   boolean not null default true,                        -- show each part's price on the customer quote
+  show_prices   boolean not null default false,                       -- customer quote: false = parts + one total, true = full breakdown
   valid_until   date,
   customer_note text check (char_length(customer_note) <= 3000),      -- printed on the customer quote
   notes         text check (char_length(notes) <= 5000),              -- private
