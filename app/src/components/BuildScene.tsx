@@ -29,9 +29,9 @@ const POWER: [number, number] = [LAND + 0.03, LAND + 0.28]; // it lights up
 const GLASS: [number, number] = [LAND + 0.03, LAND + 0.25]; // the glass panel goes on
 const SPIN_AT = LAND + 0.03; // the fans start turning
 
-const GLOW = "var(--accent)";
-const VIEW = { x: 110, y: 56, w: 550, h: 548 };
-const VIEWBOX = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
+export const GLOW = "var(--accent)";
+export const VIEW = { x: 110, y: 56, w: 550, h: 548 };
+export const VIEWBOX = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -63,12 +63,12 @@ const flash = (p: number) => { const f = (p - LAND) / 0.12; return f >= 0 && f <
 
 /** How a layer draws lit-up parts: "unlit" before power-on, "lit" after, "full" for the floating parts (always lit,
  *  with their fan blades drawn in; on the case the blades are separate layers so they can turn). */
-type Mode = "unlit" | "lit" | "full";
+export type Mode = "unlit" | "lit" | "full";
 /** Opacity of something that lights up: `base` when unlit, `base + mult` when lit. */
-const pw = (mode: Mode, mult: number, base = 0) => (mode === "unlit" ? base : Math.min(1, base + mult));
+export const pw = (mode: Mode, mult: number, base = 0) => (mode === "unlit" ? base : Math.min(1, base + mult));
 
 const BLADE_ALPHA = 0.46; // blades when lit; unlit they're at 0.1
-function Blades({ cx, cy, r, n }: { cx: number; cy: number; r: number; n: number }) {
+export function Blades({ cx, cy, r, n }: { cx: number; cy: number; r: number; n: number }) {
   return (
     <g opacity={BLADE_ALPHA}>
       {Array.from({ length: n }, (_, k) => (
@@ -79,7 +79,7 @@ function Blades({ cx, cy, r, n }: { cx: number; cy: number; r: number; n: number
     </g>
   );
 }
-const Hub = ({ cx, cy, r, mode, fancy }: { cx: number; cy: number; r: number; mode: Mode; fancy?: boolean }) => (
+export const Hub = ({ cx, cy, r, mode, fancy }: { cx: number; cy: number; r: number; mode: Mode; fancy?: boolean }) => (
   <>
     <circle cx={cx} cy={cy} r={r * 0.24} fill="#070b10" stroke={GLOW} strokeWidth={r * 0.05} strokeOpacity={pw(mode, 0.6, 0.4)} />
     {fancy && <circle cx={cx} cy={cy} r={r * 0.09} fill={GLOW} opacity={pw(mode, 0.7, 0.3)} />}
@@ -90,7 +90,7 @@ const RevRing = ({ cx, cy, r }: { cx: number; cy: number; r: number }) => (
 );
 
 /** An RGB case fan: glow halo, lit ring, blades, hub. `fancy` adds the extra rings of the CPU fan. */
-function Fan({ cx, cy, r, mode, blades = 9, fancy = false }: { cx: number; cy: number; r: number; mode: Mode; blades?: number; fancy?: boolean }) {
+export function Fan({ cx, cy, r, mode, blades = 9, fancy = false }: { cx: number; cy: number; r: number; mode: Mode; blades?: number; fancy?: boolean }) {
   return (
     <g>
       {mode !== "unlit" && <circle cx={cx} cy={cy} r={r * (fancy ? 2.3 : 1.95)} fill="url(#bs-glow)" />}
@@ -105,7 +105,7 @@ function Fan({ cx, cy, r, mode, blades = 9, fancy = false }: { cx: number; cy: n
 }
 
 /** Wraps flat parts so they sit on one face of the case. */
-function Face({ matrix, clip, children }: { matrix: string; clip: string; children: ReactNode }) {
+export function Face({ matrix, clip, children }: { matrix: string; clip: string; children: ReactNode }) {
   return (
     <g clipPath={`url(#${clip})`}>
       <g transform={matrix}>{children}</g>
@@ -113,30 +113,30 @@ function Face({ matrix, clip, children }: { matrix: string; clip: string; childr
   );
 }
 
-type Matrix = [number, number, number, number, number, number];
-const mul = (m: Matrix, n: Matrix): Matrix => [
+export type Matrix = [number, number, number, number, number, number];
+export const mul = (m: Matrix, n: Matrix): Matrix => [
   m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1],
   m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3],
   m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5],
 ];
-const svgMatrix = (m: Matrix) => `matrix(${m.join(" ")})`;
+export const svgMatrix = (m: Matrix) => `matrix(${m.join(" ")})`;
 
 // Faces: A(150,110) B(470,140) C(470,570) D(150,540) E(620,120) F(620,550) G(300,90)
-const SIDE: Matrix = [1, 0.09375, 0, 1, 150, 110]; // local u 0..320, v 0..430
-const FRONT: Matrix = [0.6, -0.08, 0, 1, 470, 140]; // local u 0..250, v 0..430
-const TOP: Matrix = [1, 0.09375, 0.5769, -0.0769, 150, 110]; // local x 0..320, y 0..260
-const REAR_LOCAL: Matrix = [0.5769, -0.131, 0, 1, 38, 112]; // the rear exhaust fan, on the back wall inside the side face
-const REAR = mul(SIDE, REAR_LOCAL);
+export const SIDE: Matrix = [1, 0.09375, 0, 1, 150, 110]; // local u 0..320, v 0..430
+export const FRONT: Matrix = [0.6, -0.08, 0, 1, 470, 140]; // local u 0..250, v 0..430
+export const TOP: Matrix = [1, 0.09375, 0.5769, -0.0769, 150, 110]; // local x 0..320, y 0..260
+export const REAR_LOCAL: Matrix = [0.5769, -0.131, 0, 1, 38, 112]; // the rear exhaust fan, on the back wall inside the side face
+export const REAR = mul(SIDE, REAR_LOCAL);
 
 /** Every fan on the case, so the static drawing and the turning blade layers agree. */
-const FANS: { face: Matrix; cx: number; cy: number; r: number; fancy?: boolean }[] = [
+export const FANS: { face: Matrix; cx: number; cy: number; r: number; fancy?: boolean }[] = [
   ...[55, 160, 265].map((cx) => ({ face: TOP, cx, cy: 130, r: 46 })),
   ...[72, 214, 356].map((cy) => ({ face: FRONT, cx: 125, cy, r: 56 })),
   { face: REAR, cx: 0, cy: 0, r: 48 },
   { face: SIDE, cx: 152, cy: 108, r: 44, fancy: true },
 ];
 
-function Defs() {
+export function Defs() {
   return (
     <defs>
       <radialGradient id="bs-glow">
@@ -169,7 +169,7 @@ function Defs() {
 }
 
 /** The empty case: feet, the top and front panels and the dark inside behind the glass. */
-function CaseBack() {
+export function CaseBack() {
   return (
     <>
       <path d="M170 540 L222 545 L220 562 L172 556Z M430 568 L500 566 L498 586 L432 588Z M585 548 L620 546 L618 562 L585 564Z" fill="#05080c" />
@@ -260,7 +260,7 @@ function Parts({ mode }: { mode: Mode }) {
 }
 
 /** The glass panel's sheen and reflections. */
-function Glass() {
+export function Glass() {
   return (
     <Face matrix={svgMatrix(SIDE)} clip="bs-clip-side">
       <rect x="-10" y="-10" width="340" height="450" fill="url(#bs-glass)" />
@@ -271,7 +271,7 @@ function Glass() {
 }
 
 /** Over the parts: the front glass reflection, the side panel's shading and frame, and the case edges and glints. */
-function CaseFront() {
+export function CaseFront() {
   return (
     <>
       <Face matrix={svgMatrix(FRONT)} clip="bs-clip-front">
@@ -334,7 +334,7 @@ const SWIRL = 0.22; // bends every flight path the same way, so together they sp
 // ---------------------------------------------------------------------------------------------------------------
 // Layers and their animations
 
-const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(4)}%`;
+export const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(4)}%`;
 /** A layer covering the whole drawing. */
 const Layer = ({ l, children }: { l: string; children: ReactNode }) => (
   <div data-l={l} className="absolute inset-0">
@@ -342,7 +342,7 @@ const Layer = ({ l, children }: { l: string; children: ReactNode }) => (
   </div>
 );
 /** A square layer of `size` drawing units centred on (cx, cy). */
-const boxAt = (cx: number, cy: number, size: number): CSSProperties => ({
+export const boxAt = (cx: number, cy: number, size: number): CSSProperties => ({
   left: pct(cx - size / 2 - VIEW.x, VIEW.w), top: pct(cy - size / 2 - VIEW.y, VIEW.h), width: pct(size, VIEW.w), height: pct(size, VIEW.h),
 });
 

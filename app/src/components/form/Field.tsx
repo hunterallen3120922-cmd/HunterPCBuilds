@@ -3,6 +3,7 @@ import type { FieldDef } from "./types";
 import type { FieldValue, PreferredWindow } from "../../types";
 import DateWindowPicker from "./DateWindowPicker";
 import Icon from "../Icon";
+import PartArt from "../build/PartArt";
 
 interface Props {
   def: FieldDef;
@@ -19,7 +20,8 @@ export default function Field({ def, value, error, onChange }: Props) {
   const str = typeof value === "string" ? value : "";
 
   const label = (
-    <span className="mb-[0.375rem] block text-[.95rem] font-medium">
+    // Picture cards sit under a step title that already asks the question, so their label is for screen readers only
+    <span className={def.kind === "cards" ? "sr-only" : "mb-[0.375rem] block text-[.95rem] font-medium"}>
       {def.label} {def.hint && <span className="text-[.82rem] font-normal text-muted">{def.hint}</span>}
     </span>
   );
@@ -29,6 +31,29 @@ export default function Field({ def, value, error, onChange }: Props) {
     case "static":
       control = <p className="rounded-lg border border-accent/40 bg-accent/[.07] px-[0.875rem] py-3 font-medium">{def.defaultValue}</p>;
       break;
+    case "cards": {
+      // Big picture cards. One answer is a string; with `multi`, a list.
+      const arr = Array.isArray(value) ? (value as string[]) : [];
+      const isOn = (v: string) => (def.multi ? arr.includes(v) : str === v);
+      const pick = (v: string) => onChange(def.multi ? (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]) : v);
+      control = (
+        <div role={def.multi ? "group" : "radiogroup"} aria-labelledby={`${id}-l`} className={`grid gap-3 ${opts.length % 3 === 0 && opts.length !== 6 ? "grid-cols-3" : "grid-cols-2"} ${opts.length === 6 ? "sm:grid-cols-3" : ""}`}>
+          {opts.map((o) => (
+            <label key={o.value} className="relative block cursor-pointer">
+              <input type={def.multi ? "checkbox" : "radio"} name={def.name} value={o.value} checked={isOn(o.value)}
+                onChange={() => pick(o.value)} className="peer absolute opacity-0" />
+              <span className="flex h-full flex-col rounded-card border-2 border-line bg-bg2 p-3.5 text-muted transition hover:-translate-y-0.5 hover:border-accent/40 peer-checked:border-accent peer-checked:bg-accent/[.08] peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent max-sm:p-3">
+                {o.art ? <PartArt name={o.art} /> : o.icon && <span className="grid h-14 place-items-center"><Icon name={o.icon} className="h-8 w-8" /></span>}
+                <strong className="mt-2 block font-medium text-ink">{o.label ?? o.value}</strong>
+                {o.description && <span className="text-[.78rem] leading-snug text-muted">{o.description}</span>}
+              </span>
+              <span className="pointer-events-none absolute right-2 top-2 hidden h-5 w-5 place-items-center rounded-full bg-accent text-bg peer-checked:grid"><Icon name="check" className="h-3 w-3" /></span>
+            </label>
+          ))}
+        </div>
+      );
+      break;
+    }
     case "choice":
       control = (
         <div role="radiogroup" aria-labelledby={`${id}-l`} className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3">
@@ -85,7 +110,7 @@ export default function Field({ def, value, error, onChange }: Props) {
       );
   }
 
-  const isGroup = def.kind === "choice" || def.kind === "pills" || def.kind === "windows" || def.kind === "static";
+  const isGroup = def.kind === "cards" || def.kind === "choice" || def.kind === "pills" || def.kind === "windows" || def.kind === "static";
   return (
     <div className="mb-[1.125rem]">
       {isGroup ? <div id={`${id}-l`}>{label}</div> : <label htmlFor={id}>{label}</label>}
