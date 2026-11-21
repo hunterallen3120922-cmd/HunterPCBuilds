@@ -123,13 +123,13 @@ export default function Records<T extends Row>({
       {!compact && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {filter && ["all", ...filter.options].map((o) => (
-            <button key={o} type="button" onClick={() => setPick(o)} aria-pressed={pick === o}
-              className={`rounded-full border px-3 py-1 text-[.8rem] capitalize ${pick === o ? "border-ink/60 bg-card text-ink" : "border-line text-muted hover:text-ink"}`}>
+            <button key={o} type="button" onClick={() => { setPick(o); setFlag(null); }} aria-pressed={pick === o && !flag}
+              className={`rounded-full border px-3 py-1 text-[.8rem] capitalize ${pick === o && !flag ? "border-ink/60 bg-card text-ink" : "border-line text-muted hover:text-ink"}`}>
               {o === "all" ? "All" : o} <span className="font-mono text-[.72rem] opacity-70">{count(o)}</span>
             </button>
           ))}
           {flags?.map((f) => (
-            <button key={f.label} type="button" onClick={() => setFlag(flag === f.label ? null : f.label)} aria-pressed={flag === f.label}
+            <button key={f.label} type="button" onClick={() => { setFlag(flag === f.label ? null : f.label); setPick("all"); }} aria-pressed={flag === f.label}
               className={`rounded-full border px-3 py-1 text-[.8rem] ${flag === f.label ? "border-accent2/70 bg-accent2/10 text-accent2" : "border-line text-muted hover:text-ink"}`}>
               {f.label} <span className="font-mono text-[.72rem] opacity-70">{(rows ?? []).filter(f.test).length}</span>
             </button>
@@ -144,7 +144,13 @@ export default function Records<T extends Row>({
 
       <ul className="space-y-2">
         {rows === null && !error && <li className="text-muted">Loading…</li>}
-        {rows !== null && shown.length === 0 && <li className="card p-6 text-center text-muted">Nothing here yet.</li>}
+        {rows !== null && shown.length === 0 && (
+          <li className="card p-6 text-center text-muted">
+            {rows.length && (flag || search.trim() || pick !== "all") ? (
+              <>Nothing matches these filters. <button type="button" className="text-accent underline" onClick={() => { setFlag(null); setSearch(""); setPick("all"); }}>Clear filters</button></>
+            ) : "Nothing here yet."}
+          </li>
+        )}
         {shown.map((r) => (
           <li key={r.id}>
             <button type="button" onClick={() => setEditing({ ...r })}
