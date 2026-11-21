@@ -4,6 +4,10 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
 import BuildsTab from "./BuildsTab";
 import RequestsTab from "./RequestsTab";
+import DashboardTab from "./DashboardTab";
+import PartsTab from "./PartsTab";
+import QuotesTab from "./QuotesTab";
+import { ExpensesTab, InventoryTab, JobsTab, PrintsTab } from "./BusinessTabs";
 import Showcase from "./Showcase";
 import { Logo } from "../components/Nav";
 
@@ -15,9 +19,24 @@ import { Logo } from "../components/Nav";
 export default function AdminApp() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [isAdmin, setIsAdmin] = useState<boolean | undefined>(undefined);
-  const [tab, setTab] = useState<"builds" | "requests">("builds");
+  const [tab, setTab] = useState<Tab>(() => {
+    try { const t = sessionStorage.getItem("admin-tab") as Tab | null; if (t && TABS.some((x) => x.id === t)) return t; } catch { /* storage blocked */ }
+    return "dashboard";
+  });
+  useEffect(() => { try { sessionStorage.setItem("admin-tab", tab); } catch { /* storage blocked */ } }, [tab]);
   const [newCount, setNewCount] = useState(0);
   const [showcase, setShowcase] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportAll = async () => {
+    setExporting(true);
+    try {
+      const { downloadEverything } = await import("./exportAll");
+      await downloadEverything();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "The export didn't work. Try again.");
+    }
+    setExporting(false);
+  };
   const closeShowcase = useCallback(() => setShowcase(false), []);
   const openShowcase = () => {
     // Fullscreen has to be asked for right inside the click
@@ -72,13 +91,14 @@ export default function AdminApp() {
 
   return (
     <Shell
+      wide={tab === "quotes"}
       bar={
         <>
-          <nav className="flex gap-1 rounded-full border border-line bg-bg2 p-1" aria-label="Admin sections">
-            {(["builds", "requests"] as const).map((t) => (
+          <nav className="order-last flex w-full gap-1 overflow-x-auto rounded-full border border-line bg-bg2 p-1" aria-label="Admin sections">
+            {TABS.map(({ id: t, label }) => (
               <button key={t} type="button" onClick={() => setTab(t)} aria-current={tab === t ? "page" : undefined}
-                className={`rounded-full px-4 py-1.5 text-[.9rem] capitalize ${tab === t ? "bg-card text-ink" : "text-muted hover:text-ink"}`}>
-                {t}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[.88rem] ${tab === t ? "bg-card text-ink" : "text-muted hover:text-ink"}`}>
+                {label}
                 {t === "requests" && newCount > 0 && (
                   <span className="ml-2 rounded-full bg-accent px-1.5 py-px font-mono text-[.7rem] text-onaccent">{newCount}</span>
                 )}
@@ -90,23 +110,48 @@ export default function AdminApp() {
               className="rounded-full border border-line px-3 py-1 text-ink hover:border-accent hover:text-accent">
               ▶ Showcase
             </button>
+            <button type="button" onClick={exportAll} disabled={exporting} title="Download one Excel file with everything: a summary, jobs, parts, quotes, expenses, prints, inventory and requests"
+              className="rounded-full border border-line px-3 py-1 text-ink hover:border-accent hover:text-accent disabled:opacity-60">
+              {exporting ? "Exporting…" : "⬇ Export all (Excel)"}
+            </button>
             <span className="hidden sm:inline">{session.user.email}</span>
             <button type="button" className="underline hover:text-ink" onClick={() => supabase!.auth.signOut()}>Sign out</button>
           </div>
         </>
       }>
-      {tab === "builds" ? <BuildsTab /> : <RequestsTab onChange={refreshNewCount} />}
+      {tab === "dashboard" && <DashboardTab go={setTab} />}
+      {tab === "jobs" && <JobsTab />}
+      {tab === "parts" && <PartsTab />}
+      {tab === "quotes" && <QuotesTab />}
+      {tab === "expenses" && <ExpensesTab />}
+      {tab === "prints" && <PrintsTab />}
+      {tab === "inventory" && <InventoryTab />}
+      {tab === "builds" && <BuildsTab />}
+      {tab === "requests" && <RequestsTab onChange={refreshNewCount} />}
       {showcase && <Showcase onClose={closeShowcase} />}
     </Shell>
   );
 }
 
+const TABS = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "jobs", label: "Jobs" },
+  { id: "parts", label: "Parts" },
+  { id: "quotes", label: "Quotes" },
+  { id: "expenses", label: "Expenses" },
+  { id: "prints", label: "3D prints" },
+  { id: "inventory", label: "Inventory" },
+  { id: "builds", label: "Site builds" },
+  { id: "requests", label: "Requests" },
+] as const;
+type Tab = (typeof TABS)[number]["id"];
+
 /** Page frame: top bar with the logo, a link back to the site, and (when signed in) the tabs. */
-function Shell({ bar, children }: { bar?: React.ReactNode; children: React.ReactNode }) {
+function Shell({ bar, children, wide }: { bar?: React.ReactNode; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
-        <div className="wrap flex min-h-16 flex-wrap items-center justify-between gap-3 py-2">
+        <div className={`${wide ? "mx-auto w-full max-w-[120rem] px-4 sm:px-6" : "wrap"} flex min-h-16 flex-wrap items-center justify-between gap-3 py-2`}>
           <div className="flex items-center gap-3">
             <Logo />
             <span className="eyebrow">Admin</span>
@@ -115,7 +160,7 @@ function Shell({ bar, children }: { bar?: React.ReactNode; children: React.React
           <Link to="/" className="text-[.85rem] text-muted no-underline hover:text-ink">View site →</Link>
         </div>
       </header>
-      <main className="wrap py-8">{children}</main>
+      <main className={wide ? "mx-auto w-full max-w-[120rem] px-4 py-8 sm:px-6" : "wrap py-8"}>{children}</main>
     </div>
   );
 }
@@ -138,7 +183,7 @@ function SignIn() {
   return (
     <form onSubmit={submit} className="card mx-auto mt-10 max-w-md p-7">
       <h1 className="text-2xl">Sign in</h1>
-      <p className="mb-6 mt-1 text-[.92rem] text-muted">Admin portal for builds and requests.</p>
+      <p className="mb-6 mt-1 text-[.92rem] text-muted">Admin portal for your jobs, money, builds and requests.</p>
       <label className="mb-1 block text-[.85rem] text-muted" htmlFor="admin-email">Email</label>
       <input id="admin-email" className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       <label className="mb-1 mt-4 block text-[.85rem] text-muted" htmlFor="admin-password">Password</label>
