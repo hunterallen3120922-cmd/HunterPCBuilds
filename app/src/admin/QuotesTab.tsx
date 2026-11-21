@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { supabase } from "./client";
 import { Totals } from "./Records";
 import PartsGrid, { blankRow, newKey, norm, type GridItem, type PastPart } from "./PartsGrid";
+import { fetchSheet, findParts, readFile, type FoundPart } from "./sheetImport";
 import {
   PART_CATEGORIES, PLATFORMS, STATUSES_FOR, day, jobDay, money, num, pct, quoteTotals, resaleTotals, specLine, today,
   type JobRow, type PartRow, type QuoteItemRow, type QuoteRow,
@@ -191,7 +192,7 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
   const [note, setNote] = useState("");
   const [past, setPast] = useState<PastPart[]>([]);
   const [builds, setBuilds] = useState<PastBuild[]>([]);
-  const [picking, setPicking] = useState(false);
+  const [picking, setPicking] = useState<"" | "build" | "sheet">("");
   const resale = q.purpose === "resale";
 
   // Everything you've bought before: for part suggestions and "copy from a past build"
@@ -359,8 +360,14 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     const rows = b.parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: num(p.price), qty: num(p.qty) || 1, source: p.source ?? "", link: "", optional: false, auto: false }));
     setList(replace ? rows : [...list.filter((i) => i.name.trim()), ...rows]);
     if (!q.title.trim()) set("title", b.job.title);
-    setPicking(false);
+    setPicking("");
     flash(`${replace ? "Replaced the list with" : "Added"} ${rows.length} parts from “${b.job.title}”. Prices are what you paid then.`);
+  };
+  const copySheet = (parts: FoundPart[], replace: boolean, from: string) => {
+    const rows = parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: p.price, qty: 1, source: p.source, link: p.link, optional: false, auto: false }));
+    setList(replace ? rows : [...list.filter((i) => i.name.trim()), ...rows]);
+    setPicking("");
+    flash(`${replace ? "Replaced the list with" : "Added"} ${rows.length} parts from ${from}.`);
   };
   const sortByCategory = () => setList([...list].sort((a, b) => Number(a.optional) - Number(b.optional) || catAt(a.category) - catAt(b.category)));
   const statuses = STATUSES_FOR[q.purpose];
@@ -402,13 +409,17 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-[1.05rem]">Parts</h2>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className="btn btn-ghost !px-3 !py-1.5 !text-[.82rem]" onClick={() => setPicking((v) => !v)} aria-expanded={picking}>
-                  {picking ? "Close" : "Copy from a past build"}
+                <button type="button" className="btn btn-ghost !px-3 !py-1.5 !text-[.82rem]" onClick={() => setPicking((v) => v === "build" ? "" : "build")} aria-expanded={picking === "build"}>
+                  {picking === "build" ? "Close" : "Copy from a past build"}
+                </button>
+                <button type="button" className="btn btn-ghost !px-3 !py-1.5 !text-[.82rem]" onClick={() => setPicking((v) => v === "sheet" ? "" : "sheet")} aria-expanded={picking === "sheet"}>
+                  {picking === "sheet" ? "Close" : "Import from Google Sheet"}
                 </button>
                 <button type="button" className="btn btn-ghost !px-3 !py-1.5 !text-[.82rem]" onClick={sortByCategory}>Sort by category</button>
               </div>
             </div>
-            {picking && <BuildPicker builds={builds} onPick={copyBuild} hasParts={named.length > 0} />}
+            {picking === "build" && <BuildPicker builds={builds} onPick={copyBuild} hasParts={named.length > 0} />}
+            {picking === "sheet" && <SheetImporter onPick={copySheet} hasParts={named.length > 0} />}
             <PartsGrid items={list} onChange={setList} past={past} taxRate={num(q.tax_rate)} />
           </div>
 
@@ -542,6 +553,74 @@ function BuildPicker({ builds, onPick, hasParts }: { builds: PastBuild[]; onPick
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** Read a build sheet (by its link, or a downloaded Excel/CSV file) and pick which parts to bring in. */
+function SheetImporter({ onPick, hasParts }: { onPick: (parts: FoundPart[], replace: boolean, from: string) => void; hasParts: boolean }) {
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [found, setFound] = useState<FoundPart[] | null>(null);
+  const [from, setFrom] = useState("");
+  const [skip, setSkip] = useState<Set<number>>(new Set());
+  const [over, setOver] = useState(false);
+
+  const load = async (read: () => Promise<string[][]>, label: string) => {
+    setBusy(true); setError(""); setFound(null); setSkip(new Set());
+    try {
+      const parts = findParts(await read());
+      if (!parts.length) setError("I couldn't find any parts in that sheet. It needs a row with headers like “Part Name” and “Price” above the parts.");
+      else { setFound(parts); setFrom(label); }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't read that sheet.");
+    }
+    setBusy(false);
+  };
+  const fromLink = () => { if (url.trim()) load(() => fetchSheet(url.trim()), "the sheet"); };
+  const fromFile = (f?: File | null) => { if (f) load(() => readFile(f), `“${f.name}”`); };
+  const chosen = found?.filter((_, k) => !skip.has(k)) ?? [];
+  const toggle = (k: number) => setSkip((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
+
+  return (
+    <div className={`mb-4 rounded-card border bg-bg2 p-3 ${over ? "border-accent" : "border-accent/30"}`}
+      onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+      onDrop={(e) => { e.preventDefault(); setOver(false); fromFile(e.dataTransfer.files[0]); }}>
+      <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); fromLink(); }}>
+        <input className="input !py-2 !text-[.88rem] min-w-0 flex-1" type="url" autoFocus placeholder="Paste the Google Sheet's link (https://docs.google.com/spreadsheets/…)"
+          aria-label="Google Sheet link" value={url} onChange={(e) => setUrl(e.target.value)} />
+        <button type="submit" className="btn !px-4 !py-1.5 !text-[.85rem]" disabled={busy || !url.trim()}>{busy ? "Reading…" : "Load"}</button>
+        <label className="btn btn-ghost cursor-pointer !px-4 !py-1.5 !text-[.85rem]">
+          Or pick a file
+          <input type="file" className="sr-only" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            onChange={(e) => { fromFile(e.target.files?.[0]); e.target.value = ""; }} />
+        </label>
+      </form>
+      <p className="mt-1.5 text-[.75rem] text-muted">The sheet has to be shared as “Anyone with the link can view”. You can also drop a downloaded Excel or CSV file here.</p>
+      {error && <p className="mt-2 text-[.85rem] text-danger" role="alert">{error}</p>}
+      {found && (
+        <>
+          <ul className="mt-3 max-h-[22rem] divide-y divide-line overflow-y-auto rounded-card border border-line bg-card">
+            {found.map((p, k) => (
+              <li key={k}>
+                <label className="flex cursor-pointer items-center gap-3 px-3 py-1.5 text-[.85rem]">
+                  <input type="checkbox" checked={!skip.has(k)} onChange={() => toggle(k)} />
+                  <span className="w-[4.5rem] shrink-0 text-[.78rem] text-muted sm:w-28 sm:text-[.85rem]">{p.category}</span>
+                  <span className="min-w-0 flex-1 break-words text-ink sm:truncate">{p.name}</span>
+                  <span className="hidden w-28 shrink-0 truncate text-muted sm:block">{p.source}</span>
+                  <span className="w-[4.5rem] shrink-0 text-right font-mono">{money(p.price)}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="mr-auto text-[.8rem] text-muted">{chosen.length} of {found.length} parts · {money(chosen.reduce((t, p) => t + p.price, 0))}</span>
+            <button type="button" className="btn !px-3 !py-1 !text-[.78rem]" disabled={!chosen.length} onClick={() => onPick(chosen, true, from)}>{hasParts ? "Replace list" : "Use these parts"}</button>
+            {hasParts && <button type="button" className="btn btn-ghost !px-3 !py-1 !text-[.78rem]" disabled={!chosen.length} onClick={() => onPick(chosen, false, from)}>Add to list</button>}
+          </div>
+        </>
+      )}
     </div>
   );
 }
