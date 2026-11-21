@@ -115,3 +115,51 @@ export const today = () => {
 
 /** Jobs that count toward revenue and profit: finished, and not your own personal PCs. */
 export const countsTowardProfit = (j: Pick<JobRow, "status" | "kind">) => j.status === "done" && j.kind !== "personal";
+
+export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined"] as const;
+
+export interface QuoteRow {
+  id: string;
+  title: string;
+  customer: string | null;
+  contact: string | null;
+  status: (typeof QUOTE_STATUSES)[number];
+  tax_rate: number;
+  build_fee: number;
+  extra_costs: number;
+  show_prices: boolean;
+  valid_until: string | null;
+  customer_note: string | null;
+  notes: string | null;
+  job_id: string | null;
+  created_at: string;
+}
+
+export interface QuoteItemRow {
+  id: string;
+  quote_id: string;
+  category: string;
+  name: string;
+  price: number;
+  qty: number;
+  source: string | null;
+  link: string | null;
+  optional: boolean;
+  sort: number;
+}
+
+const cents = (v: number) => Math.round(v * 100) / 100;
+
+/**
+ * The money on a quote. The customer pays parts + tax on parts + build fee.
+ * Your cost is parts + tax + extra costs, so your profit is the build fee minus extra costs.
+ */
+export const quoteTotals = (q: Pick<QuoteRow, "tax_rate" | "build_fee" | "extra_costs">, items: Pick<QuoteItemRow, "price" | "qty" | "optional">[]) => {
+  const parts = cents(items.filter((i) => !i.optional).reduce((s, i) => s + num(i.price) * num(i.qty), 0));
+  const tax = cents(parts * num(q.tax_rate));
+  const fee = num(q.build_fee);
+  const total = cents(parts + tax + fee);
+  const cost = cents(parts + tax + num(q.extra_costs));
+  const upgrades = cents(items.filter((i) => i.optional).reduce((s, i) => s + num(i.price) * num(i.qty), 0));
+  return { parts, tax, fee, total, cost, profit: cents(total - cost), upgrades };
+};
