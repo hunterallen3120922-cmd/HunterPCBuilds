@@ -226,13 +226,13 @@ function ConceptC({ open: startOpen = "gpu" as Category | null }) {
       <div className="relative flex flex-col bg-[radial-gradient(55%_50%_at_50%_50%,color-mix(in_srgb,var(--accent)_10%,transparent),transparent)] p-6">
         <div className="relative h-[28rem]"><PcVisual pick={pick} installed={ALL} powered highlight={open}>
           {CATEGORIES.map((c) => (
-            <button key={c.key} type="button" onClick={() => setOpen(open === c.key ? null : c.key)} style={{ ...pinStyle(c.key), zIndex: 40 }}
+            <button key={c.key} type="button" onClick={() => setOpen(open === c.key ? null : c.key)} style={{ ...pinStyle(c.key, pick.case), zIndex: 40 }}
               className={`absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 text-[.7rem] font-bold ${open === c.key ? "border-accent bg-accent text-bg" : "border-accent bg-bg/80 text-accent shadow-[0_0_0_6px_color-mix(in_srgb,var(--accent)_18%,transparent)]"}`}>
               +
             </button>
           ))}
           {open && (
-            <div className="absolute z-50 w-64 rounded-card border border-line bg-card/95 p-3 shadow-2xl backdrop-blur" style={{ ...pinStyle(open), transform: "translate(1.4rem, -50%)" }}>
+            <div className="absolute z-50 w-64 rounded-card border border-line bg-card/95 p-3 shadow-2xl backdrop-blur" style={{ ...pinStyle(open, pick.case), transform: "translate(1.4rem, -50%)" }}>
               <p className="mb-2 flex justify-between text-[.8rem]"><b className="font-medium">{CATEGORIES.find((c) => c.key === open)!.label}</b><button type="button" className="text-muted" onClick={() => setOpen(null)}>✕</button></p>
               <div className="space-y-1">
                 {customParts[open].map((p, i) => (

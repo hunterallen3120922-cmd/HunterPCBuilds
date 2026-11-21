@@ -36,10 +36,10 @@ type Opt = { v: string; sub: string; art: ReactNode };
 type Step = { cat: Category | null; part: string; q: string; hint: string; multi?: boolean; opts: Opt[] };
 
 const STEPS: Step[] = [
-  { cat: "case", part: "Case", q: "First, pick a case", hint: "How big should it be?", opts: [
-    { v: "Compact", sub: "Small desk or dorm", art: <CaseArt h={26} w={24} /> },
-    { v: "Mid tower", sub: "Most popular, easy to upgrade", art: <CaseArt h={34} w={28} /> },
-    { v: "Big showpiece", sub: "Room for big parts + fans", art: <CaseArt h={42} w={34} /> },
+  { cat: "case", part: "Case", q: "First, pick a case", hint: "Pick a size. Watch the case change.", opts: [
+    { v: "ITX", sub: "Mini. Fits a small desk or dorm", art: <CaseArt h={26} w={24} /> },
+    { v: "Micro-ATX", sub: "Compact tower, great value", art: <CaseArt h={33} w={28} /> },
+    { v: "ATX", sub: "Full size, most room + airflow", art: <CaseArt h={42} w={31} /> },
   ] },
   { cat: "cpu", part: "Motherboard & CPU", q: "What will it do?", hint: "This decides the brain of your PC. Tap all that apply.", multi: true, opts: [
     { v: "Gaming", sub: "Fortnite, Valorant, AAA", art: <Art vb="0 0 24 18"><g transform="translate(0 -3)"><path d="M7 8h10a4 4 0 0 1 4 4.2L20 16a2.5 2.5 0 0 1-4.3 1.2L14.5 16h-5l-1.2 1.2A2.5 2.5 0 0 1 4 16l-1-3.8A4 4 0 0 1 7 8z" strokeWidth="1" /></g></Art> },
@@ -157,7 +157,7 @@ export default function WalkLab() {
             </p>
             <div className="h-[19rem] lg:h-[30rem]">
               <PcVisual pick={pick} installed={installed} powered={powered} lights={powered ? LIGHTS[a(5)] : 0}>
-                {flash && <span key={flash.k} className="pointer-events-none absolute z-50 h-16 w-16 rounded-full border-2 border-accent" style={{ ...pinStyle(flash.cat), animation: "wl-ring .7s ease-out both" }} />}
+                {flash && <span key={flash.k} className="pointer-events-none absolute z-50 h-16 w-16 rounded-full border-2 border-accent" style={{ ...pinStyle(flash.cat, pick.case), animation: "wl-ring .7s ease-out both" }} />}
                 {powered && <span key="boot" className="pointer-events-none absolute inset-0 z-50 rounded-[30%] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--accent)_45%,transparent),transparent)]" style={{ animation: "wl-boot 1.2s ease-out both" }} />}
               </PcVisual>
             </div>
