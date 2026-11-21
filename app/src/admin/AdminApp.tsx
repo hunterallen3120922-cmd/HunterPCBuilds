@@ -6,6 +6,7 @@ import BuildsTab from "./BuildsTab";
 import RequestsTab from "./RequestsTab";
 import DashboardTab from "./DashboardTab";
 import PartsTab from "./PartsTab";
+import QuotesTab from "./QuotesTab";
 import { ExpensesTab, InventoryTab, JobsTab, PrintsTab } from "./BusinessTabs";
 import Showcase from "./Showcase";
 import { Logo } from "../components/Nav";
@@ -105,6 +106,7 @@ export default function AdminApp() {
       {tab === "dashboard" && <DashboardTab go={setTab} />}
       {tab === "jobs" && <JobsTab />}
       {tab === "parts" && <PartsTab />}
+      {tab === "quotes" && <QuotesTab />}
       {tab === "expenses" && <ExpensesTab />}
       {tab === "prints" && <PrintsTab />}
       {tab === "inventory" && <InventoryTab />}
@@ -119,6 +121,7 @@ const TABS = [
   { id: "dashboard", label: "Dashboard" },
   { id: "jobs", label: "Jobs" },
   { id: "parts", label: "Parts" },
+  { id: "quotes", label: "Quotes" },
   { id: "expenses", label: "Expenses" },
   { id: "prints", label: "3D prints" },
   { id: "inventory", label: "Inventory" },

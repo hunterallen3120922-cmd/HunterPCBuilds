@@ -132,3 +132,52 @@ drop policy if exists "admins only" on public.job_parts;
 create policy "admins only" on public.job_parts for all using (public.is_admin()) with check (public.is_admin());
 drop trigger if exists touch_updated_at on public.job_parts;
 create trigger touch_updated_at before update on public.job_parts for each row execute function public.touch_updated_at();
+
+-- ─── Added in phase 3: quotes ────────────────────────────────────────────────
+-- A quote is a parts list you price for a customer. When they say yes, it becomes a job.
+
+create table if not exists public.quotes (
+  id            uuid primary key default gen_random_uuid(),
+  title         text not null check (char_length(title) between 1 and 200),
+  customer      text check (char_length(customer) <= 200),
+  contact       text check (char_length(contact) <= 200),             -- phone, email, Snapchat…
+  status        text not null default 'draft' check (status in ('draft', 'sent', 'accepted', 'declined')),
+  tax_rate      numeric(5, 4) not null default 0.06 check (tax_rate between 0 and 0.5),
+  build_fee     numeric(10, 2) not null default 0,                    -- what you charge for your work
+  extra_costs   numeric(10, 2) not null default 0,                    -- your costs the customer doesn't see (shipping, fees)
+  show_prices   boolean not null default true,                        -- show each part's price on the customer quote
+  valid_until   date,
+  customer_note text check (char_length(customer_note) <= 3000),      -- printed on the customer quote
+  notes         text check (char_length(notes) <= 5000),              -- private
+  job_id        uuid references public.jobs on delete set null,       -- the job it became
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create table if not exists public.quote_items (
+  id          uuid primary key default gen_random_uuid(),
+  quote_id    uuid not null references public.quotes on delete cascade,
+  category    text not null default 'Other' check (char_length(category) between 1 and 40),
+  name        text not null check (char_length(name) between 1 and 200),
+  price       numeric(10, 2) not null default 0,          -- price for one, before tax
+  qty         integer not null default 1 check (qty >= 0),
+  source      text check (char_length(source) <= 80),
+  link        text check (char_length(link) <= 500),
+  optional    boolean not null default false,             -- an upgrade you offer, not in the total
+  sort        integer not null default 0,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists quote_items_quote_id on public.quote_items (quote_id);
+
+do $$
+declare t text;
+begin
+  foreach t in array array['quotes', 'quote_items'] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists "admins only" on public.%I', t);
+    execute format('create policy "admins only" on public.%I for all using (public.is_admin()) with check (public.is_admin())', t);
+    execute format('drop trigger if exists touch_updated_at on public.%I', t);
+    execute format('create trigger touch_updated_at before update on public.%I for each row execute function public.touch_updated_at()', t);
+  end loop;
+end $$;
