@@ -3,7 +3,7 @@ import { PART_CATEGORIES, day, num, quoteTotals, today, type QuoteItemRow, type 
 type Item = Pick<QuoteItemRow, "category" | "name" | "price" | "qty" | "source" | "link" | "optional">;
 type Quote = Pick<QuoteRow, "title" | "customer" | "contact" | "tax_rate" | "build_fee" | "extra_costs" | "show_prices" | "valid_until" | "customer_note" | "notes">;
 
-const GREEN = "FF1F9D55";
+const BLUE = "FF1D4ED8";
 const INK = "FF16181D";
 const MUTED = "FF6B7280";
 const LINE = "FFD9DDE3";
@@ -33,10 +33,19 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
   const ups = items.filter((i) => i.optional);
   const taxPct = `${+(num(q.tax_rate) * 100).toFixed(2)}%`;
 
-  // Columns: Category, Part, Qty, Price, Total (+ From, Link for your copy)
-  const cols = internal
-    ? [{ w: 14 }, { w: 40 }, { w: 6 }, { w: 12 }, { w: 12 }, { w: 16 }, { w: 40 }]
-    : prices ? [{ w: 16 }, { w: 46 }, { w: 6 }, { w: 13 }, { w: 13 }] : [{ w: 18 }, { w: 56 }, { w: 12 }];
+  // Columns are only added when they're needed: Qty only if something comes in more than one,
+  // a price column on a simple quote only for the total and upgrade prices.
+  const showQty = items.some((i) => num(i.qty) !== 1);
+  type Col = { key: "cat" | "part" | "qty" | "price" | "total" | "amt" | "from" | "link"; w: number; head: string };
+  const cols: Col[] = [
+    { key: "cat", w: internal ? 14 : 16, head: "Category" },
+    { key: "part", w: internal ? 40 : prices ? 46 : 54, head: "Part" },
+    ...(showQty ? [{ key: "qty", w: 6, head: "Qty" } as Col] : []),
+    ...(prices ? [{ key: "price", w: 13, head: "Price" } as Col, ...(showQty ? [{ key: "total", w: 13, head: "Total" } as Col] : [])] : [{ key: "amt", w: 15, head: "" } as Col]),
+    ...(internal ? [{ key: "from", w: 16, head: "From" } as Col, { key: "link", w: 40, head: "Link" } as Col] : []),
+  ];
+  const col = (k: Col["key"]) => cols.findIndex((c) => c.key === k) + 1;
+  const valueCol = col("total") || col("price") || col("amt");
   ws.columns = cols.map((c) => ({ width: c.w }));
   const last = cols.length;
   const lastCol = String.fromCharCode(64 + last);
@@ -44,7 +53,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
   // Header
   ws.mergeCells(`A1:${lastCol}1`);
   Object.assign(ws.getCell("A1"), { value: "HunterPCBuilds" });
-  ws.getCell("A1").font = { name: "Calibri", size: 20, bold: true, color: { argb: GREEN } };
+  ws.getCell("A1").font = { name: "Calibri", size: 20, bold: true, color: { argb: BLUE } };
   ws.getRow(1).height = 30;
   ws.mergeCells(`A2:${lastCol}2`);
   ws.getCell("A2").value = internal ? "Quote: your copy (don't send this one)" : "Custom PC quote";
@@ -68,33 +77,34 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
   r++;
 
   // Parts table
-  const head = internal ? ["Category", "Part", "Qty", "Price", "Total", "From", "Link"] : prices ? ["Category", "Part", "Qty", "Price", "Total"] : ["Category", "Part", "Qty"];
   const headRow = ws.getRow(r);
-  head.forEach((h, i) => {
+  cols.forEach((h, i) => {
     const c = headRow.getCell(i + 1);
-    c.value = h;
+    c.value = h.head;
     c.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: GREEN } };
-    c.alignment = { vertical: "middle", horizontal: i >= 2 && i <= 4 ? "right" : "left" };
+    c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: BLUE } };
+    c.alignment = { vertical: "middle", horizontal: ["qty", "price", "total", "amt"].includes(h.key) ? "right" : "left", indent: h.key === "from" || h.key === "link" ? 1 : 0 };
   });
   headRow.height = 20;
   r++;
   const line = (i: Item, upgrade = false) => {
     const row = ws.getRow(r);
     const unit = upgrade && !internal ? num(i.price) * (1 + num(q.tax_rate)) : num(i.price);
-    const vals: (string | number | { text: string; hyperlink: string } | null)[] = [i.category, i.name, num(i.qty)];
-    if (prices) vals.push(unit, unit * num(i.qty));
-    if (internal) vals.push(i.source ?? "", i.link ? { text: i.link, hyperlink: i.link } : "");
-    vals.forEach((v, k) => {
-      const c = row.getCell(k + 1);
-      c.value = v as never;
-      if (k === 3 || k === 4) c.numFmt = MONEY;
-      if (k === 2) c.alignment = { horizontal: "right" };
-      if (k === 6 && i.link) c.font = { color: { argb: "FF2563EB" }, underline: true };
-      c.border = { bottom: { style: "thin", color: { argb: LINE } } };
-    });
-    if (upgrade && !prices) { row.getCell(3).value = unit * num(i.qty); row.getCell(3).numFmt = '"+$"#,##0.00'; }
-    if (num(i.price) === 0 && prices && !upgrade) row.getCell(4).value = internal ? 0 : "Included";
+    const qty = num(i.qty);
+    const set = (k: Col["key"], v: unknown, fmt?: string) => { const n = col(k); if (!n) return; const c = row.getCell(n); c.value = v as never; if (fmt) c.numFmt = fmt; };
+    set("cat", i.category);
+    set("part", !showQty && qty > 1 ? `${i.name} (×${qty})` : i.name);
+    set("qty", qty);
+    if (prices) {
+      // One price column when nothing has a quantity: show the line total there
+      set("price", showQty ? unit : unit * qty, MONEY);
+      set("total", unit * qty, MONEY);
+      if (num(i.price) === 0 && !upgrade && !internal) set("price", "Included");
+    } else if (upgrade) set("amt", unit * qty, '"+$"#,##0.00');
+    set("from", i.source ?? "");
+    if (i.link) { set("link", { text: i.link, hyperlink: i.link }); row.getCell(col("link")).font = { color: { argb: BLUE }, underline: true }; }
+    for (let k = 1; k <= last; k++) row.getCell(k).border = { bottom: { style: "thin", color: { argb: LINE } } };
+    for (const k of ["qty", "price", "total", "amt"] as const) if (col(k)) row.getCell(col(k)).alignment = { horizontal: "right" };
     r++;
   };
   main.forEach((i) => line(i));
@@ -102,25 +112,25 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
 
   // Totals
   const total = (label: string, value: number, opts: { bold?: boolean; color?: string; note?: string } = {}) => {
-    const lc = prices ? 4 : 2;
-    const vc = prices ? 5 : 3;
+    const lc = valueCol - 1;
+    const vc = valueCol;
     ws.getCell(r, lc).value = label;
     ws.getCell(r, lc).alignment = { horizontal: "right" };
     ws.getCell(r, lc).font = { bold: opts.bold, color: { argb: opts.color ?? INK } };
     ws.getCell(r, vc).value = value;
     ws.getCell(r, vc).numFmt = MONEY;
     ws.getCell(r, vc).font = { bold: opts.bold, color: { argb: opts.color ?? INK }, size: opts.bold ? 13 : 11 };
-    if (opts.note && internal) { ws.getCell(r, 6).value = opts.note; ws.getCell(r, 6).font = { color: { argb: MUTED }, italic: true }; }
+    if (opts.note && internal) { ws.getCell(r, col("from")).value = opts.note; ws.getCell(r, col("from")).font = { color: { argb: MUTED }, italic: true }; }
     r++;
   };
   if (prices) {
     total("Parts", t.parts);
     total(`Sales tax (${taxPct})`, t.tax);
     if (t.fee) total("Build fee", t.fee);
-    total("Total", t.total, { bold: true, color: GREEN });
+    total("Total", t.total, { bold: true, color: BLUE });
   } else {
     // Simple quote: one price for the finished PC, no breakdown
-    total("Total (tax included)", t.total, { bold: true, color: GREEN });
+    total("Total (tax included)", t.total, { bold: true, color: BLUE });
     ws.mergeCells(r, 1, r, last);
     ws.getCell(r, 1).value = "Includes every part listed, plus assembly, setup and testing.";
     ws.getCell(r, 1).font = { color: { argb: MUTED }, italic: true };
@@ -131,9 +141,9 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
     r++;
     total("Your parts cost (with tax)", t.parts + t.tax);
     if (num(q.extra_costs)) total("Extra costs", num(q.extra_costs), { note: "shipping, fees…" });
-    total("Your profit", t.profit, { bold: true, color: t.profit < 0 ? "FFDC2626" : GREEN });
+    total("Your profit", t.profit, { bold: true, color: t.profit < 0 ? "FFDC2626" : BLUE });
     total("Margin", t.total ? t.profit / t.total : 0);
-    ws.getCell(r - 1, prices ? 5 : 3).numFmt = "0%";
+    ws.getCell(r - 1, valueCol).numFmt = "0%";
   }
 
   if (ups.length) {
@@ -176,7 +186,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
   // One font everywhere, and a little gap between the money columns and "From"
   ws.eachRow({ includeEmpty: false }, (row) => row.eachCell({ includeEmpty: false }, (c) => {
     c.font = { name: "Calibri", size: 11, ...c.font };
-    if (internal && Number(c.col) >= 6) c.alignment = { ...c.alignment, indent: 1 };
+    if (internal && Number(c.col) >= col("from")) c.alignment = { ...c.alignment, indent: 1 };
   }));
 
   const buf = await wb.xlsx.writeBuffer();
