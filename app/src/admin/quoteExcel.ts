@@ -1,7 +1,7 @@
-import { PART_CATEGORIES, day, num, quoteTotals, today, type QuoteItemRow, type QuoteRow } from "./money";
+import { PART_CATEGORIES, day, num, quoteTotals, resaleTotals, today, type QuoteItemRow, type QuoteRow } from "./money";
 
 type Item = Pick<QuoteItemRow, "category" | "name" | "price" | "qty" | "source" | "link" | "optional">;
-type Quote = Pick<QuoteRow, "title" | "customer" | "contact" | "tax_rate" | "build_fee" | "extra_costs" | "show_prices" | "valid_until" | "customer_note" | "notes">;
+type Quote = Pick<QuoteRow, "title" | "customer" | "contact" | "tax_rate" | "build_fee" | "extra_costs" | "show_prices" | "valid_until" | "customer_note" | "notes"> & Partial<Pick<QuoteRow, "purpose" | "platform" | "list_price" | "fee_pct" | "fee_fixed" | "shipping">>;
 
 const BLUE = "FF1D4ED8";
 const INK = "FF16181D";
@@ -56,7 +56,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
   ws.getCell("A1").font = { name: "Calibri", size: 20, bold: true, color: { argb: BLUE } };
   ws.getRow(1).height = 30;
   ws.mergeCells(`A2:${lastCol}2`);
-  ws.getCell("A2").value = internal ? "Quote: your copy (don't send this one)" : "Custom PC quote";
+  ws.getCell("A2").value = internal ? (q.purpose === "resale" ? "Build to sell: your copy" : "Quote: your copy (don't send this one)") : "Custom PC quote";
   ws.getCell("A2").font = { size: 12, color: { argb: internal ? "FFB45309" : MUTED } };
 
   let r = 4;
@@ -123,27 +123,45 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
     if (opts.note && internal) { ws.getCell(r, col("from")).value = opts.note; ws.getCell(r, col("from")).font = { color: { argb: MUTED }, italic: true }; }
     r++;
   };
-  if (prices) {
-    total("Parts", t.parts);
-    total(`Sales tax (${taxPct})`, t.tax);
-    if (t.fee) total("Build fee", t.fee);
-    total("Total", t.total, { bold: true, color: BLUE });
-  } else {
-    // Simple quote: one price for the finished PC, no breakdown
-    total("Total (tax included)", t.total, { bold: true, color: BLUE });
-    ws.mergeCells(r, 1, r, last);
-    ws.getCell(r, 1).value = "Includes every part listed, plus assembly, setup and testing.";
-    ws.getCell(r, 1).font = { color: { argb: MUTED }, italic: true };
-    ws.getCell(r, 1).alignment = { horizontal: "right" };
+  if (internal && q.purpose === "resale") {
+    // A build you're selling yourself: your cost, then what the sale brings in
+    const rt = resaleTotals({ ...q, list_price: q.list_price ?? 0, fee_pct: q.fee_pct ?? 0, fee_fixed: q.fee_fixed ?? 0, shipping: q.shipping ?? 0 }, allItems);
+    total("Parts", rt.parts);
+    total(`Sales tax (${taxPct})`, rt.tax);
+    if (num(q.extra_costs)) total("Other costs", num(q.extra_costs));
+    total("Your cost", rt.cost, { bold: true });
     r++;
-  }
-  if (internal) {
-    r++;
-    total("Your parts cost (with tax)", t.parts + t.tax);
-    if (num(q.extra_costs)) total("Extra costs", num(q.extra_costs), { note: "shipping, fees…" });
-    total("Your profit", t.profit, { bold: true, color: t.profit < 0 ? "FFDC2626" : BLUE });
-    total("Margin", t.total ? t.profit / t.total : 0);
+    total(`List price${q.platform ? ` (${q.platform})` : ""}`, rt.list);
+    total("Fees", -rt.fees, { note: `${+(num(q.fee_pct) * 100).toFixed(2)}% + $${num(q.fee_fixed).toFixed(2)}` });
+    if (rt.shipping) total("Shipping", -rt.shipping);
+    total("You get paid", rt.payout);
+    total("Profit", rt.profit, { bold: true, color: rt.profit < 0 ? "FFDC2626" : BLUE });
+    total("Margin", rt.list ? rt.profit / rt.list : 0);
     ws.getCell(r - 1, valueCol).numFmt = "0%";
+    total("Break-even price", rt.breakEven);
+  } else {
+    if (prices) {
+      total("Parts", t.parts);
+      total(`Sales tax (${taxPct})`, t.tax);
+      if (t.fee) total("Build fee", t.fee);
+      total("Total", t.total, { bold: true, color: BLUE });
+    } else {
+      // Simple quote: one price for the finished PC, no breakdown
+      total("Total (tax included)", t.total, { bold: true, color: BLUE });
+      ws.mergeCells(r, 1, r, last);
+      ws.getCell(r, 1).value = "Includes every part listed, plus assembly, setup and testing.";
+      ws.getCell(r, 1).font = { color: { argb: MUTED }, italic: true };
+      ws.getCell(r, 1).alignment = { horizontal: "right" };
+      r++;
+    }
+    if (internal) {
+      r++;
+      total("Your parts cost (with tax)", t.parts + t.tax);
+      if (num(q.extra_costs)) total("Extra costs", num(q.extra_costs), { note: "shipping, fees…" });
+      total("Your profit", t.profit, { bold: true, color: t.profit < 0 ? "FFDC2626" : BLUE });
+      total("Margin", t.total ? t.profit / t.total : 0);
+      ws.getCell(r - 1, valueCol).numFmt = "0%";
+    }
   }
 
   if (ups.length) {

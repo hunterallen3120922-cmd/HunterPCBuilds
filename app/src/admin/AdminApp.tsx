@@ -80,6 +80,7 @@ export default function AdminApp() {
 
   return (
     <Shell
+      wide={tab === "quotes"}
       bar={
         <>
           <nav className="order-last flex w-full gap-1 overflow-x-auto rounded-full border border-line bg-bg2 p-1" aria-label="Admin sections">
@@ -131,11 +132,11 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"];
 
 /** Page frame: top bar with the logo, a link back to the site, and (when signed in) the tabs. */
-function Shell({ bar, children }: { bar?: React.ReactNode; children: React.ReactNode }) {
+function Shell({ bar, children, wide }: { bar?: React.ReactNode; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
-        <div className="wrap flex min-h-16 flex-wrap items-center justify-between gap-3 py-2">
+        <div className={`${wide ? "mx-auto w-full max-w-[120rem] px-4 sm:px-6" : "wrap"} flex min-h-16 flex-wrap items-center justify-between gap-3 py-2`}>
           <div className="flex items-center gap-3">
             <Logo />
             <span className="eyebrow">Admin</span>
@@ -144,7 +145,7 @@ function Shell({ bar, children }: { bar?: React.ReactNode; children: React.React
           <Link to="/" className="text-[.85rem] text-muted no-underline hover:text-ink">View site →</Link>
         </div>
       </header>
-      <main className="wrap py-8">{children}</main>
+      <main className={wide ? "mx-auto w-full max-w-[120rem] px-4 py-8 sm:px-6" : "wrap py-8"}>{children}</main>
     </div>
   );
 }

@@ -116,7 +116,21 @@ export const today = () => {
 /** Jobs that count toward revenue and profit: finished, and not your own personal PCs. */
 export const countsTowardProfit = (j: Pick<JobRow, "status" | "kind">) => j.status === "done" && j.kind !== "personal";
 
-export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined"] as const;
+export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "building", "listed", "sold"] as const;
+/** The statuses that make sense for each kind of quote. */
+export const STATUSES_FOR = {
+  customer: ["draft", "sent", "accepted", "declined"],
+  resale: ["draft", "building", "listed", "sold"],
+} as const;
+
+/** Where you sell builds yourself, with the site's usual cut. Fees change, so they can be edited on each quote. */
+export const PLATFORMS = [
+  { name: "eBay", pct: 0.136, fixed: 0.4, note: "13.6% + $0.40 per order (most categories)" },
+  { name: "Facebook Marketplace (shipped)", pct: 0.1, fixed: 0, note: "10% when shipped" },
+  { name: "Facebook Marketplace (local)", pct: 0, fixed: 0, note: "no fee for local pickup" },
+  { name: "OfferUp (shipped)", pct: 0.129, fixed: 0, note: "12.9% when shipped" },
+  { name: "Local / cash", pct: 0, fixed: 0, note: "no fees" },
+] as const;
 
 export interface QuoteRow {
   id: string;
@@ -124,6 +138,12 @@ export interface QuoteRow {
   customer: string | null;
   contact: string | null;
   status: (typeof QUOTE_STATUSES)[number];
+  purpose: "customer" | "resale";
+  platform: string | null;
+  list_price: number;
+  fee_pct: number;
+  fee_fixed: number;
+  shipping: number;
   tax_rate: number;
   build_fee: number;
   extra_costs: number;
@@ -162,4 +182,22 @@ export const quoteTotals = (q: Pick<QuoteRow, "tax_rate" | "build_fee" | "extra_
   const cost = cents(parts + tax + num(q.extra_costs));
   const upgrades = cents(items.filter((i) => i.optional).reduce((s, i) => s + num(i.price) * num(i.qty), 0));
   return { parts, tax, fee, total, cost, profit: cents(total - cost), upgrades };
+};
+
+/**
+ * The money on a build you sell yourself: you pay parts + tax + extra costs,
+ * the site takes its fee from the list price, and you pay shipping.
+ */
+export const resaleTotals = (q: Pick<QuoteRow, "tax_rate" | "extra_costs" | "list_price" | "fee_pct" | "fee_fixed" | "shipping">, items: Pick<QuoteItemRow, "price" | "qty" | "optional">[]) => {
+  const parts = cents(items.filter((i) => !i.optional).reduce((s, i) => s + num(i.price) * num(i.qty), 0));
+  const tax = cents(parts * num(q.tax_rate));
+  const cost = cents(parts + tax + num(q.extra_costs));
+  const list = num(q.list_price);
+  const fees = list > 0 ? cents(list * num(q.fee_pct) + num(q.fee_fixed)) : 0;
+  const shipping = num(q.shipping);
+  const payout = cents(list - fees - shipping);
+  const profit = cents(payout - cost);
+  const pctLeft = 1 - num(q.fee_pct);
+  const breakEven = pctLeft > 0 ? cents((cost + shipping + num(q.fee_fixed)) / pctLeft) : 0;
+  return { parts, tax, cost, list, fees, shipping, payout, profit, breakEven };
 };
