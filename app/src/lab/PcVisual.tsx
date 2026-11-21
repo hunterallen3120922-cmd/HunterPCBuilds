@@ -8,9 +8,9 @@ import type { Category, Pick } from "../lib/configurator";
  * only fades/slides layers (opacity + transform). Nothing is redrawn, so it stays as cheap as the PC Builds animation.
  */
 
-const T = "opacity .35s ease, transform .5s cubic-bezier(.2,1.5,.4,1)";
+const T = "opacity .3s ease, transform .65s cubic-bezier(.25,1.6,.45,1)";
 const Layer = ({ on, z, children, style }: { on: boolean; z?: number; children: ReactNode; style?: CSSProperties }) => (
-  <div className="absolute inset-0" style={{ transition: T, opacity: on ? 1 : 0, transform: on ? "none" : "translateY(-5%)", zIndex: z, pointerEvents: "none", ...style }}>
+  <div className="absolute inset-0" style={{ transition: T, opacity: on ? 1 : 0, transform: on ? "none" : "translateY(-22%) scale(1.04)", zIndex: z, pointerEvents: "none", ...style }}>
     <svg viewBox={VIEWBOX} className="h-full w-full overflow-visible" fill="none" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
   </div>
 );
@@ -127,8 +127,10 @@ export const PIN: Record<Category, [number, number]> = (() => {
 })();
 export const pinStyle = (c: Category): CSSProperties => ({ left: pct(PIN[c][0] - VIEW.x, VIEW.w), top: pct(PIN[c][1] - VIEW.y, VIEW.h) });
 
-export default function PcVisual({ pick, installed, powered, highlight, children }: {
+export default function PcVisual({ pick, installed, powered, highlight, children, lights = 1 }: {
   pick: Pick; installed: Set<Category>; powered: boolean; highlight?: Category | null; children?: ReactNode;
+  /** How bright the lighting is once powered: 0 off, 0.5 subtle, 1 full */
+  lights?: number;
 }) {
   const has = (c: Category) => installed.has(c);
   const hl = (c: Category) => (highlight === c ? 30 : undefined);
@@ -138,13 +140,13 @@ export default function PcVisual({ pick, installed, powered, highlight, children
     <div className="flex h-full w-full items-center justify-center [container-type:size]">
       <div className="relative aspect-[550/548] w-[min(100cqw,calc(100cqh*550/548))]">
         <svg width="0" height="0" className="absolute"><Defs /></svg>
-        <div className="absolute inset-0" style={{ opacity: powered ? 1 : 0.4, transition: "opacity .6s" }}>
+        <div className="absolute inset-0" style={{ opacity: powered ? 0.3 + 0.7 * lights : 0.4, transition: "opacity .6s" }}>
           <svg viewBox={VIEWBOX} className="h-full w-full overflow-visible"><ellipse cx="395" cy="580" rx="260" ry="20" fill="url(#bs-floor)" /></svg>
         </div>
         <div className="absolute inset-0" style={{ transformOrigin: "52% 95%", transform: `scale(${has("case") ? CASE_SCALE[pick.case] : 0.9})`, transition: "transform .5s cubic-bezier(.2,1.4,.4,1)" }}>
           <Layer on style={{ opacity: has("case") ? 1 : 0.35, transform: "none" }}><CaseBack />{SHROUD}</Layer>
           <Layer on={has("case")}><CaseFans mode="unlit" /></Layer>
-          <Layer on={has("case") && powered}><CaseFans mode="lit" /></Layer>
+          <Layer on={has("case") && powered} style={{ transform: "none", opacity: has("case") && powered ? 0.12 + 0.88 * lights : 0 }}><CaseFans mode="lit" /></Layer>
           {/* where parts go, until they're chosen */}
           {(Object.keys(GHOST) as (keyof typeof GHOST)[]).map((c) => (
             <Layer key={c} on={!has(c)} style={{ transform: "none" }}><Side><g stroke={GLOW} strokeWidth="2" strokeDasharray="6 7" opacity=".45">{GHOST[c]}</g></Side></Layer>
