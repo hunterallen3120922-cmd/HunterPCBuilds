@@ -51,6 +51,8 @@ export interface Option {
   icon?: string;
   /** A small drawing shown on picture cards (see components/build/PartArt.tsx), e.g. "case-atx" */
   art?: string;
+  /** A short reaction shown beside the PC when this is picked (build request), e.g. "Big tower energy." */
+  quip?: string;
 }
 
 export interface PreferredWindow {
