@@ -42,12 +42,12 @@ export default function Field({ def, value, error, onChange }: Props) {
             <label key={o.value} className="relative block cursor-pointer">
               <input type={def.multi ? "checkbox" : "radio"} name={def.name} value={o.value} checked={isOn(o.value)}
                 onChange={() => pick(o.value)} className="peer absolute opacity-0" />
-              <span className="flex h-full flex-col rounded-card border-2 border-line bg-bg2 p-3.5 text-muted transition hover:-translate-y-0.5 hover:border-accent/40 peer-checked:border-accent peer-checked:bg-accent/[.08] peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent max-sm:p-3">
+              <span className="pick-card flex h-full flex-col rounded-card border-2 border-line bg-bg2 p-3.5 text-muted hover:-translate-y-0.5 hover:border-accent/40 peer-checked:border-accent peer-checked:bg-accent/[.08] peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent max-sm:p-3">
                 {o.art ? <PartArt name={o.art} /> : o.icon && <span className="grid h-14 place-items-center"><Icon name={o.icon} className="h-8 w-8" /></span>}
                 <strong className="mt-2 block font-medium text-ink">{o.label ?? o.value}</strong>
                 {o.description && <span className="text-[.78rem] leading-snug text-muted">{o.description}</span>}
               </span>
-              <span className="pointer-events-none absolute right-2 top-2 hidden h-5 w-5 place-items-center rounded-full bg-accent text-bg peer-checked:grid"><Icon name="check" className="h-3 w-3" /></span>
+              <span className="pick-tick pointer-events-none absolute right-2 top-2 hidden h-5 w-5 place-items-center rounded-full bg-accent text-bg peer-checked:grid"><Icon name="check" className="h-3 w-3" /></span>
             </label>
           ))}
         </div>
