@@ -399,3 +399,14 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
 }
 .footer-word > b { display: block; font-weight: inherit; font-size: 13.2cqw; }
 .footer-word b span { -webkit-text-stroke-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+
+/* Trade-in estimate reveal (pages/TradeIn.tsx) */
+.ti-bar { width: 100%; transform-origin: left; animation: ti-bar linear both; }
+@keyframes ti-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.ti-line { animation: ti-line .35s var(--ease) both; }
+@keyframes ti-line { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.ti-shuffle { display: inline-block; animation: ti-shuffle .5s ease-in-out infinite alternate; }
+@keyframes ti-shuffle { from { filter: blur(6px); opacity: .5; } to { filter: blur(2px); opacity: .9; } }
+.ti-pop { animation: ti-pop .6s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes ti-pop { from { opacity: 0; transform: scale(.94) translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ti-bar, .ti-line, .ti-shuffle, .ti-pop { animation: none; } }

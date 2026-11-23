@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import SectionHead from "../components/SectionHead";
@@ -11,6 +11,31 @@ import { tradeInForm } from "../forms/shopForms";
 import type { FormConfig } from "../components/form/types";
 import { submitTradeIn } from "../lib/submit";
 import { conditions, creditBonus, extras, partTypes, priceList, tradeInUpdated, type PartType } from "../content/tradeIn";
+
+/** HashRouter owns the # in the address, so in-page jumps scroll by id instead of using href="#id". */
+const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+/** Counts a number up from 0 so the price "lands" when it's revealed. */
+function useCountUp(target: number, run: boolean, ms = 900) {
+  const [v, setV] = useState(run ? target : 0);
+  const from = useRef(0);
+  useEffect(() => {
+    if (!run) { setV(0); from.current = 0; return; }
+    const start = performance.now(), a = from.current;
+    let raf = 0;
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - start) / ms), e = 1 - Math.pow(1 - k, 3);
+      const n = Math.round(a + (target - a) * e);
+      setV(n);
+      if (k < 1) raf = requestAnimationFrame(tick); else from.current = target;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, run, ms]);
+  return v;
+}
+
+const CHECKING = ["Looking up recent sold prices…", "Checking the condition…", "Adding up your extras…"];
 
 const round5 = (n: number) => Math.max(5, Math.round(n / 5) * 5);
 
@@ -32,6 +57,17 @@ export default function TradeIn() {
   const [picked, setPicked] = useState<string[]>(["box"]);
   const [payout, setPayout] = useState<"cash" | "credit">("credit");
   const [form, setForm] = useState<FormConfig | null>(null);
+  // The price stays hidden until they ask for it: locked → checking (a short build-up) → shown
+  const [stage, setStage] = useState<"locked" | "checking" | "shown">("locked");
+  const [line, setLine] = useState(0);
+  const reveal = () => {
+    if (stage !== "locked") return;
+    setStage("checking");
+    setLine(0);
+    CHECKING.forEach((_, i) => i && setTimeout(() => setLine(i), i * 650));
+    setTimeout(() => setStage("shown"), CHECKING.length * 650 + 250);
+  };
+  const shown = stage === "shown";
   const [details, setDetails] = useState<Record<string, unknown>>({});
 
   const est = useMemo(() => {
@@ -59,13 +95,13 @@ export default function TradeIn() {
     <>
       <PageHero tag="Trade-ins welcome" title={<>Sell or trade your <span className="grad-text">old parts.</span></>}
         actions={<>
-          <a href="#estimate" className="btn">Get an estimate <Icon name="arrow" className="h-4 w-4" /></a>
+          <button type="button" onClick={() => scrollToId("estimate")} className="btn">Get an estimate <Icon name="arrow" className="h-4 w-4" /></button>
           <Link to="/shop" className="btn btn-ghost">See the shop</Link>
         </>}>
         Upgrading? Got an old graphics card in a drawer? Get a price in seconds, then take cash or put it toward a new build or repair for {Math.round(creditBonus * 100)}% more.
       </PageHero>
 
-      <section id="estimate" className="section !pt-6">
+      <section id="estimate" className="section scroll-mt-20 !pt-6">
         <div className="wrap grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]">
           {/* Left: what are you trading in */}
           <div className="card p-6 sm:p-8">
@@ -123,23 +159,42 @@ export default function TradeIn() {
             <div className="card border-accent/40 p-6 sm:p-8">
               <p className="eyebrow">Your estimate</p>
               <p className="mt-1 text-[.9rem] text-muted">{model || "Your part"} · {conditions.find((c) => c.id === cond)?.label}</p>
-              <p className="mt-4 font-heading text-[clamp(2.4rem,5vw,3.2rem)] leading-none tracking-tight">
-                {est ? <>${est[payout][0]}<span className="text-muted">–</span>${est[payout][1]}</> : <span className="text-muted">I'll price it</span>}
-              </p>
-              <p className="mt-2 text-[.85rem] text-muted">{payout === "credit" ? "In credit toward a build, repair or shop item" : "Cash or Zelle"}</p>
 
-              <div className="mt-6 grid grid-cols-2 gap-2">
-                {(["cash", "credit"] as const).map((p) => (
-                  <button key={p} type="button" onClick={() => setPayout(p)} aria-pressed={payout === p}
-                    className={`relative cursor-pointer rounded-[.9rem] border p-4 text-left transition-colors ${payout === p ? "border-accent bg-accent/10" : "border-line hover:border-accent/50"}`}>
-                    {p === "credit" && <span className="absolute -top-2.5 right-3 rounded-full bg-accent2 px-2 py-0.5 font-mono text-[.62rem] font-semibold uppercase tracking-wider text-bg">+{Math.round(creditBonus * 100)}%</span>}
-                    <b className="block text-[.95rem] font-medium">{p === "cash" ? "Cash" : "Trade-in credit"}</b>
-                    <span className="font-mono text-[.85rem] text-accent">{est ? `$${est[p][0]}–$${est[p][1]}` : "—"}</span>
-                  </button>
-                ))}
-              </div>
+              {stage === "locked" && (
+                <div className="mt-5">
+                  <p aria-hidden className="select-none font-heading text-[clamp(2.4rem,5vw,3.2rem)] leading-none tracking-tight text-muted/60 blur-[6px]">$???–$???</p>
+                  <p className="mt-3 text-[.92rem] text-muted">Pick your part and its condition, then see what it's worth.</p>
+                  <button type="button" onClick={reveal} className="btn mt-5 w-full">Get my estimate <Icon name="arrow" className="h-4 w-4" /></button>
+                </div>
+              )}
 
-              <button type="button" onClick={openOffer} className="btn mt-6 w-full">Send for a firm offer <Icon name="arrow" className="h-4 w-4" /></button>
+              {stage === "checking" && (
+                <div className="mt-5" role="status" aria-live="polite">
+                  <p className="font-heading text-[clamp(2.4rem,5vw,3.2rem)] leading-none tracking-tight text-muted/60"><span className="ti-shuffle">$???–$???</span></p>
+                  <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-line"><div className="ti-bar h-full rounded-full bg-accent" style={{ animationDuration: `${CHECKING.length * 650 + 250}ms` }} /></div>
+                  <p key={line} className="ti-line mt-3 font-mono text-[.8rem] text-accent2">{CHECKING[line]}</p>
+                </div>
+              )}
+
+              {shown && (
+                <div className="ti-pop">
+                  <Price est={est} payout={payout} />
+                  <p className="mt-2 text-[.85rem] text-muted">{payout === "credit" ? "In credit toward a build, repair or shop item" : "Cash or Zelle"}</p>
+
+                  <div className="mt-6 grid grid-cols-2 gap-2">
+                    {(["cash", "credit"] as const).map((p) => (
+                      <button key={p} type="button" onClick={() => setPayout(p)} aria-pressed={payout === p}
+                        className={`relative cursor-pointer rounded-[.9rem] border p-4 text-left transition-colors ${payout === p ? "border-accent bg-accent/10" : "border-line hover:border-accent/50"}`}>
+                        {p === "credit" && <span className="absolute -top-2.5 right-3 rounded-full bg-accent2 px-2 py-0.5 font-mono text-[.62rem] font-semibold uppercase tracking-wider text-bg">+{Math.round(creditBonus * 100)}%</span>}
+                        <b className="block text-[.95rem] font-medium">{p === "cash" ? "Cash" : "Trade-in credit"}</b>
+                        <span className="font-mono text-[.85rem] text-accent">{est ? `$${est[p][0]}–$${est[p][1]}` : "—"}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button type="button" onClick={openOffer} className="btn mt-6 w-full">Send for a firm offer <Icon name="arrow" className="h-4 w-4" /></button>
+                </div>
+              )}
               <ul className="mt-5 space-y-2 text-[.82rem] text-muted">
                 <li className="flex gap-2"><Icon name="clock" className="mt-[2px] h-4 w-4 shrink-0 text-accent2" />Prices checked against recent sold listings · updated {tradeInUpdated}</li>
                 <li className="flex gap-2"><Icon name="shield-check" className="mt-[2px] h-4 w-4 shrink-0 text-accent2" />Final offer after I test it in person. No pressure to sell.</li>
@@ -178,13 +233,27 @@ export default function TradeIn() {
       </section>
       <FormDialog config={form} onClose={() => setForm(null)} onSubmit={(v) => submitTradeIn(form!, v, details)} />
 
-      {/* Phone: the estimate follows you down the form */}
-      {est && createPortal(
-        <a href="#offer" className="fixed inset-x-3 bottom-3 z-20 flex items-center justify-between rounded-full border border-accent/40 bg-bg/90 py-2 pl-5 pr-2 no-underline shadow-[0_14px_44px_-14px_rgba(0,0,0,.9)] backdrop-blur-xl lg:hidden">
-          <span><small className="block font-mono text-[.62rem] uppercase tracking-wider text-accent2">Estimate · {payout === "credit" ? "credit" : "cash"}</small><b className="font-heading text-lg text-ink">${est[payout][0]}–${est[payout][1]}</b></span>
-          <span className="btn !px-4 !py-2 !text-[.85rem]">See offer <Icon name="arrow" className="h-3.5 w-3.5" /></span>
-        </a>
+      {/* Phone: a bar at the bottom that asks for the estimate, then keeps it in view */}
+      {stage !== "checking" && (shown ? est : true) && createPortal(
+        <button type="button" onClick={() => { scrollToId("offer"); reveal(); }}
+          className="fixed inset-x-3 bottom-3 z-20 flex items-center justify-between rounded-full border border-accent/40 bg-bg/90 py-2 pl-5 pr-2 text-left shadow-[0_14px_44px_-14px_rgba(0,0,0,.9)] backdrop-blur-xl lg:hidden">
+          {shown && est
+            ? <span><small className="block font-mono text-[.62rem] uppercase tracking-wider text-accent2">Estimate · {payout === "credit" ? "credit" : "cash"}</small><b className="font-heading text-lg text-ink">${est[payout][0]}–${est[payout][1]}</b></span>
+            : <span><small className="block font-mono text-[.62rem] uppercase tracking-wider text-accent2">Your estimate</small><b className="font-heading text-lg text-muted blur-[4px]">$???–$???</b></span>}
+          <span className="btn !px-4 !py-2 !text-[.85rem]">{shown ? "See offer" : "Get my estimate"} <Icon name="arrow" className="h-3.5 w-3.5" /></span>
+        </button>
       , document.body)}
     </>
+  );
+}
+
+/** The big price, counting up when it first appears and when the choice changes. */
+function Price({ est, payout }: { est: { cash: number[]; credit: number[] } | null; payout: "cash" | "credit" }) {
+  const lo = useCountUp(est ? est[payout][0] : 0, !!est);
+  const hi = useCountUp(est ? est[payout][1] : 0, !!est);
+  return (
+    <p className="mt-4 font-heading text-[clamp(2.4rem,5vw,3.2rem)] leading-none tracking-tight">
+      {est ? <>${lo}<span className="text-muted">–</span>${hi}</> : <span className="text-muted">I'll price it</span>}
+    </p>
   );
 }
