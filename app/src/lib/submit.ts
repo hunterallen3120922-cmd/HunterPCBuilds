@@ -1,7 +1,7 @@
 import type { FormConfig } from "../components/form/types";
 import type { FormValues, PreferredWindow } from "../types";
 import { site } from "../content/site";
-import { insertRequest, supabaseReady } from "./supabase";
+import { insertRequest, insertTradeIn, supabaseReady } from "./supabase";
 
 const WEB3FORMS_URL = "https://api.web3forms.com/submit";
 const accessKey = import.meta.env.VITE_WEB3FORMS_KEY as string | undefined;
@@ -84,5 +84,31 @@ export async function submitRequest(type: "build" | "repair", config: FormConfig
   const results = await Promise.allSettled(tasks);
   const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
   failed.forEach((f) => console.error("Request delivery problem:", f.reason));
+  if (failed.length === results.length) throw failed[0].reason;
+}
+
+/**
+ * Trade-ins: emailed to you like other requests, but saved as a quote (Quotes tab → Trade-ins)
+ * instead of in Requests. `details` is what the trade-in page worked out (part, condition, estimate…).
+ */
+export async function submitTradeIn(config: FormConfig, values: FormValues, details: Record<string, unknown>): Promise<void> {
+  const tasks: Promise<void>[] = [];
+  if (accessKey) tasks.push(sendEmail(config, values));
+  if (supabaseReady) {
+    const model = asText(values.model) || String(details.model ?? "");
+    tasks.push(insertTradeIn({
+      title: `Trade-in: ${model || String(details.part_type ?? "part")}`.slice(0, 200),
+      customer: asText(values.name).slice(0, 200),
+      contact: asText(values.email).slice(0, 200),
+      trade_in: { ...details, model, payout: asText(values.payout), message: asText(values.notes), phone: asText(values.phone), contact_by: asText(values.contactPreference) },
+    }));
+  }
+  if (tasks.length === 0) {
+    if (import.meta.env.DEV) { console.info("[dev] trade-in would be sent:", values, details); await new Promise((r) => setTimeout(r, 600)); return; }
+    throw new Error("The request form isn't connected yet.");
+  }
+  const results = await Promise.allSettled(tasks);
+  const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+  failed.forEach((f) => console.error("Trade-in delivery problem:", f.reason));
   if (failed.length === results.length) throw failed[0].reason;
 }

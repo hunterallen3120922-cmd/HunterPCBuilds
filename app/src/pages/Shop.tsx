@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import Icon from "../components/Icon";
@@ -7,7 +7,26 @@ import { site } from "../content/site";
 import FormDialog from "../components/FormDialog";
 import { notifyForm, shopItemForm } from "../forms/shopForms";
 import type { FormConfig } from "../components/form/types";
-import { listings, shopTabs, type Listing, type ShopTab } from "../content/shop";
+import { listings as fileListings, shopTabs, type Listing, type ShopTab } from "../content/shop";
+import { getShopItems, photoUrl, supabaseReady } from "../lib/supabase";
+
+/** Items from the admin portal's Shop tab; if the portal can't be reached, the ones in content/shop.ts. */
+function useListings(): Listing[] {
+  const [list, setList] = useState<Listing[]>(fileListings);
+  useEffect(() => {
+    if (!supabaseReady) return;
+    let alive = true;
+    getShopItems()
+      .then((rows) => alive && setList(rows.map((r) => ({
+        tab: r.tab, name: r.name, price: Number(r.price), condition: r.condition ?? "", status: r.status, specs: r.specs,
+        note: r.note ?? undefined, photo: r.photos[0] ? photoUrl(r.photos[0]) : undefined,
+        icon: r.tab === "pcs" ? "desktop" : r.tab === "laptops" ? "laptop" : "chip",
+      }))))
+      .catch((err) => console.warn("Using built-in shop items:", err));
+    return () => { alive = false; };
+  }, []);
+  return list;
+}
 
 const statusStyle = {
   available: { label: "Available", cls: "text-accent border-accent/40 bg-accent/10" },
@@ -23,7 +42,7 @@ function ListingCard({ l, onOpen }: { l: Listing; onOpen: (f: FormConfig) => voi
     <article className={`card lift flex h-full flex-col overflow-hidden !p-0 ${sold ? "opacity-60" : ""}`}>
       <div className="relative aspect-[4/3] overflow-hidden border-b border-line bg-bg2">
         {l.photo
-          ? <img src={`${import.meta.env.BASE_URL}photos/${l.photo}`} alt="" className="h-full w-full object-cover" />
+          ? <img src={/^https?:/.test(l.photo) ? l.photo : `${import.meta.env.BASE_URL}photos/${l.photo}`} loading="lazy" alt="" className="h-full w-full object-cover" />
           : <div className="hero-grid grid h-full place-items-center text-accent/70"><Icon name={l.icon ?? "box"} className="h-16 w-16" /></div>}
         <span className={`absolute left-3 top-3 rounded-full border px-2.5 py-1 font-mono text-[.65rem] uppercase tracking-wider bg-bg/70 backdrop-blur ${s.cls}`}>{s.label}</span>
         {l.note && <span className="absolute bottom-3 left-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 text-[.72rem] text-ink backdrop-blur">{l.note}</span>}
@@ -54,6 +73,7 @@ export default function Shop() {
   const [tab, setTab] = useState<ShopTab>(initial);
   const [hideSold, setHideSold] = useState(false);
   const [form, setForm] = useState<FormConfig | null>(null);
+  const listings = useListings();
   const t = shopTabs.find((x) => x.id === tab)!;
   const items = listings.filter((l) => l.tab === tab && !(hideSold && l.status === "sold"));
 
@@ -66,7 +86,7 @@ export default function Shop() {
 
       <section className="section !pt-4">
         <div className="wrap">
-          <div className="sticky top-20 z-10 -mx-2 mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] px-2 py-2">
+          <div className="sticky top-[5.25rem] z-10 -mx-2 mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] px-2 py-2">
             <div role="tablist" className="flex w-full gap-1 overflow-x-auto rounded-full border border-line bg-bg/80 p-1 backdrop-blur-xl sm:w-auto">
               {shopTabs.map((x) => (
                 <button key={x.id} role="tab" type="button" aria-selected={tab === x.id} onClick={() => setTab(x.id)}
@@ -93,7 +113,7 @@ export default function Shop() {
             </div>
           )}
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((l) => <ListingCard key={l.name} l={l} onOpen={setForm} />)}
+            {items.map((l, i) => <ListingCard key={`${l.name}-${i}`} l={l} onOpen={setForm} />)}
           </div>
 
           {items.length > 0 && (

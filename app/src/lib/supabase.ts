@@ -60,3 +60,44 @@ export async function insertRequest(row: { type: "build" | "repair"; name: strin
   });
   if (!res.ok) throw new Error(`Saving the request failed (${res.status})`);
 }
+
+/** A shop item as the site sees it (see supabase/shop-and-trade-ins.sql). Your cost is never sent to visitors. */
+export interface ShopItemRow {
+  id: string;
+  tab: "pcs" | "laptops" | "parts";
+  name: string;
+  price: number;
+  condition: string | null;
+  note: string | null;
+  specs: string[];
+  photos: string[];
+  status: "available" | "reserved" | "sold";
+  sort_order: number;
+}
+
+/** Published shop items, in your chosen order. */
+export async function getShopItems(timeoutMs = 4000): Promise<ShopItemRow[]> {
+  if (!supabaseReady) throw new Error("Supabase not configured");
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const cols = "id,tab,name,price,condition,note,specs,photos,status,sort_order";
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/shop_items?select=${cols}&published=eq.true&order=sort_order.asc,created_at.desc`,
+      { headers: headers(), signal: ctrl.signal });
+    if (!res.ok) throw new Error(`Shop request failed (${res.status})`);
+    return (await res.json()) as ShopItemRow[];
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/** Saves a trade-in from the site as a new quote, so it shows up in the admin portal's Quotes tab. */
+export async function insertTradeIn(row: { title: string; customer: string; contact: string; trade_in: Record<string, unknown> }): Promise<void> {
+  if (!supabaseReady) throw new Error("Supabase not configured");
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+    method: "POST",
+    headers: { ...headers(), "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ ...row, purpose: "trade_in", status: "draft", tax_rate: 0 }),
+  });
+  if (!res.ok) throw new Error(`Saving the trade-in failed (${res.status})`);
+}
