@@ -121,7 +121,25 @@ export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "buildin
 export const STATUSES_FOR = {
   customer: ["draft", "sent", "accepted", "declined"],
   resale: ["draft", "building", "listed", "sold"],
+  trade_in: ["draft", "sent", "accepted", "declined"],
 } as const;
+
+/** Trade-ins reuse the quote statuses under friendlier names. */
+export const TRADE_IN_STATUS: Record<string, string> = { draft: "New", sent: "Offer sent", accepted: "Bought", declined: "Passed" };
+
+/** What the site's trade-in form saves on the quote (quotes.trade_in). */
+export interface TradeInDetails {
+  part_type?: string;
+  model?: string;
+  condition?: string;
+  extras?: string[];
+  payout?: string;
+  estimate_cash?: [number, number] | null;
+  estimate_credit?: [number, number] | null;
+  message?: string;
+  phone?: string;
+  contact_by?: string;
+}
 
 /** Where you sell builds yourself, with the site's usual cut. Fees change, so they can be edited on each quote. */
 export const PLATFORMS = [
@@ -138,7 +156,7 @@ export interface QuoteRow {
   customer: string | null;
   contact: string | null;
   status: (typeof QUOTE_STATUSES)[number];
-  purpose: "customer" | "resale";
+  purpose: "customer" | "resale" | "trade_in";
   platform: string | null;
   list_price: number;
   fee_pct: number;
@@ -152,6 +170,8 @@ export interface QuoteRow {
   customer_note: string | null;
   notes: string | null;
   job_id: string | null;
+  trade_in?: TradeInDetails | null;
+  offer?: number | null;
   created_at: string;
 }
 

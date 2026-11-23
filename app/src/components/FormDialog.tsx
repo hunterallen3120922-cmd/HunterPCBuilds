@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import MultiStepForm from "./form/MultiStepForm";
-import type { FormConfig } from "./form/types";
+import type { FormConfig, FormValues } from "./form/types";
 import { submitRequest } from "../lib/submit";
 
 /** Popup that runs any short request form (trade-in offers, shop holds and questions). */
-export default function FormDialog({ config, onClose }: { config: FormConfig | null; onClose: () => void }) {
+export default function FormDialog({ config, onClose, onSubmit }: { config: FormConfig | null; onClose: () => void; onSubmit?: (v: FormValues) => Promise<void> }) {
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function FormDialog({ config, onClose }: { config: FormConfig | n
           </div>
           {/* Requests table only allows build/repair, so these go in as "repair" with their own "Request type" label */}
           <MultiStepForm key={config.label} bare config={config} onClose={onClose}
-            onSubmit={(v) => submitRequest("repair", config, v)} />
+            onSubmit={onSubmit ?? ((v) => submitRequest("repair", config, v))} />
         </div>
       )}
     </dialog>

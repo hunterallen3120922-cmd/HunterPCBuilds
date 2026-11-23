@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
 import BuildsTab from "./BuildsTab";
+import ShopTab from "./ShopTab";
 import RequestsTab from "./RequestsTab";
 import DashboardTab from "./DashboardTab";
 import PartsTab from "./PartsTab";
@@ -127,6 +128,7 @@ export default function AdminApp() {
       {tab === "prints" && <PrintsTab />}
       {tab === "inventory" && <InventoryTab />}
       {tab === "builds" && <BuildsTab />}
+      {tab === "shop" && <ShopTab />}
       {tab === "requests" && <RequestsTab onChange={refreshNewCount} />}
       {showcase && <Showcase onClose={closeShowcase} />}
     </Shell>
@@ -142,6 +144,7 @@ const TABS = [
   { id: "prints", label: "3D prints" },
   { id: "inventory", label: "Inventory" },
   { id: "builds", label: "Site builds" },
+  { id: "shop", label: "Shop" },
   { id: "requests", label: "Requests" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];

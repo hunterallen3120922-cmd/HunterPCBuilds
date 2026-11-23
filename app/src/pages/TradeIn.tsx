@@ -9,6 +9,7 @@ import { site } from "../content/site";
 import FormDialog from "../components/FormDialog";
 import { tradeInForm } from "../forms/shopForms";
 import type { FormConfig } from "../components/form/types";
+import { submitTradeIn } from "../lib/submit";
 import { conditions, creditBonus, extras, partTypes, priceList, tradeInUpdated, type PartType } from "../content/tradeIn";
 
 const round5 = (n: number) => Math.max(5, Math.round(n / 5) * 5);
@@ -31,6 +32,7 @@ export default function TradeIn() {
   const [picked, setPicked] = useState<string[]>(["box"]);
   const [payout, setPayout] = useState<"cash" | "credit">("credit");
   const [form, setForm] = useState<FormConfig | null>(null);
+  const [details, setDetails] = useState<Record<string, unknown>>({});
 
   const est = useMemo(() => {
     const item = priceList.find((p) => p.name === model);
@@ -47,6 +49,7 @@ export default function TradeIn() {
     const ex = extras.filter((e) => picked.includes(e.id)).map((e) => e.label);
     const range = est ? `Cash $${est.cash[0]}–$${est.cash[1]} · Credit $${est.credit[0]}–$${est.credit[1]}` : "Not on the list, price by hand";
     const summary = `${typeLabel}: ${model || "not listed"} · ${c.label}${ex.length ? ` · ${ex.join(", ")}` : ""} · ${range}`;
+    setDetails({ part_type: typeLabel, model, condition: c.label, extras: ex, estimate_cash: est?.cash ?? null, estimate_credit: est?.credit ?? null });
     setForm(tradeInForm(summary, payout === "credit" ? "Trade-in credit" : "Cash or Zelle", !model));
   };
 
@@ -173,7 +176,7 @@ export default function TradeIn() {
           </div>
         </div>
       </section>
-      <FormDialog config={form} onClose={() => setForm(null)} />
+      <FormDialog config={form} onClose={() => setForm(null)} onSubmit={(v) => submitTradeIn(form!, v, details)} />
 
       {/* Phone: the estimate follows you down the form */}
       {est && createPortal(
