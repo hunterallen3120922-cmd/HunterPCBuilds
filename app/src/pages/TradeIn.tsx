@@ -6,6 +6,9 @@ import SectionHead from "../components/SectionHead";
 import Icon, { IconTile } from "../components/Icon";
 import { useSeo } from "../lib/seo";
 import { site } from "../content/site";
+import FormDialog from "../components/FormDialog";
+import { tradeInForm } from "../forms/shopForms";
+import type { FormConfig } from "../components/form/types";
 import { conditions, creditBonus, extras, partTypes, priceList, tradeInUpdated, type PartType } from "../content/tradeIn";
 
 const round5 = (n: number) => Math.max(5, Math.round(n / 5) * 5);
@@ -27,6 +30,7 @@ export default function TradeIn() {
   const [cond, setCond] = useState<string>("good");
   const [picked, setPicked] = useState<string[]>(["box"]);
   const [payout, setPayout] = useState<"cash" | "credit">("credit");
+  const [form, setForm] = useState<FormConfig | null>(null);
 
   const est = useMemo(() => {
     const item = priceList.find((p) => p.name === model);
@@ -36,6 +40,15 @@ export default function TradeIn() {
     const lo = item.value * c.low * bonus, hi = item.value * c.high * bonus;
     return { cash: [round5(lo), round5(hi)], credit: [round5(lo * (1 + creditBonus)), round5(hi * (1 + creditBonus))] };
   }, [model, cond, picked]);
+
+  const openOffer = () => {
+    const c = conditions.find((x) => x.id === cond)!;
+    const typeLabel = partTypes.find((t) => t.id === type)!.label;
+    const ex = extras.filter((e) => picked.includes(e.id)).map((e) => e.label);
+    const range = est ? `Cash $${est.cash[0]}–$${est.cash[1]} · Credit $${est.credit[0]}–$${est.credit[1]}` : "Not on the list, price by hand";
+    const summary = `${typeLabel}: ${model || "not listed"} · ${c.label}${ex.length ? ` · ${ex.join(", ")}` : ""} · ${range}`;
+    setForm(tradeInForm(summary, payout === "credit" ? "Trade-in credit" : "Cash or Zelle", !model));
+  };
 
   const pickType = (t: PartType) => { setType(t); setModel(priceList.find((p) => p.type === t)?.name ?? ""); };
 
@@ -96,11 +109,10 @@ export default function TradeIn() {
               })}
             </div>
 
-            <p className="eyebrow mb-2 mt-8">Step 3 · optional</p>
-            <div className="grid place-items-center gap-2 rounded-[.9rem] border border-dashed border-line px-4 py-6 text-center text-[.9rem] text-muted">
-              <Icon name="video" className="h-6 w-6 text-accent" />
-              Add 1 to 3 photos for a faster, firmer offer
-            </div>
+            <p className="mt-8 flex gap-2 rounded-[.9rem] border border-dashed border-line px-4 py-4 text-[.88rem] text-muted">
+              <Icon name="video" className="mt-[1px] h-5 w-5 shrink-0 text-accent" />
+              Have photos? Send them when I reply. They help me give a firmer offer faster.
+            </p>
           </div>
 
           {/* Right: the live estimate */}
@@ -124,7 +136,7 @@ export default function TradeIn() {
                 ))}
               </div>
 
-              <button type="button" className="btn mt-6 w-full">Send for a firm offer <Icon name="arrow" className="h-4 w-4" /></button>
+              <button type="button" onClick={openOffer} className="btn mt-6 w-full">Send for a firm offer <Icon name="arrow" className="h-4 w-4" /></button>
               <ul className="mt-5 space-y-2 text-[.82rem] text-muted">
                 <li className="flex gap-2"><Icon name="clock" className="mt-[2px] h-4 w-4 shrink-0 text-accent2" />Prices checked against recent sold listings · updated {tradeInUpdated}</li>
                 <li className="flex gap-2"><Icon name="shield-check" className="mt-[2px] h-4 w-4 shrink-0 text-accent2" />Final offer after I test it in person. No pressure to sell.</li>
@@ -161,6 +173,8 @@ export default function TradeIn() {
           </div>
         </div>
       </section>
+      <FormDialog config={form} onClose={() => setForm(null)} />
+
       {/* Phone: the estimate follows you down the form */}
       {est && createPortal(
         <a href="#offer" className="fixed inset-x-3 bottom-3 z-20 flex items-center justify-between rounded-full border border-accent/40 bg-bg/90 py-2 pl-5 pr-2 no-underline shadow-[0_14px_44px_-14px_rgba(0,0,0,.9)] backdrop-blur-xl lg:hidden">

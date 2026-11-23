@@ -1,10 +1,12 @@
-import { createPortal } from "react-dom";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import Icon from "../components/Icon";
 import { useSeo } from "../lib/seo";
 import { site } from "../content/site";
+import FormDialog from "../components/FormDialog";
+import { notifyForm, shopItemForm } from "../forms/shopForms";
+import type { FormConfig } from "../components/form/types";
 import { listings, shopTabs, type Listing, type ShopTab } from "../content/shop";
 
 const statusStyle = {
@@ -13,7 +15,8 @@ const statusStyle = {
   sold: { label: "Sold", cls: "text-muted border-line bg-bg/60" },
 };
 
-function ListingCard({ l, onReserve }: { l: Listing; onReserve: (l: Listing) => void }) {
+function ListingCard({ l, onOpen }: { l: Listing; onOpen: (f: FormConfig) => void }) {
+  const label = `${l.name} · $${l.price} (${l.condition})`;
   const s = statusStyle[l.status];
   const sold = l.status === "sold";
   return (
@@ -35,10 +38,10 @@ function ListingCard({ l, onReserve }: { l: Listing; onReserve: (l: Listing) => 
           {l.specs.map((x) => <li key={x} className="flex gap-2"><Icon name="check" className="mt-[3px] h-3.5 w-3.5 shrink-0 text-accent" />{x}</li>)}
         </ul>
         <div className="mt-auto flex gap-2">
-          <button type="button" disabled={l.status !== "available"} onClick={() => onReserve(l)} className={`btn flex-1 !px-4 !py-2.5 !text-[.88rem] ${l.status !== "available" ? "btn-ghost" : ""}`}>
+          <button type="button" disabled={l.status !== "available"} onClick={() => onOpen(shopItemForm(label, "reserve"))} className={`btn flex-1 !px-4 !py-2.5 !text-[.88rem] ${l.status !== "available" ? "btn-ghost" : ""}`}>
             {l.status === "available" ? "Reserve" : s.label}
           </button>
-          <button type="button" className="btn btn-ghost !px-4 !py-2.5 !text-[.88rem]" aria-label={`Ask about ${l.name}`}><Icon name="chat" className="h-4 w-4" /> Ask</button>
+          <button type="button" onClick={() => onOpen(shopItemForm(label, "ask"))} className="btn btn-ghost !px-4 !py-2.5 !text-[.88rem]" aria-label={`Ask about ${l.name}`}><Icon name="chat" className="h-4 w-4" /> Ask</button>
         </div>
       </div>
     </article>
@@ -50,7 +53,7 @@ export default function Shop() {
   const initial = (new URLSearchParams(window.location.hash.split("?")[1]).get("tab") as ShopTab) || "pcs";
   const [tab, setTab] = useState<ShopTab>(initial);
   const [hideSold, setHideSold] = useState(false);
-  const [reserving, setReserving] = useState<Listing | null>(null);
+  const [form, setForm] = useState<FormConfig | null>(null);
   const t = shopTabs.find((x) => x.id === tab)!;
   const items = listings.filter((l) => l.tab === tab && !(hideSold && l.status === "sold"));
 
@@ -79,8 +82,16 @@ export default function Shop() {
           </div>
 
           <p className="mb-6 max-w-[60ch] text-muted">{t.blurb}</p>
+          {items.length === 0 && (
+            <div className="card grid place-items-center gap-3 px-6 py-14 text-center">
+              <span className="icon-tile h-14 w-14"><Icon name={t.icon} className="h-7 w-7" /></span>
+              <h3 className="text-xl">Nothing here right now</h3>
+              <p className="max-w-[44ch] text-[.95rem] text-muted">New {t.label.toLowerCase()} show up as I finish them. Tell me what you want and I'll text you first.</p>
+              <button type="button" onClick={() => setForm(notifyForm)} className="btn mt-2">Get notified <Icon name="arrow" className="h-4 w-4" /></button>
+            </div>
+          )}
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((l) => <ListingCard key={l.name} l={l} onReserve={setReserving} />)}
+            {items.map((l) => <ListingCard key={l.name} l={l} onOpen={setForm} />)}
           </div>
 
           <div className="card mt-12 flex flex-col items-start justify-between gap-5 p-7 sm:flex-row sm:items-center">
@@ -89,29 +100,12 @@ export default function Shop() {
               <h2 className="text-2xl">Tell me what you're after</h2>
               <p className="mt-2 text-[.95rem] text-muted">New stock comes in from trade-ins and repairs all the time. I'll text you when something fits.</p>
             </div>
-            <button type="button" className="btn shrink-0">Get notified <Icon name="arrow" className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setForm(notifyForm)} className="btn shrink-0">Get notified <Icon name="arrow" className="h-4 w-4" /></button>
           </div>
         </div>
       </section>
 
-      {reserving && createPortal(
-        <div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setReserving(null)}>
-          <div className="card w-full max-w-md p-7" onClick={(e) => e.stopPropagation()}>
-            <p className="eyebrow mb-2">Reserve</p>
-            <h2 className="text-2xl">{reserving.name} · <span className="font-mono text-accent">${reserving.price}</span></h2>
-            <p className="mt-2 text-[.9rem] text-muted">I'll hold it for 48 hours while we set up a time. No payment online.</p>
-            <div className="mt-5 space-y-3">
-              <input className="input" placeholder="Your name" />
-              <input className="input" placeholder="Phone or email" />
-              <label className="flex items-center gap-2 text-[.88rem] text-muted"><input type="checkbox" className="accent-[var(--accent)]" /> Use my trade-in credit</label>
-            </div>
-            <div className="mt-6 flex gap-2">
-              <button type="button" className="btn flex-1">Hold it for me</button>
-              <button type="button" className="btn btn-ghost" onClick={() => setReserving(null)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      , document.body)}
+      <FormDialog config={form} onClose={() => setForm(null)} />
     </>
   );
 }
