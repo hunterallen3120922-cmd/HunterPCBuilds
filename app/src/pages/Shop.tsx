@@ -76,9 +76,11 @@ export default function Shop() {
                 </button>
               ))}
             </div>
+            {listings.some((l) => l.status === "sold") && (
             <label className="inline-flex cursor-pointer items-center gap-2 text-[.85rem] text-muted">
               <input type="checkbox" checked={hideSold} onChange={(e) => setHideSold(e.target.checked)} className="accent-[var(--accent)]" /> Hide sold
             </label>
+            )}
           </div>
 
           <p className="mb-6 max-w-[60ch] text-muted">{t.blurb}</p>
