@@ -88,7 +88,7 @@ export default function Shop() {
             <div className="card grid place-items-center gap-3 px-6 py-14 text-center">
               <span className="icon-tile h-14 w-14"><Icon name={t.icon} className="h-7 w-7" /></span>
               <h3 className="text-xl">Nothing here right now</h3>
-              <p className="max-w-[44ch] text-[.95rem] text-muted">New {t.label.toLowerCase()} show up as I finish them. Tell me what you want and I'll text you first.</p>
+              <p className="max-w-[44ch] text-[.95rem] text-muted">New stock shows up here as I finish it. Tell me what you're after and I'll reach out first.</p>
               <button type="button" onClick={() => setForm(notifyForm)} className="btn mt-2">Get notified <Icon name="arrow" className="h-4 w-4" /></button>
             </div>
           )}
@@ -96,6 +96,7 @@ export default function Shop() {
             {items.map((l) => <ListingCard key={l.name} l={l} onOpen={setForm} />)}
           </div>
 
+          {items.length > 0 && (
           <div className="card mt-12 flex flex-col items-start justify-between gap-5 p-7 sm:flex-row sm:items-center">
             <div>
               <p className="eyebrow mb-2">Don't see it?</p>
@@ -104,6 +105,7 @@ export default function Shop() {
             </div>
             <button type="button" onClick={() => setForm(notifyForm)} className="btn shrink-0">Get notified <Icon name="arrow" className="h-4 w-4" /></button>
           </div>
+          )}
         </div>
       </section>
 
