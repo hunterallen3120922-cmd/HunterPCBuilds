@@ -18,6 +18,7 @@ export default function Footer() {
             <li><Link to="/tech-repair" className={col}>Tech Repair</Link></li>
             <li><Link to="/shop" className={col}>Shop</Link></li>
             <li><Link to="/sell" className={col}>Sell or trade parts</Link></li>
+            <li><Link to="/3d-prints" className={col}>3D Prints</Link></li>
             <li><Link to="/about" className={col}>About me</Link></li>
           </ul>
         </div>

@@ -27,17 +27,20 @@ export function tradeInForm(estimate: string, payout: string, needsModel: boolea
   };
 }
 
-/** Reserve or ask about a shop item. */
-export function shopItemForm(item: string, mode: "reserve" | "ask"): FormConfig {
+/** Reserve or ask about a shop item. `colors` (3D prints) adds a color choice. */
+export function shopItemForm(item: string, mode: "reserve" | "ask", colors: string[] = []): FormConfig {
   return {
     label: mode === "reserve" ? "Shop hold" : "Shop question",
     steps: [
       {
         title: mode === "reserve" ? "Hold it for me" : "Ask about it",
-        sub: mode === "reserve" ? "I'll hold it for 48 hours while we set up a time. No payment online." : "Ask anything: specs, condition, upgrades, a lower price.",
+        sub: mode === "reserve"
+          ? colors.length ? "I'll print it in your color and text you when it's ready. Pay when you pick it up. No payment online." : "I'll hold it for 48 hours while we set up a time. No payment online."
+          : "Ask anything: specs, condition, upgrades, a lower price.",
         fields: [
           { name: "item", label: "Item", kind: "static", defaultValue: item },
-          ...(mode === "reserve" ? [{ name: "credit", label: "Using trade-in credit?", kind: "select" as const, options: yesNo, defaultValue: "No" }] : []),
+          ...(mode === "reserve" && colors.length ? [{ name: "color", label: "Color", kind: "select" as const, options: colors.map((c) => ({ value: c })), defaultValue: colors[0] }] : []),
+          ...(mode === "reserve" && !colors.length ? [{ name: "credit", label: "Using trade-in credit?", kind: "select" as const, options: yesNo, defaultValue: "No" }] : []),
           { name: "notes", label: mode === "reserve" ? "Anything I should know?" : "Your question", hint: mode === "reserve" ? "(optional)" : undefined, kind: "textarea", required: mode === "ask", requiredMessage: "Type your question." },
         ],
       },
@@ -60,3 +63,22 @@ export const notifyForm: FormConfig = {
     contactStep,
   ],
 };
+
+/** "Send request" on the 3D Prints page. `summary` is what the page worked out (size, material, ballpark…). */
+export function printRequestForm(summary: string, files: string[]): FormConfig {
+  return {
+    label: "Custom 3D print",
+    steps: [
+      {
+        title: "Send your print request",
+        sub: "I'll check it over and text you a firm price, usually within a day. Nothing is printed until you say yes.",
+        fields: [
+          { name: "request", label: "Your request", kind: "static", defaultValue: summary },
+          ...(files.length ? [{ name: "files", label: "Files attached", kind: "static" as const, defaultValue: files.join(", ") }] : []),
+          { name: "notes", label: "Anything else?", hint: "(optional)", kind: "textarea", placeholder: "When you need it by, links to the model, exact measurements…" },
+        ],
+      },
+      contactStep,
+    ],
+  };
+}
