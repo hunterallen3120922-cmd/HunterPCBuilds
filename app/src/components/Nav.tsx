@@ -5,6 +5,8 @@ import { Link, NavLink } from "react-router-dom";
 const links = [
   { to: "/pc-builds", label: "PC Builds" },
   { to: "/tech-repair", label: "Tech Repair" },
+  { to: "/shop", label: "Shop" },
+  { to: "/sell", label: "Trade-ins" },
 ];
 
 /** Badge icon + wordmark. The badge files live in app/public/ (favicon.svg, logo.svg). */
@@ -47,12 +49,12 @@ export default function Nav() {
   }, []);
 
   const pill = scrolled || open;
-  const linkCls = "group relative inline-flex items-center rounded-full px-4 py-2 text-[.92rem] no-underline transition-colors hover:text-ink";
+  const linkCls = "group relative inline-flex items-center rounded-full whitespace-nowrap px-4 py-2 text-[.92rem] no-underline transition-colors hover:text-ink";
 
   return (
     <header className="nav-wrap pointer-events-none fixed inset-x-0 top-0 z-30 px-3 pt-3 sm:px-5">
       <nav aria-label="Main" data-pill={pill}
-        className="nav-bar pointer-events-auto relative mx-auto flex h-14 w-full max-w-[45rem] items-center justify-between gap-3 pl-4 pr-2">
+        className="nav-bar pointer-events-auto relative mx-auto flex h-14 w-full max-w-[54rem] items-center justify-between gap-3 pl-4 pr-2">
         {/* The glass pill behind the links: fades and drops in once you scroll */}
         <span aria-hidden className="nav-glass absolute inset-0 rounded-[1.75rem] border border-line bg-bg/80 shadow-[0_14px_44px_-14px_rgba(0,0,0,.75)] backdrop-blur-xl" />
 
@@ -67,7 +69,7 @@ export default function Nav() {
               <span aria-hidden className="absolute inset-x-4 bottom-1 h-px origin-left scale-x-0 bg-accent transition-transform duration-300 group-hover:scale-x-100 group-aria-[current=page]:scale-x-100" />
             </NavLink>
           ))}
-          <Link to="/" state={{ scrollTo: "paths" }} className="btn ml-2 !px-5 !py-2 !text-[.9rem]">Get a quote</Link>
+          <Link to="/" state={{ scrollTo: "paths" }} className="btn ml-2 whitespace-nowrap !px-5 !py-2 !text-[.9rem]">Get a quote</Link>
         </div>
 
         <button type="button"

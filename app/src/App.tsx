@@ -10,6 +10,8 @@ import TechRepair from "./pages/TechRepair";
 import Faq from "./pages/Faq";
 import Privacy from "./pages/Privacy";
 import About from "./pages/About";
+import TradeIn from "./pages/TradeIn";
+import Shop from "./pages/Shop";
 
 /** The admin portal is a separate download, so visitors never load it. */
 const AdminApp = lazy(() => import("./admin/AdminApp"));
@@ -54,6 +56,8 @@ export default function App() {
           <Route path="/faq" element={<Faq />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/about" element={<About />} />
+          <Route path="/sell" element={<TradeIn />} />
+          <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

@@ -16,6 +16,8 @@ export default function Footer() {
           <ul className="space-y-2">
             <li><Link to="/pc-builds" className={col}>PC Builds</Link></li>
             <li><Link to="/tech-repair" className={col}>Tech Repair</Link></li>
+            <li><Link to="/shop" className={col}>Shop</Link></li>
+            <li><Link to="/sell" className={col}>Sell or trade parts</Link></li>
             <li><Link to="/about" className={col}>About me</Link></li>
           </ul>
         </div>
