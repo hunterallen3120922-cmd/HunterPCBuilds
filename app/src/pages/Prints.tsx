@@ -6,14 +6,15 @@ import Icon, { IconTile } from "../components/Icon";
 import { useSeo } from "../lib/seo";
 import { site } from "../content/site";
 import FormDialog from "../components/FormDialog";
-import { notifyForm, printRequestForm, shopItemForm } from "../forms/shopForms";
+import { printOrderForm, printRequestForm, shopItemForm } from "../forms/shopForms";
+import PrintArt, { PrintingVideo } from "../components/PrintArt";
 import type { FormConfig } from "../components/form/types";
 import { submitPrintRequest } from "../lib/submit";
 import { getPrintItems, photoUrl, supabaseReady } from "../lib/supabase";
 import type { Listing } from "../content/shop";
 import {
-  colors, details, fileOptions, ideas, materials, printEstimate, printSteps, sizes,
-  type DetailId, type FileOptionId, type MaterialId, type SizeId,
+  catalog, catalogPrice, colors, details, fileOptions, materials, printEstimate, printSteps, sizes,
+  type CatalogItem, type DetailId, type FileOptionId, type MaterialId, type SizeId,
 } from "../content/prints";
 
 const MAX_FILES = 5;
@@ -62,7 +63,7 @@ function PrintCard({ l, onOpen }: { l: Listing; onOpen: (f: FormConfig) => void 
       <div className="relative aspect-[4/3] overflow-hidden border-b border-line bg-bg2">
         {l.photo
           ? <img src={l.photo} loading="lazy" alt="" className="h-full w-full object-cover" />
-          : <div className="hero-grid grid h-full place-items-center text-accent/70"><Icon name="printer" className="h-16 w-16" /></div>}
+          : <div className="studio grid h-full place-items-center text-accent/70"><Icon name="printer" className="h-16 w-16" /></div>}
         {l.note && <span className="absolute bottom-3 left-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 text-[.72rem] text-ink backdrop-blur">{l.note}</span>}
         {!open && <span className="absolute left-3 top-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 font-mono text-[.65rem] uppercase tracking-wider text-muted backdrop-blur">{l.status === "sold" ? "Sold out" : "On hold"}</span>}
       </div>
@@ -88,6 +89,47 @@ function PrintCard({ l, onOpen }: { l: Listing; onOpen: (f: FormConfig) => void 
   );
 }
 
+/** One ready-made print from content/prints.ts: drawing, price, bundles (keycaps), Order. */
+function CatalogCard({ c, onOrder }: { c: CatalogItem; onOrder: (label: string, c: CatalogItem, price: [number, number]) => void }) {
+  const [opt, setOpt] = useState(c.options ? 1 % c.options.length : 0);
+  const o = c.options?.[opt];
+  const price: [number, number] = o ? [o.price, o.price] : [c.price, c.priceTo ?? c.price];
+  const shown = o ? `$${o.price}` : catalogPrice(c);
+  const label = `${c.name}${o ? ` · ${o.label}` : ""} · ${shown}`;
+  return (
+    <article className="card lift group flex h-full flex-col overflow-hidden !p-0">
+      <div className="studio relative aspect-[4/3] overflow-hidden border-b border-line">
+        <PrintArt kind={c.art} alt={c.name} className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.05]" />
+        <span className="absolute left-3 top-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 font-mono text-[.66rem] uppercase tracking-wider text-muted backdrop-blur">{c.material}</span>
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg">{c.name}</h3>
+          <p className="shrink-0 font-mono text-[1.15rem] text-accent">{shown}</p>
+        </div>
+        <p className="mt-2 text-[.88rem] text-muted">{c.blurb}</p>
+        {c.options && (
+          <div className="mt-4 flex flex-wrap gap-1.5" role="radiogroup" aria-label={`${c.name} options`}>
+            {c.options.map((x, i) => (
+              <button key={x.label} type="button" role="radio" aria-checked={opt === i} onClick={() => setOpt(i)}
+                className={`cursor-pointer rounded-full border px-3 py-1.5 text-[.8rem] transition-colors ${opt === i ? "border-accent bg-accent/10 text-ink" : "border-line text-muted hover:text-ink"}`}>
+                {x.label} <span className="font-mono text-accent">${x.price}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="mt-auto pt-5">
+          <button type="button" onClick={() => onOrder(label, c, price)} className="btn w-full !py-2.5 !text-[.9rem]">
+            Order <Icon name="arrow" className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+type Mode = "ready" | "custom" | null;
+
 const choice = (on: boolean) =>
   `cursor-pointer rounded-[.9rem] border text-left transition-colors ${on ? "border-accent bg-accent/10" : "border-line hover:border-accent/50"}`;
 
@@ -98,6 +140,8 @@ export default function Prints() {
   const gallery = (all ?? []).filter((l) => l.tab === "past_prints" && l.photo);
   const [form, setForm] = useState<FormConfig | null>(null);
   const [dialogKind, setDialogKind] = useState<"request" | "other">("other");
+  const [mode, setMode] = useState<Mode>(null);
+  const pick = (m: Exclude<Mode, null>) => { setMode(m); setTimeout(() => scrollToId(m), 60); };
 
   // The custom request
   const [description, setDescription] = useState("");
@@ -120,7 +164,7 @@ export default function Prints() {
     const io = new IntersectionObserver(([e]) => setInCustom(e.isIntersecting), { rootMargin: "-30% 0px -30% 0px" });
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [mode]);
 
   const est = useMemo(() => printEstimate(size, detail, material, fileOpt, qty), [size, detail, material, fileOpt, qty]);
   const sizeInfo = sizes.find((s) => s.id === size)!;
@@ -156,63 +200,107 @@ export default function Prints() {
   };
   const openOther = (f: FormConfig) => { setDialogKind("other"); setForm(f); };
 
-  const pickIdea = (i: (typeof ideas)[number]) => {
-    setDescription(i.text);
-    setSize(i.size);
-    setMaterial(i.material);
-    setMissing(false);
+  /** A ready-made print goes in as a print request too (Quotes → 3D prints), with its set price. */
+  const orderReady = (label: string, c: CatalogItem, price: [number, number]) => {
+    setDetails({ description: label, ready_made: true, material: c.material, has_file: true, estimate: price });
+    setDialogKind("request");
+    setForm(printOrderForm(label, [ANY_COLOR, ...colors.map((x) => x.name)]));
   };
+  const readyFiles: File[] = [];
 
   return (
     <>
       <PageHero tag="3D printing" title={<>Printed for <span className="grad-text">your setup.</span></>}
         actions={<>
-          <button type="button" onClick={() => scrollToId("custom")} className="btn">Request a custom print <Icon name="arrow" className="h-4 w-4" /></button>
-          <button type="button" onClick={() => scrollToId("print-shop")} className="btn btn-ghost">Browse the Print Shop</button>
+          <button type="button" onClick={() => pick("ready")} className="btn">Something from here <Icon name="arrow" className="h-4 w-4" /></button>
+          <button type="button" onClick={() => pick("custom")} className="btn btn-ghost">Something custom</button>
         </>}>
         GPU brackets, cable combs, headphone stands, keycaps, or anything you can describe. Printed by me in PLA, PETG or TPU, picked up locally. Pay {site.paymentMethods.join(" or ")} when it's done.
       </PageHero>
 
-      {/* Print Shop */}
-      <section id="print-shop" className="section scroll-mt-20 !pt-4">
+      {/* First choice: from the list, or custom */}
+      <section id="start" className="section scroll-mt-20 !pt-4">
         <div className="wrap">
-          <SectionHead eyebrow="Print Shop" title="Ready-made prints" />
-          {all === null && <p className="text-muted">Loading…</p>}
-          {all !== null && shop.length === 0 && (
-            <div className="card grid place-items-center gap-3 px-6 py-14 text-center">
-              <span className="icon-tile h-14 w-14"><Icon name="printer" className="h-7 w-7" /></span>
-              <h3 className="text-xl">The Print Shop is warming up</h3>
-              <p className="max-w-[46ch] text-[.95rem] text-muted">Ready-made prints show up here soon. Want something now? Ask for it below and I'll print it for you.</p>
-              <div className="mt-2 flex flex-wrap justify-center gap-2">
-                <button type="button" onClick={() => scrollToId("custom")} className="btn">Request a custom print <Icon name="arrow" className="h-4 w-4" /></button>
-                <button type="button" onClick={() => openOther(notifyForm)} className="btn btn-ghost">Get notified</button>
-              </div>
-            </div>
-          )}
-          {shop.length > 0 && (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {shop.map((l, i) => <PrintCard key={`${l.name}-${i}`} l={l} onOpen={openOther} />)}
-            </div>
-          )}
+          <SectionHead eyebrow="Start here" title="What are you after?" />
+          <div className="grid gap-5 md:grid-cols-2">
+            <button type="button" onClick={() => pick("ready")} aria-pressed={mode === "ready"}
+              className={`card lift group flex cursor-pointer flex-col overflow-hidden !p-0 text-left ${mode === "ready" ? "!border-accent" : ""}`}>
+              <span className="studio relative block aspect-[4/3] overflow-hidden border-b border-line" aria-hidden>
+                <PrintArt kind="collection" className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.04]" />
+                <span className="absolute right-4 top-4 rounded-full border border-line bg-bg/70 px-3 py-1 font-mono text-[.7rem] text-accent backdrop-blur">{catalog.length} prints · from $1</span>
+              </span>
+              <span className="flex items-center justify-between gap-4 p-6">
+                <span>
+                  <b className="block font-heading text-2xl font-medium">Something from here</b>
+                  <span className="mt-1 block text-[.92rem] text-muted">GPU brackets, cable combs, stands, keycaps and more, at set prices.</span>
+                </span>
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full border ${mode === "ready" ? "border-accent bg-accent text-onaccent" : "border-line text-accent"}`}><Icon name="arrow" className="h-4 w-4" /></span>
+              </span>
+            </button>
+
+            <button type="button" onClick={() => pick("custom")} aria-pressed={mode === "custom"}
+              className={`card lift group flex cursor-pointer flex-col overflow-hidden !p-0 text-left ${mode === "custom" ? "!border-accent" : ""}`}>
+              <span className="relative block aspect-[4/3] overflow-hidden border-b border-line bg-bg2" aria-hidden>
+                <PrintingVideo className="h-full w-full object-cover" />
+                <span className="absolute right-4 top-4 rounded-full border border-line bg-bg/70 px-3 py-1 font-mono text-[.7rem] text-accent backdrop-blur">Your idea · ballpark in seconds</span>
+              </span>
+              <span className="flex items-center justify-between gap-4 p-6">
+                <span>
+                  <b className="block font-heading text-2xl font-medium">Something custom</b>
+                  <span className="mt-1 block text-[.92rem] text-muted">Describe it, or send a photo or file. See a ballpark price right away.</span>
+                </span>
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full border ${mode === "custom" ? "border-accent bg-accent text-onaccent" : "border-line text-accent"}`}><Icon name="arrow" className="h-4 w-4" /></span>
+              </span>
+            </button>
+          </div>
         </div>
       </section>
 
+      {/* Ready-made: the set-price list, then anything added in the admin Print Shop */}
+      {mode === "ready" && (
+        <section id="ready" className="pick-in section alt scroll-mt-20 !pt-10">
+          <div className="wrap">
+            <SectionHead eyebrow="Something from here" title="Pick a print" />
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {catalog.map((c) => <CatalogCard key={c.id} c={c} onOrder={orderReady} />)}
+              {/* Fills out the last row: the way to the custom request */}
+              <button type="button" onClick={() => pick("custom")}
+                className="card lift group grid cursor-pointer overflow-hidden !p-0 text-left sm:col-span-2 sm:grid-cols-[1fr_1.1fr]">
+                <span className="relative block aspect-[4/3] overflow-hidden border-b border-line bg-bg2 sm:aspect-auto sm:border-b-0 sm:border-r" aria-hidden>
+                  <PrintingVideo className="h-full w-full object-cover" />
+                </span>
+                <span className="flex flex-col justify-center p-7">
+                  <span className="eyebrow mb-2">Don't see it?</span>
+                  <b className="font-heading text-2xl font-medium">Make something custom</b>
+                  <span className="mt-2 text-[.95rem] text-muted">Describe it or send a file, and see a ballpark price right away. If it needs designing, that's a flat $5.</span>
+                  <span className="btn mt-5 self-start">Something custom <Icon name="arrow" className="h-4 w-4" /></span>
+                </span>
+              </button>
+            </div>
+            {shop.length > 0 && (
+              <>
+                <h3 className="mb-5 mt-12 text-2xl">More in the Print Shop</h3>
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {shop.map((l, i) => <PrintCard key={`${l.name}-${i}`} l={l} onOpen={openOther} />)}
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Custom request with a live ballpark */}
-      <section id="custom" className="section alt scroll-mt-20">
+      {mode === "custom" && (
+      <section id="custom" className="pick-in section alt scroll-mt-20 !pt-10">
         <div className="wrap">
-          <SectionHead eyebrow="Custom prints" title="Tell me what to print" />
+          <SectionHead eyebrow="Something custom" title="Tell me what to print" />
           <div className="grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]">
             <div className="card p-6 sm:p-8">
               <p className="eyebrow mb-2">Step 1</p>
               <h3 className="text-2xl">What do you want printed?</h3>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {ideas.map((i) => (
-                  <button key={i.label} type="button" onClick={() => pickIdea(i)} aria-pressed={description === i.text}
-                    className={`cursor-pointer rounded-full border px-3.5 py-1.5 text-[.82rem] transition-colors ${description === i.text ? "border-accent bg-accent/10 text-ink" : "border-line text-muted hover:text-ink"}`}>{i.label}</button>
-                ))}
-              </div>
+              <p className="mt-2 text-[.88rem] text-muted">Want a GPU bracket, cable combs or keycaps? Those have set prices in the <button type="button" onClick={() => pick("ready")} className="cursor-pointer text-accent underline-offset-2 hover:underline">ready-made list</button>.</p>
               <label htmlFor="pr-desc" className="sr-only">Describe your print</label>
-              <textarea id="pr-desc" ref={describeRef} className="input mt-3 min-h-[6.5rem]" maxLength={2000} value={description}
+              <textarea id="pr-desc" ref={describeRef} className="input mt-4 min-h-[6.5rem]" maxLength={2000} value={description}
                 aria-invalid={missing && !description.trim()} aria-describedby={missing && !description.trim() ? "pr-desc-err" : undefined}
                 placeholder="Describe it: what it's for, rough size, anything it has to fit…"
                 onChange={(e) => { setDescription(e.target.value); setMissing(false); }} />
@@ -222,7 +310,7 @@ export default function Prints() {
                 {fileOptions.map((f) => (
                   <button key={f.id} type="button" onClick={() => setFileOpt(f.id)} aria-pressed={fileOpt === f.id} className={`${choice(fileOpt === f.id)} px-4 py-3`}>
                     <b className="block text-[.95rem] font-medium text-ink">{f.label}</b>
-                    <small className="text-[.8rem] text-muted">{f.hint}{f.high > 0 ? ` · design +$${f.low}–$${f.high}` : ""}</small>
+                    <small className="text-[.8rem] text-muted">{f.hint}{f.high > 0 ? ` · +$${f.high} design fee` : ""}</small>
                   </button>
                 ))}
               </div>
@@ -304,7 +392,7 @@ export default function Prints() {
                 <p className="eyebrow">Ballpark price</p>
                 <p className="mt-1 text-[.9rem] text-muted">{sizeInfo.label} · {details.find((d) => d.id === detail)!.label} · {material}{qty > 1 ? ` · ×${qty}` : ""}</p>
                 <p className="mt-4 font-heading text-[clamp(2.4rem,5vw,3.2rem)] leading-none tracking-tight">${est[0]}<span className="text-muted">–</span>${est[1]}</p>
-                <p className="mt-2 text-[.85rem] text-muted">{fileOpt === "design" ? "Includes designing it for you" : "If you send a ready-to-print file"}</p>
+                <p className="mt-2 text-[.85rem] text-muted">{fileOpt === "design" ? "Includes the $5 design fee" : "If you send a ready-to-print file"}</p>
                 <button type="button" onClick={send} className="btn mt-6 w-full">Send request <Icon name="arrow" className="h-4 w-4" /></button>
                 <ul className="mt-5 space-y-2 text-[.82rem] text-muted">
                   <li className="flex gap-2"><Icon name="tag" className="mt-[2px] h-4 w-4 shrink-0 text-accent2" />I check the file and print time, then text you the real price. Nothing prints until you say yes.</li>
@@ -316,6 +404,8 @@ export default function Prints() {
           </div>
         </div>
       </section>
+
+      )}
 
       {/* Materials */}
       <section id="materials" className="section scroll-mt-20">
@@ -368,10 +458,10 @@ export default function Prints() {
       </section>
 
       <FormDialog config={form} onClose={() => setForm(null)}
-        onSubmit={dialogKind === "request" ? (v) => submitPrintRequest(form!, v, details_, files) : undefined} />
+        onSubmit={dialogKind === "request" ? (v) => submitPrintRequest(form!, v, details_, details_.ready_made ? readyFiles : files) : undefined} />
 
       {/* Phone: the ballpark follows you down the form */}
-      {inCustom && createPortal(
+      {mode === "custom" && inCustom && createPortal(
         <button type="button" onClick={() => scrollToId("ballpark")} className="cursor-pointer text-left fixed inset-x-3 bottom-3 z-20 flex items-center justify-between rounded-full border border-accent/40 bg-bg/90 py-2 pl-5 pr-2 no-underline shadow-[0_14px_44px_-14px_rgba(0,0,0,.9)] backdrop-blur-xl lg:hidden">
           <span><small className="block font-mono text-[.62rem] uppercase tracking-wider text-accent2">Ballpark · {material}</small><b className="font-heading text-lg text-ink">${est[0]}–${est[1]}</b></span>
           <span className="btn !px-4 !py-2 !text-[.85rem]">See price <Icon name="arrow" className="h-3.5 w-3.5" /></span>

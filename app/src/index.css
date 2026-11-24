@@ -410,3 +410,9 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
 .ti-pop { animation: ti-pop .6s cubic-bezier(.3,1.5,.5,1) both; }
 @keyframes ti-pop { from { opacity: 0; transform: scale(.94) translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ti-bar, .ti-line, .ti-shuffle, .ti-pop { animation: none; } }
+
+/* Product "studio": a soft spotlight behind the 3D print renders */
+.studio { background: radial-gradient(ellipse 70% 60% at 50% 42%, color-mix(in srgb, var(--accent) 9%, var(--bg2)) 0%, var(--bg2) 62%, color-mix(in srgb, var(--bg) 70%, var(--bg2)) 100%); }
+.pick-in { animation: pick-in .45s var(--ease) both; }
+@keyframes pick-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pick-in { animation: none; } }

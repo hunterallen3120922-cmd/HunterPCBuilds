@@ -131,7 +131,7 @@ export async function submitPrintRequest(config: FormConfig, values: FormValues,
         title: `3D print: ${what || "custom request"}`.slice(0, 200),
         customer: asText(values.name).slice(0, 200),
         contact: asText(values.email).slice(0, 200),
-        print_job: { ...details, files: uploaded, files_failed: failedFiles, message: asText(values.notes), phone: asText(values.phone), contact_by: asText(values.contactPreference) },
+        print_job: { ...details, ...(asText(values.color) ? { color: asText(values.color) } : {}), ...(Number(asText(values.qty)) ? { qty: Number(asText(values.qty)) } : {}), files: uploaded, files_failed: failedFiles, message: asText(values.notes), phone: asText(values.phone), contact_by: asText(values.contactPreference) },
       });
     })());
   }

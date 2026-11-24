@@ -84,3 +84,23 @@ export function printRequestForm(summary: string, files: string[]): FormConfig {
     ],
   };
 }
+
+/** "Order" on a ready-made 3D print. `item` already includes the bundle and price, e.g. "Custom keycaps · 10 keycaps · $5". */
+export function printOrderForm(item: string, colorNames: string[]): FormConfig {
+  return {
+    label: "3D print order",
+    steps: [
+      {
+        title: "Order it",
+        sub: "I'll text you to confirm, then print it. Most prints are ready in 2 to 5 days. Pay when you pick it up.",
+        fields: [
+          { name: "item", label: "Item", kind: "static", defaultValue: item },
+          { name: "color", label: "Color", kind: "select", options: colorNames.map((c) => ({ value: c })), defaultValue: colorNames[0] },
+          { name: "qty", label: "How many?", kind: "select", options: ["1", "2", "3", "4", "5", "More (tell me below)"].map((v) => ({ value: v })), defaultValue: "1" },
+          { name: "notes", label: "Anything else?", hint: "(optional)", kind: "textarea", placeholder: "Your GPU model, the name or logo you want, when you need it by…" },
+        ],
+      },
+      contactStep,
+    ],
+  };
+}
