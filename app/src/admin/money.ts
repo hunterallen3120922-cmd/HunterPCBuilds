@@ -122,10 +122,31 @@ export const STATUSES_FOR = {
   customer: ["draft", "sent", "accepted", "declined"],
   resale: ["draft", "building", "listed", "sold"],
   trade_in: ["draft", "sent", "accepted", "declined"],
+  print: ["draft", "sent", "accepted", "sold", "declined"],
 } as const;
 
 /** Trade-ins reuse the quote statuses under friendlier names. */
 export const TRADE_IN_STATUS: Record<string, string> = { draft: "New", sent: "Offer sent", accepted: "Bought", declined: "Passed" };
+
+/** Custom 3D print requests reuse the quote statuses under these names. */
+export const PRINT_STATUS: Record<string, string> = { draft: "New", sent: "Price sent", accepted: "Printing", sold: "Done", declined: "Passed" };
+
+/** What the site's custom 3D print form saves on the quote (quotes.print_job). */
+export interface PrintJobDetails {
+  description?: string;
+  size?: string;
+  detail?: string;
+  material?: string;
+  color?: string;
+  qty?: number;
+  has_file?: boolean;
+  estimate?: [number, number] | null;
+  files?: string[];
+  files_failed?: string[];
+  message?: string;
+  phone?: string;
+  contact_by?: string;
+}
 
 /** What the site's trade-in form saves on the quote (quotes.trade_in). */
 export interface TradeInDetails {
@@ -156,7 +177,7 @@ export interface QuoteRow {
   customer: string | null;
   contact: string | null;
   status: (typeof QUOTE_STATUSES)[number];
-  purpose: "customer" | "resale" | "trade_in";
+  purpose: "customer" | "resale" | "trade_in" | "print";
   platform: string | null;
   list_price: number;
   fee_pct: number;
@@ -171,6 +192,7 @@ export interface QuoteRow {
   notes: string | null;
   job_id: string | null;
   trade_in?: TradeInDetails | null;
+  print_job?: PrintJobDetails | null;
   offer?: number | null;
   created_at: string;
 }

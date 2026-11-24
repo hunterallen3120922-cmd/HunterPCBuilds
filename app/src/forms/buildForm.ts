@@ -2,6 +2,7 @@ import { budgets, caseSizes, coolingOptions, havePartsOptions, lightingOptions, 
 import type { FormConfig } from "../components/form/types";
 import { contactStep, meetingStep } from "./shared";
 import { buildTiers } from "../content/buildTiers";
+import { buildAddOns } from "../content/prints";
 import type { BuildTier } from "../types";
 import Workbench, { PART_STEPS } from "../components/build/Workbench";
 
@@ -49,6 +50,7 @@ export const buildForm: FormConfig = {
         { name: "preferences", label: "Preferences & notes", hint: "(optional)", kind: "textarea", placeholder: "e.g. I play Valorant and Fortnite, want a white case" },
         { name: "package", label: "Package", kind: "select", options: [...buildTiers.map((t) => ({ value: packageLabel(t) })), { value: CUSTOM_PACKAGE }], defaultValue: CUSTOM_PACKAGE },
         { name: "havePartsAlready", label: "Do you have parts already?", kind: "select", options: havePartsOptions, defaultValue: "No, starting fresh" },
+        { name: "printAddOn", label: "Add a custom 3D print?", hint: "(I print these myself)", kind: "select", options: buildAddOns, defaultValue: "No thanks" },
       ],
     },
     meetingStep,

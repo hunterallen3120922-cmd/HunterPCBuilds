@@ -12,6 +12,7 @@ import Privacy from "./pages/Privacy";
 import About from "./pages/About";
 import TradeIn from "./pages/TradeIn";
 import Shop from "./pages/Shop";
+import Prints from "./pages/Prints";
 
 /** The admin portal is a separate download, so visitors never load it. */
 const AdminApp = lazy(() => import("./admin/AdminApp"));
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/sell" element={<TradeIn />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/3d-prints" element={<Prints />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

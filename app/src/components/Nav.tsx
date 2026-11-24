@@ -7,6 +7,7 @@ const links = [
   { to: "/tech-repair", label: "Tech Repair" },
   { to: "/shop", label: "Shop" },
   { to: "/sell", label: "Trade-ins" },
+  { to: "/3d-prints", label: "3D Prints" },
 ];
 
 /** Badge icon + wordmark. The badge files live in app/public/ (favicon.svg, logo.svg). */

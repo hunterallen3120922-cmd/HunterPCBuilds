@@ -1,7 +1,7 @@
 import type { FormConfig } from "../components/form/types";
 import type { FormValues, PreferredWindow } from "../types";
 import { site } from "../content/site";
-import { insertRequest, insertTradeIn, supabaseReady } from "./supabase";
+import { insertPrintRequest, insertRequest, insertTradeIn, supabaseReady, uploadPrintFile } from "./supabase";
 
 const WEB3FORMS_URL = "https://api.web3forms.com/submit";
 const accessKey = import.meta.env.VITE_WEB3FORMS_KEY as string | undefined;
@@ -110,5 +110,37 @@ export async function submitTradeIn(config: FormConfig, values: FormValues, deta
   const results = await Promise.allSettled(tasks);
   const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
   failed.forEach((f) => console.error("Trade-in delivery problem:", f.reason));
+  if (failed.length === results.length) throw failed[0].reason;
+}
+
+/**
+ * Custom 3D print requests: emailed to you, and saved as a quote (Quotes tab → 3D prints) with any photos or
+ * model files uploaded to private storage. If an upload fails the request still goes through, and says so.
+ */
+export async function submitPrintRequest(config: FormConfig, values: FormValues, details: Record<string, unknown>, files: File[]): Promise<void> {
+  const tasks: Promise<void>[] = [];
+  if (accessKey) tasks.push(sendEmail(config, values));
+  if (supabaseReady) {
+    tasks.push((async () => {
+      const folder = crypto.randomUUID();
+      const done = await Promise.allSettled(files.map((f) => uploadPrintFile(folder, f)));
+      const uploaded = done.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+      const failedFiles = files.filter((_, i) => done[i].status === "rejected").map((f) => f.name);
+      const what = String(details.description ?? "").split("\n")[0].trim();
+      await insertPrintRequest({
+        title: `3D print: ${what || "custom request"}`.slice(0, 200),
+        customer: asText(values.name).slice(0, 200),
+        contact: asText(values.email).slice(0, 200),
+        print_job: { ...details, files: uploaded, files_failed: failedFiles, message: asText(values.notes), phone: asText(values.phone), contact_by: asText(values.contactPreference) },
+      });
+    })());
+  }
+  if (tasks.length === 0) {
+    if (import.meta.env.DEV) { console.info("[dev] print request would be sent:", values, details, files); await new Promise((r) => setTimeout(r, 600)); return; }
+    throw new Error("The request form isn't connected yet.");
+  }
+  const results = await Promise.allSettled(tasks);
+  const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+  failed.forEach((f) => console.error("Print request delivery problem:", f.reason));
   if (failed.length === results.length) throw failed[0].reason;
 }
