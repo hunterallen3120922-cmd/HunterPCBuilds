@@ -12,13 +12,13 @@ export const materials = [
     avoid: "Hot cars or anything near real heat. It softens around 140°F.",
   },
   {
-    id: "PETG", name: "PETG", mult: 1.15, tag: "Inside your PC",
+    id: "PETG", name: "PETG", mult: 1.1, tag: "Inside your PC",
     blurb: "Tougher and more heat resistant. My pick for GPU brackets, fan grills and anything that lives inside a PC.",
     good: ["Handles PC heat", "Bends before it breaks", "Water resistant"],
     avoid: "Super fine detail. Edges come out a little softer than PLA.",
   },
   {
-    id: "TPU", name: "TPU", mult: 1.4, tag: "Flexible",
+    id: "TPU", name: "TPU", mult: 1.25, tag: "Flexible",
     blurb: "Rubbery and bendy. Good for bumpers, feet, grips, cable straps and cases that need to take a hit.",
     good: ["Flexible and grippy", "Shock absorbing", "Hard to break"],
     avoid: "Anything that needs to stay stiff or hold weight.",
@@ -28,23 +28,23 @@ export type MaterialId = (typeof materials)[number]["id"];
 
 /** Size choices on the custom request, with the ballpark price for one simple PLA print. */
 export const sizes = [
-  { id: "small", label: "Small", hint: "Fits in your palm · up to about 2 in", example: "keycap, cable clip", low: 4, high: 10 },
-  { id: "medium", label: "Medium", hint: "Phone size · up to about 5 in", example: "cable combs, controller holder", low: 10, high: 22 },
-  { id: "large", label: "Large", hint: "Up to about 9 in", example: "headphone stand, GPU bracket", low: 18, high: 40 },
-  { id: "xl", label: "Extra large", hint: "Bigger, printed in pieces", example: "big display piece, case parts", low: 40, high: 100 },
+  { id: "small", label: "Small", hint: "Fits in your palm · up to about 2 in", example: "keycap, cable clip", low: 1, high: 5 },
+  { id: "medium", label: "Medium", hint: "Phone size · up to about 5 in", example: "cable combs, controller holder", low: 5, high: 12 },
+  { id: "large", label: "Large", hint: "Up to about 9 in", example: "headphone stand, GPU bracket", low: 8, high: 20 },
+  { id: "xl", label: "Extra large", hint: "Bigger, printed in pieces", example: "big display piece, case parts", low: 20, high: 50 },
 ] as const;
 export type SizeId = (typeof sizes)[number]["id"];
 
 export const details = [
   { id: "simple", label: "Simple", hint: "Plain shapes, flat sides", mult: 1 },
-  { id: "detailed", label: "Detailed", hint: "Fine text, small parts, lots of supports", mult: 1.35 },
+  { id: "detailed", label: "Detailed", hint: "Fine text, small parts, lots of supports", mult: 1.25 },
 ] as const;
 export type DetailId = (typeof details)[number]["id"];
 
-/** Does it need designing? Adds a design fee range on top. */
+/** Does it need designing? Adds a flat design fee on top. */
 export const fileOptions = [
   { id: "file", label: "I have the file", hint: "STL or 3MF, e.g. from Printables or Thingiverse", low: 0, high: 0 },
-  { id: "design", label: "I need it designed", hint: "Send a photo, sketch or measurements", low: 10, high: 35 },
+  { id: "design", label: "I need it designed", hint: "Send a photo, sketch or measurements", low: 5, high: 5 },
 ] as const;
 export type FileOptionId = (typeof fileOptions)[number]["id"];
 
@@ -63,16 +63,38 @@ export const colors = [
   { name: "Purple", hex: "#8b5cf6" },
 ];
 
-/** Quick ideas on the request form. Tapping one fills in the description. */
-export const ideas = [
-  { label: "GPU support bracket", text: "A GPU support bracket to stop my graphics card sagging.", size: "large", material: "PETG" },
-  { label: "Cable combs", text: "Cable combs for my PSU cables (24-pin, 8-pin CPU and GPU).", size: "medium", material: "PETG" },
-  { label: "Headphone stand", text: "A headphone stand for my desk.", size: "large", material: "PLA" },
-  { label: "Controller holder", text: "A holder for my controllers.", size: "medium", material: "PLA" },
-  { label: "Fan grill", text: "A fan grill / cover for a 120mm fan.", size: "medium", material: "PETG" },
-  { label: "Custom keycaps", text: "Custom keycaps for my keyboard.", size: "small", material: "PLA" },
-  { label: "Name plate / logo", text: "A name plate or logo to show inside my PC.", size: "medium", material: "PLA" },
-] as const;
+/**
+ * READY-MADE LIST ("Something from here"). Printed to order at these prices; the customer doesn't need a file.
+ * `art` picks the drawing (components/PrintArt.tsx). `options` = bundles they choose between, otherwise `price` (and `priceTo` for a range).
+ */
+export interface CatalogItem {
+  id: string;
+  name: string;
+  art: "bracket" | "comb" | "stand" | "controller" | "grill" | "keycap" | "plate";
+  blurb: string;
+  material: MaterialId;
+  price: number;
+  /** For a price range, e.g. name plates $5–$30 */
+  priceTo?: number;
+  options?: { label: string; price: number }[];
+}
+
+export const catalog: CatalogItem[] = [
+  { id: "gpu-bracket", name: "GPU support bracket", art: "bracket", material: "PETG", price: 10, blurb: "Stops graphics card sag. Adjustable height, and PETG handles PC heat." },
+  { id: "cable-combs", name: "Cable combs", art: "comb", material: "PETG", price: 10, blurb: "A set for your 24-pin, CPU and GPU cables. Snap on, clean lines." },
+  { id: "headphone-stand", name: "Headphone stand", art: "stand", material: "PLA", price: 10, blurb: "Keeps your headset off the desk." },
+  { id: "controller-holder", name: "Controller holder", art: "controller", material: "PLA", price: 15, blurb: "Holds two controllers upright on your desk or shelf." },
+  { id: "fan-grill", name: "Fan grill", art: "grill", material: "PETG", price: 5, blurb: "Cover for a 120 mm fan. Keeps fingers and cables out." },
+  {
+    id: "keycaps", name: "Custom keycaps", art: "keycap", material: "PLA", price: 1, blurb: "Fits standard MX-style switches. Mix colors if you like.",
+    options: [{ label: "1 keycap", price: 1 }, { label: "10 keycaps", price: 5 }, { label: "Full keyboard", price: 20 }],
+  },
+  { id: "name-plate", name: "Name plate or logo", art: "plate", material: "PLA", price: 5, priceTo: 30, blurb: "Your name, gamertag or logo for inside your case or on your desk. Price depends on size and detail." },
+];
+
+/** "$10", "$5–$30" or "from $1" */
+export const catalogPrice = (c: CatalogItem) =>
+  c.options ? `from $${Math.min(...c.options.map((o) => o.price))}` : c.priceTo ? `$${c.price}–$${c.priceTo}` : `$${c.price}`;
 
 /** Under "How it works" on the page. */
 export const printSteps = [
