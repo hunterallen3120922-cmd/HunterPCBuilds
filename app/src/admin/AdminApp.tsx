@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
 import BuildsTab from "./BuildsTab";
 import ShopTab from "./ShopTab";
+import ReviewsTab from "./ReviewsTab";
 import RequestsTab from "./RequestsTab";
 import DashboardTab from "./DashboardTab";
 import PartsTab from "./PartsTab";
@@ -129,6 +130,7 @@ export default function AdminApp() {
       {tab === "inventory" && <InventoryTab />}
       {tab === "builds" && <BuildsTab />}
       {tab === "shop" && <ShopTab />}
+      {tab === "reviews" && <ReviewsTab />}
       {tab === "requests" && <RequestsTab onChange={refreshNewCount} />}
       {showcase && <Showcase onClose={closeShowcase} />}
     </Shell>
@@ -145,6 +147,7 @@ const TABS = [
   { id: "inventory", label: "Inventory" },
   { id: "builds", label: "Site builds" },
   { id: "shop", label: "Shop" },
+  { id: "reviews", label: "Reviews" },
   { id: "requests", label: "Requests" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];

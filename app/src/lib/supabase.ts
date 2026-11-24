@@ -146,3 +146,48 @@ export async function insertPrintRequest(row: { title: string; customer: string;
   });
   if (!res.ok) throw new Error(`Saving the print request failed (${res.status})`);
 }
+
+/** A review as the site shows it (see supabase/reviews.sql). */
+export interface ReviewRow {
+  id: string;
+  source: "ebay" | "in person" | "facebook" | "other";
+  rating: "positive" | "neutral" | "negative";
+  comment: string;
+  buyer: string | null;
+  item: string | null;
+  reviewed_on: string;
+}
+/** Your eBay summary: username for the "See all" link, positive % and feedback count. */
+export interface ReviewStats {
+  ebay_username: string | null;
+  positive_pct: number | null;
+  feedback_count: number | null;
+}
+
+async function getJson<T>(path: string, timeoutMs: number): Promise<T> {
+  if (!supabaseReady) throw new Error("Supabase not configured");
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: headers(), signal: ctrl.signal });
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/** The newest published reviews and your eBay summary. Null if the portal isn't set up or the tables don't exist yet. */
+export async function getReviews(limit = 8, timeoutMs = 4000): Promise<{ reviews: ReviewRow[]; stats: ReviewStats | null } | null> {
+  if (!supabaseReady) return null;
+  try {
+    const [reviews, stats] = await Promise.all([
+      getJson<ReviewRow[]>(`reviews?select=id,source,rating,comment,buyer,item,reviewed_on&published=eq.true&rating=eq.positive&order=reviewed_on.desc,created_at.desc&limit=${limit}`, timeoutMs),
+      getJson<ReviewStats[]>("review_stats?select=ebay_username,positive_pct,feedback_count&id=eq.1", timeoutMs).catch(() => []),
+    ]);
+    return { reviews, stats: stats[0] ?? null };
+  } catch (err) {
+    console.warn("Reviews unavailable:", err);
+    return null;
+  }
+}
