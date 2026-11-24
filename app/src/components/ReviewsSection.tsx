@@ -52,7 +52,7 @@ export default function ReviewsRotator({ data }: { data: Data }) {
   return (
     <figure data-reveal="up" aria-roledescription="carousel" aria-label="What customers say"
       onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}
-      className="card relative mt-4 overflow-hidden px-6 py-10 text-center sm:px-14 sm:py-14">
+      className="card relative overflow-hidden px-6 py-10 text-center sm:px-14 sm:py-14">
       <span className="pointer-events-none absolute left-5 top-0 select-none font-serif text-[9rem] leading-none text-accent opacity-[.08] sm:left-10" aria-hidden>“</span>
       <p className="eyebrow mb-6">People have great things to say</p>
 

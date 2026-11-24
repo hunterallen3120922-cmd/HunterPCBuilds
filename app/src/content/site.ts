@@ -20,7 +20,7 @@ export const site = {
   responseTime: "I aim to reply within 24 hours.",
   /** Small line above the hero headline */
   localTag: "Student-run · Repairs & custom builds",
-  /** The "Local, not a call center" section on the home page */
+  /** Local blurb (no longer on the home page; kept for reuse) */
   localTitle: "Local, not a call center.",
   localText:
     "I'm a local student, so repairs happen close by: at your place, on or near campus, or at a quick drop-off. You get a real person who answers your texts, explains what's wrong, and doesn't upsell.",

@@ -14,7 +14,6 @@ import { toGalleryItem, useBuilds } from "../lib/useBuilds";
 import type { GalleryItem } from "../types";
 import { repairServices } from "../content/repairServices";
 import { faq } from "../content/faq";
-import { meetingMethods } from "../content/formOptions";
 
 function GlanceCard() {
   return (
@@ -74,7 +73,7 @@ export default function Home() {
   const builds = useBuilds();
   const fromPortal = builds?.filter((b) => b.featured && b.photos.length > 0) ?? [];
   const featured = fromPortal.length > 0 ? fromPortal.map(toGalleryItem) : gallery.filter((g) => g.featured);
-  // Reviews from the admin portal; the rotating quote under "Why people pick me" only shows once there are some
+  // Reviews from the admin portal; the rotating reviews section only shows once there are some
   const reviews = useReviews();
   useSeo(site.fullName, "Student-run computer repair and custom PC builds. Submit a request and get a quote fast.");
   return (
@@ -147,30 +146,16 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
-          {reviews && <ReviewsRotator data={reviews} />}
         </div>
       </section>
 
-      <section className="section">
-        <div className="wrap grid items-center gap-12 lg:grid-cols-2">
-          <div data-reveal-group="blur">
-            <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Local</p>
-            <h2 className="text-[clamp(2rem,4.2vw,3.1rem)]">{site.localTitle}</h2>
-            <p className="mt-4 max-w-[52ch] text-muted">{site.localText}</p>
-            {site.serviceArea && <p className="mt-4 text-[.9rem] text-muted">Serving {site.serviceArea}.</p>}
-          </div>
-          <ul data-reveal="right" className="card divide-y divide-line overflow-hidden !p-0">
-            {meetingMethods.map((m) => (
-              <li key={m.value} className="flex items-center gap-4 p-5">
-                <IconTile name={m.icon ?? "pin"} />
-                <div><p className="font-medium">{m.label ?? m.value}</p><p className="text-[.9rem] text-muted">{m.description}</p></div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {reviews && (
+        <section className="section">
+          <div className="wrap max-w-[60rem]"><ReviewsRotator data={reviews} /></div>
+        </section>
+      )}
 
-      <section className="section alt">
+      <section className={`section ${reviews ? "alt" : ""}`}>
         <div className="wrap max-w-[51.25rem]">
           <SectionHead eyebrow="FAQ" title="Quick answers" />
           <FaqList items={faq.filter((f) => f.preview)} />
