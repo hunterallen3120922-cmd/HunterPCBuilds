@@ -70,7 +70,7 @@ export const colors = [
 export interface CatalogItem {
   id: string;
   name: string;
-  art: "bracket" | "comb" | "stand" | "controller" | "grill" | "keycap" | "plate";
+  art: "bracket" | "comb" | "stand" | "controller" | "grill" | "keycap" | "plate" | "collection";
   blurb: string;
   material: MaterialId;
   price: number;

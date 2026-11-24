@@ -411,15 +411,8 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
 @keyframes ti-pop { from { opacity: 0; transform: scale(.94) translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ti-bar, .ti-line, .ti-shuffle, .ti-pop { animation: none; } }
 
-.dot-grid { background-image: radial-gradient(circle, color-mix(in srgb, var(--text) 7%, transparent) 1px, transparent 1.5px); background-size: 1.5rem 1.5rem; }
-/* 3D prints drawings + the morphing "custom" shape (components/PrintArt.tsx) */
-.print-art .pa-dim { stroke: var(--muted); }
-.print-art .pa-print { stroke: var(--accent); }
-.print-art .pa-fill { fill: color-mix(in srgb, var(--accent) 14%, transparent); }
-.morph-fill { fill: color-mix(in srgb, var(--accent) 16%, transparent); stroke: var(--accent); stroke-width: 1.6; stroke-linejoin: round; }
-.morph-spin { transform-origin: 50px 50px; animation: morph-spin 24s linear infinite; }
-.morph-bed { stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
-@keyframes morph-spin { to { transform: rotate(360deg); } }
+/* Product "studio": a soft spotlight behind the 3D print renders */
+.studio { background: radial-gradient(ellipse 70% 60% at 50% 42%, color-mix(in srgb, var(--accent) 9%, var(--bg2)) 0%, var(--bg2) 62%, color-mix(in srgb, var(--bg) 70%, var(--bg2)) 100%); }
 .pick-in { animation: pick-in .45s var(--ease) both; }
 @keyframes pick-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .morph-spin, .pick-in { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .pick-in { animation: none; } }

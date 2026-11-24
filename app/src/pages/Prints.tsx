@@ -7,7 +7,7 @@ import { useSeo } from "../lib/seo";
 import { site } from "../content/site";
 import FormDialog from "../components/FormDialog";
 import { printOrderForm, printRequestForm, shopItemForm } from "../forms/shopForms";
-import PrintArt, { MorphShape } from "../components/PrintArt";
+import PrintArt, { PrintingVideo } from "../components/PrintArt";
 import type { FormConfig } from "../components/form/types";
 import { submitPrintRequest } from "../lib/submit";
 import { getPrintItems, photoUrl, supabaseReady } from "../lib/supabase";
@@ -63,7 +63,7 @@ function PrintCard({ l, onOpen }: { l: Listing; onOpen: (f: FormConfig) => void 
       <div className="relative aspect-[4/3] overflow-hidden border-b border-line bg-bg2">
         {l.photo
           ? <img src={l.photo} loading="lazy" alt="" className="h-full w-full object-cover" />
-          : <div className="dot-grid grid h-full place-items-center text-accent/70"><Icon name="printer" className="h-16 w-16" /></div>}
+          : <div className="studio grid h-full place-items-center text-accent/70"><Icon name="printer" className="h-16 w-16" /></div>}
         {l.note && <span className="absolute bottom-3 left-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 text-[.72rem] text-ink backdrop-blur">{l.note}</span>}
         {!open && <span className="absolute left-3 top-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 font-mono text-[.65rem] uppercase tracking-wider text-muted backdrop-blur">{l.status === "sold" ? "Sold out" : "On hold"}</span>}
       </div>
@@ -97,10 +97,10 @@ function CatalogCard({ c, onOrder }: { c: CatalogItem; onOrder: (label: string, 
   const shown = o ? `$${o.price}` : catalogPrice(c);
   const label = `${c.name}${o ? ` · ${o.label}` : ""} · ${shown}`;
   return (
-    <article className="card lift flex h-full flex-col overflow-hidden !p-0">
-      <div className="dot-grid relative grid aspect-[16/10] place-items-center border-b border-line bg-bg2">
-        <PrintArt kind={c.art} className="h-[70%] w-[70%]" />
-        <span className="absolute left-3 top-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 font-mono text-[.68rem] text-accent2 backdrop-blur">{c.material}</span>
+    <article className="card lift group flex h-full flex-col overflow-hidden !p-0">
+      <div className="studio relative aspect-[4/3] overflow-hidden border-b border-line">
+        <PrintArt kind={c.art} alt={c.name} className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.05]" />
+        <span className="absolute left-3 top-3 rounded-full border border-line bg-bg/70 px-2.5 py-1 font-mono text-[.66rem] uppercase tracking-wider text-muted backdrop-blur">{c.material}</span>
       </div>
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-start justify-between gap-3">
@@ -225,17 +225,14 @@ export default function Prints() {
           <div className="grid gap-5 md:grid-cols-2">
             <button type="button" onClick={() => pick("ready")} aria-pressed={mode === "ready"}
               className={`card lift group flex cursor-pointer flex-col overflow-hidden !p-0 text-left ${mode === "ready" ? "!border-accent" : ""}`}>
-              <span className="dot-grid grid grid-cols-3 gap-2.5 border-b border-line bg-bg2 p-5" aria-hidden>
-                {catalog.slice(0, 6).map((c) => (
-                  <span key={c.id} className="grid aspect-[4/3] place-items-center rounded-[.7rem] border border-line bg-bg/60 transition-transform duration-300 group-hover:-translate-y-0.5">
-                    <PrintArt kind={c.art} className="h-[78%] w-[78%]" />
-                  </span>
-                ))}
+              <span className="studio relative block aspect-[4/3] overflow-hidden border-b border-line" aria-hidden>
+                <PrintArt kind="collection" className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.04]" />
+                <span className="absolute right-4 top-4 rounded-full border border-line bg-bg/70 px-3 py-1 font-mono text-[.7rem] text-accent backdrop-blur">{catalog.length} prints · from $1</span>
               </span>
               <span className="flex items-center justify-between gap-4 p-6">
                 <span>
                   <b className="block font-heading text-2xl font-medium">Something from here</b>
-                  <span className="mt-1 block text-[.92rem] text-muted">Brackets, cable combs, stands, keycaps and more. Set prices, from $1.</span>
+                  <span className="mt-1 block text-[.92rem] text-muted">GPU brackets, cable combs, stands, keycaps and more, at set prices.</span>
                 </span>
                 <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full border ${mode === "ready" ? "border-accent bg-accent text-onaccent" : "border-line text-accent"}`}><Icon name="arrow" className="h-4 w-4" /></span>
               </span>
@@ -243,8 +240,9 @@ export default function Prints() {
 
             <button type="button" onClick={() => pick("custom")} aria-pressed={mode === "custom"}
               className={`card lift group flex cursor-pointer flex-col overflow-hidden !p-0 text-left ${mode === "custom" ? "!border-accent" : ""}`}>
-              <span className="dot-grid grid flex-1 place-items-center border-b border-line bg-bg2 p-5" aria-hidden>
-                <MorphShape className="h-[9.5rem] w-[9.5rem]" />
+              <span className="relative block aspect-[4/3] overflow-hidden border-b border-line bg-bg2" aria-hidden>
+                <PrintingVideo className="h-full w-full object-cover" />
+                <span className="absolute right-4 top-4 rounded-full border border-line bg-bg/70 px-3 py-1 font-mono text-[.7rem] text-accent backdrop-blur">Your idea · ballpark in seconds</span>
               </span>
               <span className="flex items-center justify-between gap-4 p-6">
                 <span>
@@ -265,6 +263,19 @@ export default function Prints() {
             <SectionHead eyebrow="Something from here" title="Pick a print" />
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {catalog.map((c) => <CatalogCard key={c.id} c={c} onOrder={orderReady} />)}
+              {/* Fills out the last row: the way to the custom request */}
+              <button type="button" onClick={() => pick("custom")}
+                className="card lift group grid cursor-pointer overflow-hidden !p-0 text-left sm:col-span-2 sm:grid-cols-[1fr_1.1fr]">
+                <span className="relative block aspect-[4/3] overflow-hidden border-b border-line bg-bg2 sm:aspect-auto sm:border-b-0 sm:border-r" aria-hidden>
+                  <PrintingVideo className="h-full w-full object-cover" />
+                </span>
+                <span className="flex flex-col justify-center p-7">
+                  <span className="eyebrow mb-2">Don't see it?</span>
+                  <b className="font-heading text-2xl font-medium">Make something custom</b>
+                  <span className="mt-2 text-[.95rem] text-muted">Describe it or send a file, and see a ballpark price right away. If it needs designing, that's a flat $5.</span>
+                  <span className="btn mt-5 self-start">Something custom <Icon name="arrow" className="h-4 w-4" /></span>
+                </span>
+              </button>
             </div>
             {shop.length > 0 && (
               <>
@@ -274,14 +285,6 @@ export default function Prints() {
                 </div>
               </>
             )}
-            <div className="card mt-10 flex flex-col items-start justify-between gap-5 p-7 sm:flex-row sm:items-center">
-              <div>
-                <p className="eyebrow mb-2">Don't see it?</p>
-                <h3 className="text-2xl">Make something custom</h3>
-                <p className="mt-2 text-[.95rem] text-muted">Describe it or send a file. A design is a flat $5 if you don't have one.</p>
-              </div>
-              <button type="button" onClick={() => pick("custom")} className="btn shrink-0">Something custom <Icon name="arrow" className="h-4 w-4" /></button>
-            </div>
           </div>
         </section>
       )}
