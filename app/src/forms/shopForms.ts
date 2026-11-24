@@ -8,18 +8,20 @@ const payoutOptions = [
 const yesNo = [{ value: "No", label: "No" }, { value: "Yes", label: "Yes" }];
 
 /** "Send for a firm offer" on the trade-in page. `estimate` is the summary the page worked out. */
-export function tradeInForm(estimate: string, payout: string, needsModel: boolean): FormConfig {
+export function tradeInForm(estimate: string, payout: string, needsModel: boolean, negotiate = false): FormConfig {
   return {
     label: "Trade-in",
     steps: [
       {
-        title: "Get a firm offer",
-        sub: "I'll reply with a firm offer, usually within a day. Final price after I test it in person.",
+        title: negotiate ? "Make me a counteroffer" : "Get a firm offer",
+        sub: negotiate ? "Tell me what you think it's worth and why. I'll take a look and reply, usually within a day." : "I'll reply with a firm offer, usually within a day. Final price after I test it in person.",
         fields: [
           { name: "estimate", label: "Estimate from the site", kind: "static", defaultValue: estimate },
           ...(needsModel ? [{ name: "model", label: "What is it?", kind: "text" as const, required: true, requiredMessage: "Tell me the brand and model.", placeholder: "e.g. RTX 2080 Super, or a Dell XPS 15 from 2020" }] : []),
           { name: "payout", label: "How you'd like to be paid", kind: "select", options: payoutOptions, defaultValue: payout },
-          { name: "notes", label: "Anything I should know?", hint: "(optional)", kind: "textarea", placeholder: "How old it is, any issues, what you're upgrading to…" },
+          negotiate
+            ? { name: "notes", label: "What price did you have in mind?", kind: "textarea", required: true, requiredMessage: "Tell me the price you had in mind.", placeholder: "e.g. $200. Similar ones sold for that on eBay last week." }
+            : { name: "notes", label: "Anything I should know?", hint: "(optional)", kind: "textarea", placeholder: "How old it is, any issues, what you're upgrading to…" },
         ],
       },
       contactStep,
