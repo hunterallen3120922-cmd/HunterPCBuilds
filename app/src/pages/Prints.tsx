@@ -21,6 +21,9 @@ const MAX_MB = 25;
 const ACCEPT = ".stl,.3mf,.obj,.step,.stp,.jpg,.jpeg,.png,.webp,.heic,.gif";
 const ANY_COLOR = "Any color, you pick";
 
+/** HashRouter owns the # in the address, so in-page jumps scroll by id instead of using href="#id". */
+const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
 /** Print Shop items and past prints from the admin portal's Shop tab. Empty until you add some. */
 function usePrints(): Listing[] | null {
   const [list, setList] = useState<Listing[] | null>(supabaseReady ? null : []);
@@ -164,8 +167,8 @@ export default function Prints() {
     <>
       <PageHero tag="3D printing" title={<>Printed for <span className="grad-text">your setup.</span></>}
         actions={<>
-          <a href="#custom" className="btn">Request a custom print <Icon name="arrow" className="h-4 w-4" /></a>
-          <a href="#print-shop" className="btn btn-ghost">Browse the Print Shop</a>
+          <button type="button" onClick={() => scrollToId("custom")} className="btn">Request a custom print <Icon name="arrow" className="h-4 w-4" /></button>
+          <button type="button" onClick={() => scrollToId("print-shop")} className="btn btn-ghost">Browse the Print Shop</button>
         </>}>
         GPU brackets, cable combs, headphone stands, keycaps, or anything you can describe. Printed by me in PLA, PETG or TPU, picked up locally. Pay {site.paymentMethods.join(" or ")} when it's done.
       </PageHero>
@@ -181,7 +184,7 @@ export default function Prints() {
               <h3 className="text-xl">The Print Shop is warming up</h3>
               <p className="max-w-[46ch] text-[.95rem] text-muted">Ready-made prints show up here soon. Want something now? Ask for it below and I'll print it for you.</p>
               <div className="mt-2 flex flex-wrap justify-center gap-2">
-                <a href="#custom" className="btn">Request a custom print <Icon name="arrow" className="h-4 w-4" /></a>
+                <button type="button" onClick={() => scrollToId("custom")} className="btn">Request a custom print <Icon name="arrow" className="h-4 w-4" /></button>
                 <button type="button" onClick={() => openOther(notifyForm)} className="btn btn-ghost">Get notified</button>
               </div>
             </div>
@@ -272,7 +275,7 @@ export default function Prints() {
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-[.82rem] text-muted">{mat.blurb} <a href="#materials" className="text-accent">Compare materials</a></p>
+              <p className="mt-2 text-[.82rem] text-muted">{mat.blurb} <button type="button" onClick={() => scrollToId("materials")} className="cursor-pointer text-accent underline-offset-2 hover:underline">Compare materials</button></p>
 
               <div className="mt-5 flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Color">
                 {colors.map((c) => (
@@ -369,10 +372,10 @@ export default function Prints() {
 
       {/* Phone: the ballpark follows you down the form */}
       {inCustom && createPortal(
-        <a href="#ballpark" className="fixed inset-x-3 bottom-3 z-20 flex items-center justify-between rounded-full border border-accent/40 bg-bg/90 py-2 pl-5 pr-2 no-underline shadow-[0_14px_44px_-14px_rgba(0,0,0,.9)] backdrop-blur-xl lg:hidden">
+        <button type="button" onClick={() => scrollToId("ballpark")} className="cursor-pointer text-left fixed inset-x-3 bottom-3 z-20 flex items-center justify-between rounded-full border border-accent/40 bg-bg/90 py-2 pl-5 pr-2 no-underline shadow-[0_14px_44px_-14px_rgba(0,0,0,.9)] backdrop-blur-xl lg:hidden">
           <span><small className="block font-mono text-[.62rem] uppercase tracking-wider text-accent2">Ballpark · {material}</small><b className="font-heading text-lg text-ink">${est[0]}–${est[1]}</b></span>
           <span className="btn !px-4 !py-2 !text-[.85rem]">See price <Icon name="arrow" className="h-3.5 w-3.5" /></span>
-        </a>
+        </button>
       , document.body)}
     </>
   );
