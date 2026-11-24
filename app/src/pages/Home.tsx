@@ -5,7 +5,7 @@ import { Photo } from "../components/Gallery";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
 import FaqList from "../components/FaqList";
-import ReviewsSection, { useReviews } from "../components/ReviewsSection";
+import ReviewsRotator, { useReviews } from "../components/ReviewsSection";
 import Icon, { IconTile } from "../components/Icon";
 import { useSeo } from "../lib/seo";
 import { glance, howItWorks, site, trustPoints } from "../content/site";
@@ -74,7 +74,7 @@ export default function Home() {
   const builds = useBuilds();
   const fromPortal = builds?.filter((b) => b.featured && b.photos.length > 0) ?? [];
   const featured = fromPortal.length > 0 ? fromPortal.map(toGalleryItem) : gallery.filter((g) => g.featured);
-  // Reviews from the admin portal; the section (and the stripe swap below it) only appears once there are some
+  // Reviews from the admin portal; the rotating quote under "Why people pick me" only shows once there are some
   const reviews = useReviews();
   useSeo(site.fullName, "Student-run computer repair and custom PC builds. Submit a request and get a quote fast.");
   return (
@@ -147,12 +147,11 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
+          {reviews && <ReviewsRotator data={reviews} />}
         </div>
       </section>
 
-      {reviews && <ReviewsSection data={reviews} />}
-
-      <section className={`section ${reviews ? "alt" : ""}`}>
+      <section className="section">
         <div className="wrap grid items-center gap-12 lg:grid-cols-2">
           <div data-reveal-group="blur">
             <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Local</p>
@@ -171,7 +170,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={`section ${reviews ? "" : "alt"}`}>
+      <section className="section alt">
         <div className="wrap max-w-[51.25rem]">
           <SectionHead eyebrow="FAQ" title="Quick answers" />
           <FaqList items={faq.filter((f) => f.preview)} />

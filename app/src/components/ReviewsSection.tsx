@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import SectionHead from "./SectionHead";
-import Reveal from "./Reveal";
-import Icon from "./Icon";
+import { useEffect, useRef, useState } from "react";
 import { getReviews, type ReviewRow, type ReviewStats } from "../lib/supabase";
+import Icon from "./Icon";
 
 type Data = { reviews: ReviewRow[]; stats: ReviewStats | null };
 let cache: Promise<Data | null> | null = null;
@@ -19,73 +17,74 @@ export function useReviews() {
 }
 
 const SOURCE = { ebay: "Verified eBay purchase", "in person": "Local customer", facebook: "Facebook Marketplace", other: "Customer" } as const;
+const ROTATE_MS = 7000;
 
-const monthYear = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-
-/** Long eBay reviews get cut at a sentence end near 220 characters. */
-function trim(text: string, max = 220) {
+/** Long eBay reviews get cut at a sentence end near 200 characters, so the card keeps one size. */
+function trim(text: string, max = 200) {
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
   const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "));
   return end > 80 ? cut.slice(0, end + 1) : `${cut.slice(0, cut.lastIndexOf(" "))}…`;
 }
 
-export default function ReviewsSection({ data, alt }: { data: Data; alt?: boolean }) {
+/**
+ * One review at a time, fading to the next every few seconds. Pauses while hovered or focused,
+ * and doesn't auto-advance for people who turned off motion (the dots still work).
+ */
+export default function ReviewsRotator({ data }: { data: Data }) {
   const { reviews, stats } = data;
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const still = useRef(typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  useEffect(() => {
+    if (paused || still.current || reviews.length < 2) return;
+    const t = setTimeout(() => setI((n) => (n + 1) % reviews.length), ROTATE_MS);
+    return () => clearTimeout(t);
+  }, [i, paused, reviews.length]);
+
   const user = stats?.ebay_username?.trim();
   const profile = user ? `https://www.ebay.com/fdbk/feedback_profile/${encodeURIComponent(user)}?filter=feedback_page:RECEIVED_AS_SELLER` : null;
   const pct = stats?.positive_pct;
   const count = stats?.feedback_count;
-  return (
-    <section className={`section ${alt ? "alt" : ""}`} aria-label="Customer reviews">
-      <div className="wrap">
-        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-2">
-          <SectionHead eyebrow="Reviews" title="What buyers say" sub="Recent feedback from real orders." />
-          {(pct != null || count != null) && (
-            <div data-reveal="up" className="mb-12 flex items-center gap-4">
-              {pct != null && (
-                <div>
-                  <p className="font-mono text-[2.4rem] leading-none tracking-[-0.03em] text-accent">{Number(pct) % 1 ? Number(pct).toFixed(1) : Number(pct)}%</p>
-                  <p className="mt-1 text-[.8rem] text-muted">positive on eBay</p>
-                </div>
-              )}
-              {pct != null && count != null && <span className="h-10 w-px bg-line" aria-hidden />}
-              {count != null && (
-                <div>
-                  <p className="font-mono text-[2.4rem] leading-none tracking-[-0.03em] text-ink">{Number(count).toLocaleString()}</p>
-                  <p className="mt-1 text-[.8rem] text-muted">ratings</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+  const proof = [pct != null && `${Number(pct) % 1 ? Number(pct).toFixed(1) : Number(pct)}% positive on eBay`, count != null && `${Number(count).toLocaleString()} ratings`].filter(Boolean).join(" · ");
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {reviews.map((r, i) => (
-            <Reveal key={r.id} delay={(i % 3) * 90} className="h-full">
-              <figure className="card lift flex h-full flex-col p-6">
-                <div className="mb-4 flex items-center gap-2 text-accent">
-                  <span className="grid h-7 w-7 place-items-center rounded-full border border-accent/40 bg-accent/10"><Icon name="check" className="h-3.5 w-3.5" /></span>
-                  <span className="font-mono text-[.7rem] uppercase tracking-[.14em]">Positive</span>
-                </div>
-                <blockquote className="flex-1 text-[1rem] leading-relaxed text-ink">“{trim(r.comment)}”</blockquote>
-                <figcaption className="mt-5 border-t border-line pt-4 text-[.82rem] text-muted">
-                  {r.item && <p className="mb-1 truncate text-ink/80" title={r.item}>{r.item}</p>}
-                  <p>{[r.buyer, SOURCE[r.source] ?? "Customer", monthYear(r.reviewed_on)].filter(Boolean).join(" · ")}</p>
-                </figcaption>
-              </figure>
-            </Reveal>
+  return (
+    <figure data-reveal="up" aria-roledescription="carousel" aria-label="What customers say"
+      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}
+      className="card relative mt-4 overflow-hidden px-6 py-10 text-center sm:px-14 sm:py-14">
+      <span className="pointer-events-none absolute left-5 top-0 select-none font-serif text-[9rem] leading-none text-accent opacity-[.08] sm:left-10" aria-hidden>“</span>
+      <p className="eyebrow mb-6">People have great things to say</p>
+
+      {/* every review is laid out in the same spot; the tallest one sets the height so nothing jumps */}
+      <div className="grid" aria-live={paused ? "polite" : "off"}>
+        {reviews.map((r, n) => (
+          <div key={r.id} aria-hidden={n !== i} style={{ gridArea: "1 / 1" }}
+            className={`flex flex-col items-center justify-center transition-[opacity,transform] duration-700 ease-out ${n === i ? "opacity-100" : "pointer-events-none translate-y-2 opacity-0"}`}>
+            <blockquote className="mx-auto max-w-[40ch] text-[clamp(1.2rem,2.3vw,1.6rem)] leading-snug tracking-[-0.01em] text-ink">“{trim(r.comment)}”</blockquote>
+            <figcaption className="mt-5 text-[.85rem] text-muted">
+              {[r.buyer, SOURCE[r.source] ?? "Customer"].filter(Boolean).join(" · ")}
+              {r.item && <span className="mx-auto mt-0.5 block max-w-[46ch] truncate text-[.8rem] opacity-80">{r.item}</span>}
+            </figcaption>
+          </div>
+        ))}
+      </div>
+
+      {reviews.length > 1 && (
+        <div className="mt-7 flex justify-center gap-2" role="group" aria-label="Choose a review">
+          {reviews.map((r, n) => (
+            <button key={r.id} type="button" onClick={() => setI(n)} aria-label={`Review ${n + 1} of ${reviews.length}`} aria-current={n === i}
+              className={`h-1.5 rounded-full transition-all duration-500 ${n === i ? "w-6 bg-accent" : "w-1.5 bg-line hover:bg-muted"}`} />
           ))}
         </div>
+      )}
 
-        {profile && (
-          <p data-reveal="up" className="mt-8">
-            <a href={profile} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 font-medium">
-              See all my feedback on eBay <Icon name="arrow" className="h-4 w-4" />
-            </a>
-          </p>
-        )}
-      </div>
-    </section>
+      {(proof || profile) && (
+        <p className="mt-7 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-line pt-6 text-[.88rem] text-muted">
+          {proof && <span className="inline-flex items-center gap-2"><Icon name="check" className="h-4 w-4 text-accent" />{proof}</span>}
+          {profile && <a href={profile} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-medium">See all on eBay <Icon name="arrow" className="h-3.5 w-3.5" /></a>}
+        </p>
+      )}
+    </figure>
   );
 }

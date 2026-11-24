@@ -178,7 +178,7 @@ async function getJson<T>(path: string, timeoutMs: number): Promise<T> {
 }
 
 /** The newest published reviews and your eBay summary. Null if the portal isn't set up or the tables don't exist yet. */
-export async function getReviews(limit = 6, timeoutMs = 4000): Promise<{ reviews: ReviewRow[]; stats: ReviewStats | null } | null> {
+export async function getReviews(limit = 8, timeoutMs = 4000): Promise<{ reviews: ReviewRow[]; stats: ReviewStats | null } | null> {
   if (!supabaseReady) return null;
   try {
     const [reviews, stats] = await Promise.all([
