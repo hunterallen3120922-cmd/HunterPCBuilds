@@ -80,14 +80,14 @@ export default function TradeIn() {
     return { cash: [round5(lo), round5(hi)], credit: [round5(lo * (1 + creditBonus)), round5(hi * (1 + creditBonus))] };
   }, [model, cond, picked]);
 
-  const openOffer = () => {
+  const openOffer = (negotiate = false) => {
     const c = conditions.find((x) => x.id === cond)!;
     const typeLabel = partTypes.find((t) => t.id === type)!.label;
     const ex = extras.filter((e) => picked.includes(e.id)).map((e) => e.label);
     const range = est ? `Cash $${est.cash[0]}–$${est.cash[1]} · Credit $${est.credit[0]}–$${est.credit[1]}` : "Not on the list, price by hand";
     const summary = `${typeLabel}: ${model || "not listed"} · ${c.label}${ex.length ? ` · ${ex.join(", ")}` : ""} · ${range}`;
     setDetails({ part_type: typeLabel, model, condition: c.label, extras: ex, estimate_cash: est?.cash ?? null, estimate_credit: est?.credit ?? null });
-    setForm(tradeInForm(summary, payout === "credit" ? "Trade-in credit" : "Cash or Zelle", !model));
+    setForm(tradeInForm(summary, payout === "credit" ? "Trade-in credit" : "Cash or Zelle", !model, negotiate));
   };
 
   const pickType = (t: PartType) => { setType(t); setModel(priceList.find((p) => p.type === t)?.name ?? ""); };
@@ -197,7 +197,11 @@ export default function TradeIn() {
                     ))}
                   </div>
 
-                  <button type="button" onClick={openOffer} className="btn mt-6 w-full">Send for a firm offer <Icon name="arrow" className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => openOffer()} className="btn mt-6 w-full">Send for a firm offer <Icon name="arrow" className="h-4 w-4" /></button>
+                  <p className="mt-3 text-center text-[.8rem] text-muted">
+                    Think my price is wrong?{" "}
+                    <button type="button" onClick={() => openOffer(true)} className="text-accent2 underline underline-offset-2 hover:text-ink">Message me to negotiate</button>
+                  </p>
                 </div>
               )}
               <ul className="mt-5 space-y-2 text-[.82rem] text-muted">
