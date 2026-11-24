@@ -3,9 +3,10 @@ import { supabase } from "./client";
 import { Totals } from "./Records";
 import PartsGrid, { blankRow, newKey, norm, type GridItem, type PastPart } from "./PartsGrid";
 import TradeInEditor from "./TradeInEditor";
+import PrintRequestEditor from "./PrintRequestEditor";
 import { fetchSheet, findParts, readFile, type FoundPart } from "./sheetImport";
 import {
-  PART_CATEGORIES, PLATFORMS, STATUSES_FOR, TRADE_IN_STATUS, day, jobDay, money, num, pct, quoteTotals, resaleTotals, specLine, today,
+  PART_CATEGORIES, PLATFORMS, PRINT_STATUS, STATUSES_FOR, TRADE_IN_STATUS, day, jobDay, money, num, pct, quoteTotals, resaleTotals, specLine, today,
   type JobRow, type PartRow, type QuoteItemRow, type QuoteRow,
 } from "./money";
 
@@ -46,6 +47,7 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
   const [open, setOpenRaw] = useState<(Opened & { n: number }) | null>(null);
   const [choosing, setChoosing] = useState(false);
   const [tradeIn, setTradeIn] = useState<QuoteRow | null>(null);
+  const [printReq, setPrintReq] = useState<QuoteRow | null>(null);
   const setOpen = (o: Opened | null) => setOpenRaw((cur) => o && { ...o, n: (cur?.n ?? 0) + 1 });
 
   const load = useCallback(async () => {
@@ -74,6 +76,7 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
 
   const openQuote = (q: QuoteRow) => {
     if (q.purpose === "trade_in") { setTradeIn(q); return; }
+    if (q.purpose === "print") { setPrintReq(q); return; }
     const { created_at: _c, ...rest } = q;
     setOpen({
       quote: { ...rest, customer: q.customer ?? "", contact: q.contact ?? "", customer_note: q.customer_note ?? "", notes: q.notes ?? "" },
@@ -81,6 +84,7 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
     });
   };
 
+  if (printReq) return <PrintRequestEditor quote={printReq} onClose={() => { setPrintReq(null); load(); }} />;
   if (tradeIn) return <TradeInEditor quote={tradeIn} onClose={() => { setTradeIn(null); load(); }} />;
   if (open) {
     return <QuoteEditor key={open.n} initial={open} onClose={() => { setOpen(null); load(); }} onJobMade={onJobMade} onDuplicate={setOpen} />;
@@ -88,7 +92,7 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
 
   const money2 = (q: QuoteRow) => {
     const its = byQuote.get(q.id) ?? [];
-    if (q.purpose === "trade_in") return { price: num(q.offer), profit: 0 };
+    if (q.purpose === "trade_in" || q.purpose === "print") return { price: num(q.offer), profit: 0 };
     if (q.purpose === "resale") { const t = resaleTotals(q, its); return { price: t.list, profit: t.profit }; }
     const t = quoteTotals(q, its);
     return { price: t.total, profit: t.profit };
@@ -100,6 +104,7 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
   const won = decided.filter((q) => q.status === "accepted").length;
   const forSale = all.filter((q) => q.purpose === "resale" && q.status !== "sold");
   const newTradeIns = all.filter((q) => q.purpose === "trade_in" && q.status === "draft").length;
+  const newPrints = all.filter((q) => q.purpose === "print" && q.status === "draft").length;
 
   return (
     <section>
@@ -130,8 +135,13 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
               {newTradeIns} new trade-in request{newTradeIns === 1 ? "" : "s"} from the site. Show them →
             </button>
           )}
+          {newPrints > 0 && show !== "print" && (
+            <button type="button" onClick={() => setShow("print")} className="mt-4 w-full rounded-card border border-accent/50 bg-accent/10 px-4 py-2.5 text-left text-[.9rem] text-accent">
+              {newPrints} new 3D print request{newPrints === 1 ? "" : "s"} from the site. Show them →
+            </button>
+          )}
           <div className="mb-4 mt-4 flex flex-wrap gap-2">
-            {([["all", "All"], ["customer", "For customers"], ["resale", "To sell"], ["trade_in", "Trade-ins"]] as const).map(([o, label]) => (
+            {([["all", "All"], ["customer", "For customers"], ["resale", "To sell"], ["trade_in", "Trade-ins"], ["print", "3D prints"]] as const).map(([o, label]) => (
               <button key={o} type="button" onClick={() => setShow(o)} aria-pressed={show === o}
                 className={`rounded-full border px-3 py-1 text-[.8rem] ${show === o ? "border-ink/60 bg-card text-ink" : "border-line text-muted hover:text-ink"}`}>
                 {label} <span className="font-mono text-[.72rem] opacity-70">{o === "all" ? all.length : all.filter((q) => q.purpose === o).length}</span>
@@ -149,15 +159,18 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="truncate font-medium">{q.title}</span>
-                        <span className={`shrink-0 rounded-full border px-2 py-px text-[.7rem] capitalize ${STATUS_STYLE[q.status]}`}>{q.purpose === "trade_in" ? TRADE_IN_STATUS[q.status] ?? q.status : q.status}</span>
+                        <span className={`shrink-0 rounded-full border px-2 py-px text-[.7rem] capitalize ${STATUS_STYLE[q.status]}`}>{q.purpose === "trade_in" ? TRADE_IN_STATUS[q.status] ?? q.status : q.purpose === "print" ? PRINT_STATUS[q.status] ?? q.status : q.status}</span>
                       </span>
                       <span className="block truncate text-[.82rem] text-muted">
-                        {[q.purpose === "resale" ? `To sell${q.platform ? ` on ${q.platform}` : ""}` : q.purpose === "trade_in" ? `Trade-in from ${q.customer || "the site"}` : q.customer || "Customer", q.purpose === "trade_in" ? q.trade_in?.condition : spec, day(q.created_at.slice(0, 10))].filter(Boolean).join(" · ")}
+                        {[q.purpose === "resale" ? `To sell${q.platform ? ` on ${q.platform}` : ""}` : q.purpose === "trade_in" ? `Trade-in from ${q.customer || "the site"}` : q.purpose === "print" ? `3D print for ${q.customer || "the site"}` : q.customer || "Customer",
+                          q.purpose === "trade_in" ? q.trade_in?.condition : q.purpose === "print" ? [q.print_job?.material, q.print_job?.size].filter(Boolean).join(" · ") : spec, day(q.created_at.slice(0, 10))].filter(Boolean).join(" · ")}
                       </span>
                     </span>
                     <span className="shrink-0 text-right">
-                      <span className="block font-mono">{m.price ? money(m.price) : "–"}{q.purpose === "resale" && <span className="text-[.7rem] text-muted"> list</span>}{q.purpose === "trade_in" && m.price > 0 && <span className="text-[.7rem] text-muted"> offer</span>}</span>
-                      {q.purpose === "trade_in"
+                      <span className="block font-mono">{m.price ? money(m.price) : "–"}{q.purpose === "resale" && <span className="text-[.7rem] text-muted"> list</span>}{q.purpose === "trade_in" && m.price > 0 && <span className="text-[.7rem] text-muted"> offer</span>}{q.purpose === "print" && m.price > 0 && <span className="text-[.7rem] text-muted"> price</span>}</span>
+                      {q.purpose === "print"
+                        ? <span className="block font-mono text-[.75rem] text-muted">{q.print_job?.estimate ? `est. ${money(q.print_job.estimate[0])}–${money(q.print_job.estimate[1])}` : ""}</span>
+                        : q.purpose === "trade_in"
                         ? <span className="block font-mono text-[.75rem] text-muted">{q.trade_in?.estimate_cash ? `est. ${money(q.trade_in.estimate_cash[0])}–${money(q.trade_in.estimate_cash[1])}` : "price by hand"}</span>
                         : <span className={`block font-mono text-[.75rem] ${m.profit < 0 ? "text-danger" : "text-muted"}`}>{money(m.profit)} profit</span>}
                     </span>

@@ -4,7 +4,16 @@ import { cropToJpeg, loadPhoto, type Crop } from "./resize";
 import Cropper from "./Cropper";
 import { money, num } from "./money";
 import { PHOTO_BUCKET, photoUrl } from "../lib/supabase";
-import { shopTabs, type ShopTab as TabId } from "../content/shop";
+import { printTabs, shopTabs, type PrintTab, type ShopTab } from "../content/shop";
+
+type TabId = ShopTab | PrintTab;
+/** The Shop's own tabs, then the 3D Prints page's (Print Shop and the past prints gallery). */
+const allTabs = [...shopTabs, ...printTabs];
+const isPrint = (t: TabId) => t === "prints" || t === "past_prints";
+const MATERIALS = ["PLA", "PETG", "TPU"];
+const tabError = (msg: string) => /shop_items_tab_check|colors/.test(msg)
+  ? "3D prints need a database update first. Run 8-3d-prints.sql in Supabase (SQL Editor → New query → paste → Run)."
+  : msg;
 
 /** A shop item as stored in the database (supabase/shop-and-trade-ins.sql). */
 interface ShopRow {
@@ -19,10 +28,11 @@ interface ShopRow {
   status: "available" | "reserved" | "sold";
   published: boolean;
   cost: number | null;
+  colors?: string[];
   sort_order: number;
   created_at: string;
 }
-type Draft = Omit<ShopRow, "id" | "created_at" | "sort_order" | "price" | "cost"> & { id?: string; price: string; cost: string };
+type Draft = Omit<ShopRow, "id" | "created_at" | "sort_order" | "price" | "cost" | "colors"> & { id?: string; price: string; cost: string; colors: string[] };
 
 const STATUSES = [
   { id: "available", label: "Available", cls: "border-accent/60 bg-accent/15 text-accent" },
@@ -30,7 +40,10 @@ const STATUSES = [
   { id: "sold", label: "Sold", cls: "border-line bg-bg2 text-ink" },
 ] as const;
 const CONDITIONS = ["New build", "Refurbished", "Refurbished · A grade", "Refurbished · B grade", "Used · tested", "For parts"];
-const blank = (tab: TabId): Draft => ({ tab, name: "", price: "", cost: "", condition: tab === "pcs" ? "New build" : tab === "laptops" ? "Refurbished" : "Used · tested", note: "", specs: [], photos: [], status: "available", published: true });
+const blank = (tab: TabId): Draft => ({
+  tab, name: "", price: "", cost: "", note: "", specs: [], photos: [], status: "available", published: true, colors: [],
+  condition: tab === "pcs" ? "New build" : tab === "laptops" ? "Refurbished" : isPrint(tab) ? "PLA" : "Used · tested",
+});
 
 /** Shop: what's for sale on the site's Shop page. Changes show the next time a page loads. */
 export default function ShopTab() {
@@ -53,7 +66,7 @@ export default function ShopTab() {
   const patch = async (it: ShopRow, change: Partial<ShopRow>) => {
     setItems((cur) => cur?.map((x) => (x.id === it.id ? { ...x, ...change } : x)) ?? null);
     const { error } = await supabase!.from("shop_items").update(change).eq("id", it.id);
-    if (error) { setError(error.message); load(); }
+    if (error) { setError(tabError(error.message)); load(); }
   };
 
   const move = async (list: ShopRow[], index: number, dir: -1 | 1) => {
@@ -87,7 +100,7 @@ export default function ShopTab() {
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[1.8rem]">Shop</h1>
-          <p className="text-[.92rem] text-muted">What's for sale on the site's Shop page. Top of the list shows first. Changes appear the next time a page loads.</p>
+          <p className="text-[.92rem] text-muted">What's for sale on the site's Shop page, plus the Print Shop and past prints on the 3D Prints page. Top of the list shows first. Changes appear the next time a page loads.</p>
         </div>
         <button type="button" className="btn" onClick={() => setEditing(blank(show === "all" ? "pcs" : show))} disabled={!!error && !all.length}>+ Add an item</button>
       </div>
@@ -105,7 +118,7 @@ export default function ShopTab() {
             ))}
           </dl>
           <div className="mb-4 flex flex-wrap gap-2">
-            {([["all", "All"], ...shopTabs.map((t) => [t.id, t.label])] as [TabId | "all", string][]).map(([id, label]) => (
+            {([["all", "All"], ...allTabs.map((t) => [t.id, t.label])] as [TabId | "all", string][]).map(([id, label]) => (
               <button key={id} type="button" onClick={() => setShow(id)} aria-pressed={show === id}
                 className={`rounded-full border px-3 py-1 text-[.8rem] ${show === id ? "border-ink/60 bg-card text-ink" : "border-line text-muted hover:text-ink"}`}>
                 {label} <span className="font-mono text-[.72rem] opacity-70">{id === "all" ? all.length : all.filter((x) => x.tab === id).length}</span>
@@ -130,11 +143,11 @@ export default function ShopTab() {
                   <div className="min-w-[10rem] flex-1">
                     <p className="font-medium">{it.name}</p>
                     <p className="text-[.85rem] text-muted">
-                      {[shopTabs.find((t) => t.id === it.tab)?.label, it.condition, money(it.price), it.cost != null ? `cost ${money(it.cost)}` : ""].filter(Boolean).join(" · ")}
+                      {[allTabs.find((t) => t.id === it.tab)?.label, it.condition, it.tab === "past_prints" ? "" : money(it.price), it.cost != null ? `cost ${money(it.cost)}` : ""].filter(Boolean).join(" · ")}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {STATUSES.map((s) => (
+                    {it.tab !== "past_prints" && STATUSES.map((s) => (
                       <button key={s.id} type="button" aria-pressed={it.status === s.id} onClick={() => patch(it, { status: s.id })}
                         className={`rounded-full border px-3 py-1 text-[.78rem] ${it.status === s.id ? s.cls : "border-line text-muted hover:text-ink"}`}>{s.label}</button>
                     ))}
@@ -143,7 +156,7 @@ export default function ShopTab() {
                   </div>
                   <div className="flex gap-2">
                     <button type="button" className="btn btn-ghost !px-4 !py-1.5 !text-[.85rem]"
-                      onClick={() => setEditing({ ...it, price: String(it.price), cost: it.cost != null ? String(it.cost) : "", condition: it.condition ?? "", note: it.note ?? "" })}>Edit</button>
+                      onClick={() => setEditing({ ...it, price: String(it.price), cost: it.cost != null ? String(it.cost) : "", condition: it.condition ?? "", note: it.note ?? "", colors: it.colors ?? [] })}>Edit</button>
                     <button type="button" className="rounded-card px-3 text-[.85rem] text-muted hover:text-danger" onClick={() => remove(it)}>Delete</button>
                   </div>
                 </li>
@@ -165,6 +178,7 @@ function ShopEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: nu
   const dialog = useRef<HTMLDialogElement>(null);
   const [d, setD] = useState<Draft>(draft);
   const [specsText, setSpecsText] = useState(draft.specs.join("\n"));
+  const [colorsText, setColorsText] = useState(draft.colors.join(", "));
   const [uploading, setUploading] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -208,7 +222,9 @@ function ShopEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: nu
   });
   const removePhoto = (path: string) => { removed.current.push(path); setD((cur) => ({ ...cur, photos: cur.photos.filter((p) => p !== path) })); };
 
-  const dirty = JSON.stringify({ ...d, specs: specsText }) !== JSON.stringify({ ...draft, specs: draft.specs.join("\n") });
+  const dirty = JSON.stringify({ ...d, specs: specsText, colors: colorsText }) !== JSON.stringify({ ...draft, specs: draft.specs.join("\n"), colors: draft.colors.join(", ") });
+  const print = isPrint(d.tab);
+  const past = d.tab === "past_prints";
   const cancel = async () => {
     if (dirty && !confirm("Close without saving? Photos you just added won't be kept.")) return;
     if (uploaded.current.length) await supabase!.storage.from(PHOTO_BUCKET).remove(uploaded.current);
@@ -216,18 +232,19 @@ function ShopEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: nu
   };
   const save = async () => {
     if (!d.name.trim()) { setError("Give the item a name."); return; }
-    if (!d.price.trim() || !(num(d.price) >= 0)) { setError("Enter a price."); return; }
+    if (!past && (!d.price.trim() || !(num(d.price) >= 0))) { setError("Enter a price."); return; }
     setBusy(true);
     setError("");
     const row = {
-      tab: d.tab, name: d.name.trim(), price: num(d.price), cost: d.cost.trim() ? num(d.cost) : null,
+      tab: d.tab, name: d.name.trim(), price: past ? 0 : num(d.price), cost: d.cost.trim() ? num(d.cost) : null,
       condition: d.condition?.trim() || null, note: d.note?.trim() || null,
-      specs: specsText.split("\n").map((s) => s.trim()).filter(Boolean), photos: d.photos, status: d.status, published: d.published,
+      specs: specsText.split("\n").map((s) => s.trim()).filter(Boolean), photos: d.photos, status: past ? "sold" as const : d.status, published: d.published,
+      ...(print ? { colors: colorsText.split(",").map((s) => s.trim()).filter(Boolean) } : {}),
     };
     const { error } = d.id
       ? await supabase!.from("shop_items").update(row).eq("id", d.id)
       : await supabase!.from("shop_items").insert({ ...row, sort_order: nextOrder });
-    if (error) { setBusy(false); setError(error.message); return; }
+    if (error) { setBusy(false); setError(tabError(error.message)); return; }
     const gone = removed.current.filter((p) => !d.photos.includes(p));
     if (gone.length) await supabase!.storage.from(PHOTO_BUCKET).remove(gone);
     onClose(true);
@@ -240,31 +257,40 @@ function ShopEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: nu
         <h2 className="text-2xl">{d.id ? "Edit item" : "Add an item"}</h2>
 
         <div className="mt-5 flex flex-wrap gap-2" role="radiogroup" aria-label="Which tab">
-          {shopTabs.map((t) => (
-            <button key={t.id} type="button" role="radio" aria-checked={d.tab === t.id} onClick={() => setD({ ...d, tab: t.id })}
+          {allTabs.map((t) => (
+            <button key={t.id} type="button" role="radio" aria-checked={d.tab === t.id} onClick={() => setD({ ...d, tab: t.id, condition: isPrint(t.id) !== isPrint(d.tab) ? blank(t.id).condition : d.condition })}
               className={`rounded-full border px-4 py-1.5 text-[.85rem] ${d.tab === t.id ? "border-accent bg-accent/15 text-accent" : "border-line text-muted hover:text-ink"}`}>{t.label}</button>
           ))}
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_8rem_8rem]">
+        {print && <p className="mt-3 text-[.82rem] text-muted">{past ? "Shows in the \"Prints I've made\" gallery on the 3D Prints page. Add a photo, or it won't show." : "For sale in the Print Shop on the 3D Prints page. Customers pick a color when they order."}</p>}
+        <div className={`mt-4 grid gap-4 ${past ? "" : "sm:grid-cols-[1fr_8rem_8rem]"}`}>
           <label className="block"><span className={L}>Name</span>
-            <input className="input" value={d.name} maxLength={120} placeholder={d.tab === "pcs" ? "e.g. White 1440p gaming PC" : d.tab === "laptops" ? "e.g. Dell Latitude 7420" : "e.g. RTX 3070 Founders"} onChange={(e) => setD({ ...d, name: e.target.value })} /></label>
+            <input className="input" value={d.name} maxLength={120} placeholder={d.tab === "pcs" ? "e.g. White 1440p gaming PC" : d.tab === "laptops" ? "e.g. Dell Latitude 7420" : print ? "e.g. GPU support bracket" : "e.g. RTX 3070 Founders"} onChange={(e) => setD({ ...d, name: e.target.value })} /></label>
+          {!past && <>
           <label className="block"><span className={L}>Price ($)</span>
             <input className="input font-mono" inputMode="decimal" value={d.price} placeholder="549" onChange={(e) => setD({ ...d, price: e.target.value })} /></label>
           <label className="block"><span className={L}>Your cost <span className="text-[.75rem]">(private)</span></span>
             <input className="input font-mono" inputMode="decimal" value={d.cost} placeholder="optional" onChange={(e) => setD({ ...d, cost: e.target.value })} /></label>
+          </>}
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block"><span className={L}>Condition</span>
-            <input className="input" list="shop-conditions" maxLength={60} value={d.condition ?? ""} onChange={(e) => setD({ ...d, condition: e.target.value })} />
-            <datalist id="shop-conditions">{CONDITIONS.map((c) => <option key={c} value={c} />)}</datalist></label>
+          <label className="block"><span className={L}>{print ? "Material" : "Condition"}</span>
+            <input className="input" list={print ? "print-materials" : "shop-conditions"} maxLength={60} value={d.condition ?? ""} onChange={(e) => setD({ ...d, condition: e.target.value })} />
+            <datalist id="shop-conditions">{CONDITIONS.map((c) => <option key={c} value={c} />)}</datalist>
+            <datalist id="print-materials">{MATERIALS.map((c) => <option key={c} value={c} />)}</datalist></label>
           <label className="block"><span className={L}>Tag on the photo (optional)</span>
-            <input className="input" maxLength={40} value={d.note ?? ""} placeholder="1440p gaming" onChange={(e) => setD({ ...d, note: e.target.value })} /></label>
+            <input className="input" maxLength={40} value={d.note ?? ""} placeholder={print ? "Fits most GPUs" : "1440p gaming"} onChange={(e) => setD({ ...d, note: e.target.value })} /></label>
         </div>
 
-        <label className="mt-4 block"><span className={L}>Specs, one per line</span>
-          <textarea className="input min-h-[7rem]" value={specsText} placeholder={"Ryzen 5 7600\nRTX 4060 Ti\n32GB DDR5\n1TB NVMe"} onChange={(e) => setSpecsText(e.target.value)} /></label>
+        {print && !past && (
+          <label className="mt-4 block"><span className={L}>Colors it comes in, separated by commas</span>
+            <input className="input" value={colorsText} placeholder="Black, White, Gray" onChange={(e) => setColorsText(e.target.value)} /></label>
+        )}
+
+        <label className="mt-4 block"><span className={L}>{print ? "Details, one per line" : "Specs, one per line"}</span>
+          <textarea className="input min-h-[7rem]" value={specsText} placeholder={print ? "About 4 in tall\nAdjustable height\nPrinted to order, 2 to 5 days" : "Ryzen 5 7600\nRTX 4060 Ti\n32GB DDR5\n1TB NVMe"} onChange={(e) => setSpecsText(e.target.value)} /></label>
 
         <div className="mt-5">
           <span className="mb-2 block text-[.85rem] text-muted">Photos (the first one is the cover)</span>
@@ -287,8 +313,8 @@ function ShopEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: nu
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-[.85rem] text-muted">Status</span>
-          {STATUSES.map((s) => (
+          {!past && <span className="mr-1 text-[.85rem] text-muted">Status</span>}
+          {!past && STATUSES.map((s) => (
             <button key={s.id} type="button" aria-pressed={d.status === s.id} onClick={() => setD({ ...d, status: s.id })}
               className={`rounded-full border px-3 py-1 text-[.8rem] ${d.status === s.id ? s.cls : "border-line text-muted hover:text-ink"}`}>{s.label}</button>
           ))}
