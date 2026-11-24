@@ -10,7 +10,7 @@ import FormDialog from "../components/FormDialog";
 import { tradeInForm } from "../forms/shopForms";
 import type { FormConfig } from "../components/form/types";
 import { submitTradeIn } from "../lib/submit";
-import { conditions, creditBonus, extras, partTypes, priceList, tradeInUpdated, type PartType } from "../content/tradeIn";
+import { conditions, creditBonus, extras, partTypes, priceList, tradeInRate, tradeInUpdated, type PartType } from "../content/tradeIn";
 
 /** HashRouter owns the # in the address, so in-page jumps scroll by id instead of using href="#id". */
 const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -52,7 +52,7 @@ export default function TradeIn() {
   useSeo(`Sell or trade your parts | ${site.name}`, "Get an instant estimate for your old PC parts, then take cash or put it toward a build.");
   const [type, setType] = useState<PartType>("gpu");
   const models = priceList.filter((p) => p.type === type);
-  const [model, setModel] = useState(models[1]?.name ?? "");
+  const [model, setModel] = useState(models.find((m) => m.name === "RTX 3070")?.name ?? models[0]?.name ?? "");
   const [cond, setCond] = useState<string>("good");
   const [picked, setPicked] = useState<string[]>(["box"]);
   const [payout, setPayout] = useState<"cash" | "credit">("credit");
@@ -75,7 +75,8 @@ export default function TradeIn() {
     const c = conditions.find((x) => x.id === cond);
     if (!item || !c) return null;
     const bonus = 1 + extras.filter((e) => picked.includes(e.id)).reduce((s, e) => s + e.bonus, 0);
-    const lo = item.value * c.low * bonus, hi = item.value * c.high * bonus;
+    const base = item.sold * tradeInRate;
+    const lo = base * c.low * bonus, hi = base * c.high * bonus;
     return { cash: [round5(lo), round5(hi)], credit: [round5(lo * (1 + creditBonus)), round5(hi * (1 + creditBonus))] };
   }, [model, cond, picked]);
 
@@ -118,7 +119,11 @@ export default function TradeIn() {
 
             <label className="mt-6 block text-[.9rem] text-muted" htmlFor="ti-model">Model</label>
             <select id="ti-model" className="input mt-2" value={model} onChange={(e) => setModel(e.target.value)}>
-              {models.map((m) => <option key={m.name}>{m.name}</option>)}
+              {[...new Set(models.map((m) => m.group))].map((grp) => (
+                <optgroup key={grp} label={grp}>
+                  {models.filter((m) => m.group === grp).map((m) => <option key={m.name}>{m.name}</option>)}
+                </optgroup>
+              ))}
               <option value="">Not listed, I'll type it</option>
             </select>
             <p className="mt-2 text-[.8rem] text-muted">Not on the list? Pick "Not listed" and I'll price it by hand.</p>
