@@ -102,7 +102,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
       if (num(i.price) === 0 && !upgrade && !internal) set("price", "Included");
     } else if (upgrade) set("amt", unit * qty, '"+$"#,##0.00');
     set("from", i.source ?? "");
-    if (i.link) { set("link", { text: i.link, hyperlink: i.link }); row.getCell(col("link")).font = { color: { argb: BLUE }, underline: true }; }
+    if (i.link && col("link")) { set("link", { text: i.link, hyperlink: i.link }); row.getCell(col("link")).font = { color: { argb: BLUE }, underline: true }; }
     for (let k = 1; k <= last; k++) row.getCell(k).border = { bottom: { style: "thin", color: { argb: LINE } } };
     for (const k of ["qty", "price", "total", "amt"] as const) if (col(k)) row.getCell(col(k)).alignment = { horizontal: "right" };
     r++;
