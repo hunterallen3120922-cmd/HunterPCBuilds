@@ -64,7 +64,7 @@ Questions asked in the forms live in `app/src/forms/` (`repairForm.ts`, `buildFo
 
 ## Admin portal (builds + requests)
 
-A private page at **`/#/admin`** on your site (for example `https://YOUR-SITE.netlify.app/#/admin`). It isn't linked anywhere and search engines are told to skip it. Sign in to:
+A private page at **`/admin.html`** on your site (for example `https://YOUR-SITE.netlify.app/admin.html`; old `/#/admin` links still go there). It can be installed like an app: tap **Install app** at the top (Chrome, Edge, Android), or on iPhone use Safari's Share button, then **Add to Home Screen**. It isn't linked anywhere and search engines are told to skip it. Sign in to:
 
 - **Builds:** add a build (name, price, specs, photos), reorder with ▲▼, and switch where it shows:
   - **Home carousel:** the carousel on the home page.

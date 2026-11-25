@@ -1,0 +1,17 @@
+{
+  "id": "./admin.html",
+  "name": "HunterPCBuilds Admin",
+  "short_name": "HPB Admin",
+  "description": "Jobs, parts, quotes, money and requests for HunterPCBuilds.",
+  "start_url": "./admin.html",
+  "scope": "./admin.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1017",
+  "theme_color": "#0b1017",
+  "icons": [
+    { "src": "./app-icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./app-icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./app-icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
