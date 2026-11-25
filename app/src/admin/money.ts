@@ -216,14 +216,32 @@ const cents = (v: number) => Math.round(v * 100) / 100;
  * The money on a quote. The customer pays parts + tax on parts + build fee.
  * Your cost is parts + tax + extra costs, so your profit is the build fee minus extra costs.
  */
-export const quoteTotals = (q: Pick<QuoteRow, "tax_rate" | "build_fee" | "extra_costs">, items: Pick<QuoteItemRow, "price" | "qty" | "optional">[]) => {
+/**
+ * Windows install on a customer quote. Saved in columns the customer quote doesn't otherwise use
+ * (so no database change was needed): `platform` holds the edition, `fee_fixed` the fee.
+ */
+export const WINDOWS = [
+  { name: "Windows 10 Home", fee: 10 },
+  { name: "Windows 10 Pro", fee: 25 },
+] as const;
+export const NO_WINDOWS = "No Windows install";
+
+/**
+ * The money on a customer quote: parts + tax + Windows install + build fee.
+ * With a custom price (`list_price` > 0 on a customer quote), the customer pays that,
+ * and the build fee is whatever is left after parts, tax and Windows.
+ */
+export const quoteTotals = (q: Pick<QuoteRow, "tax_rate" | "build_fee" | "extra_costs"> & Partial<Pick<QuoteRow, "platform" | "fee_fixed" | "list_price">>, items: Pick<QuoteItemRow, "price" | "qty" | "optional">[]) => {
   const parts = cents(items.filter((i) => !i.optional).reduce((s, i) => s + num(i.price) * num(i.qty), 0));
   const tax = cents(parts * num(q.tax_rate));
-  const fee = num(q.build_fee);
-  const total = cents(parts + tax + fee);
+  const windows = q.platform && q.platform !== NO_WINDOWS ? num(q.fee_fixed) : 0;
+  const windowsName = q.platform && q.platform !== NO_WINDOWS ? q.platform : "";
+  const custom = num(q.list_price) > 0 ? cents(num(q.list_price)) : 0;
+  const fee = custom ? cents(custom - parts - tax - windows) : num(q.build_fee);
+  const total = custom || cents(parts + tax + windows + fee);
   const cost = cents(parts + tax + num(q.extra_costs));
   const upgrades = cents(items.filter((i) => i.optional).reduce((s, i) => s + num(i.price) * num(i.qty), 0));
-  return { parts, tax, fee, total, cost, profit: cents(total - cost), upgrades };
+  return { parts, tax, windows, windowsName, custom, fee, total, cost, profit: cents(total - cost), upgrades };
 };
 
 /**
