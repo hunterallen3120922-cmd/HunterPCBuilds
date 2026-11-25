@@ -248,15 +248,14 @@
 /*
  * Home page opening (see HomeHero.tsx, CircuitBackdrop.tsx, BuildStack.tsx).
  * --p is 0 at the top and 1 once the opening has scrolled away; the circuit backdrop fades with it.
- * .circuit-pulse  a short bright dash sliding along a trace (each trace is measured as 1000 long). It travels
- *                 during the first 15% of a 28s loop and stays hidden the rest, so with four pulses taking turns
- *                 (CircuitBackdrop.tsx) one runs every 7s.
+ * .circuit-pulse  a short bright dash sliding along a trace (each trace is measured as 1000 long). CircuitBackdrop.tsx
+ *                 slides one at a time, taking turns, one every 7s.
  * .circuit-wash   page colour over the traces behind the headline (centred on phones, left on wide screens),
  *                 plus a soft green glow behind the photo cards
  */
 .hero-circuit { opacity: calc(1 - var(--p, 0) * 0.75); will-change: opacity; }
-.circuit-pulse { stroke-dasharray: 45 1000; stroke-dashoffset: 45; animation: circuit-pulse 28s linear infinite backwards; }
-@keyframes circuit-pulse { 0% { stroke-dashoffset: 45; } 15%, 100% { stroke-dashoffset: -1000; } }
+/* hidden until CircuitBackdrop.tsx slides it along (stroke-dashoffset 45 to -1000 over 4.2s) */
+.circuit-pulse { stroke-dasharray: 45 1000; stroke-dashoffset: 45; }
 .circuit-wash {
   background:
     radial-gradient(60% 34% at 50% 34%, var(--bg) 0%, color-mix(in srgb, var(--bg) 80%, transparent) 55%, transparent 100%);
@@ -268,7 +267,6 @@
       radial-gradient(26% 40% at 76% 50%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
   }
 }
-@media (prefers-reduced-motion: reduce) { .circuit-pulse { animation: none; } }
 
 /* The build photo cards: each new photo fades in over the last one */
 .build-card { box-shadow: 0 30px 60px -20px rgb(0 0 0 / .7); }
@@ -278,7 +276,7 @@
 @keyframes build-card-fade { from { opacity: 0; } }
 
 /* Paused off screen (see lib/usePauseOffscreen.ts): never-ending animations stop while their section is far out of view */
-[data-offscreen="true"] .circuit-pulse, [data-offscreen="true"] .ticker, [data-offscreen="true"] .bfan-spin,
+[data-offscreen="true"] .ticker, [data-offscreen="true"] .bfan-spin,
 [data-offscreen="true"] .pill-dot::after, [data-offscreen="true"] .wb-pulse {
   animation-play-state: paused !important;
 }

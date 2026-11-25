@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 
 /**
  * Marks an element with data-offscreen="true" while it is scrolled out of view, so its never-ending
@@ -14,4 +14,20 @@ export function usePauseOffscreen(ref: RefObject<HTMLElement | null>) {
     io.observe(el);
     return () => io.disconnect();
   }, [ref]);
+}
+
+/**
+ * True while the element is on screen or within a screen's height of it. Slideshows use it to stop changing slides
+ * while nobody can see them (each change restyles every slide), and they carry on before they come back into view.
+ */
+export function useNearScreen(ref: RefObject<HTMLElement | null>) {
+  const [near, setNear] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([e]) => setNear(e.isIntersecting), { rootMargin: "100% 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return near;
 }
