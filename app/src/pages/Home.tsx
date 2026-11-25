@@ -151,7 +151,7 @@ export default function Home() {
 
       {reviews && (
         <section className="section">
-          <div className="wrap max-w-[60rem]"><ReviewsRotator data={reviews} /></div>
+          <div className="wrap"><ReviewsRotator data={reviews} /></div>
         </section>
       )}
 

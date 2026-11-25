@@ -28,63 +28,86 @@ function trim(text: string, max = 200) {
 }
 
 /**
- * One review at a time, fading to the next every few seconds. Pauses while hovered or focused,
- * and doesn't auto-advance for people who turned off motion (the dots still work).
+ * Two columns: the heading, eBay numbers and link on one side, one review at a time on the other (stacked on phones).
+ * Reviews fade to the next every few seconds; arrows and dots step through them. Pauses while hovered or focused,
+ * and doesn't auto-advance for people who turned off motion.
  */
 export default function ReviewsRotator({ data }: { data: Data }) {
   const { reviews, stats } = data;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const still = useRef(typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const many = reviews.length > 1;
+  const go = (step: number) => setI((n) => (n + step + reviews.length) % reviews.length);
 
   useEffect(() => {
-    if (paused || still.current || reviews.length < 2) return;
+    if (paused || still.current || !many) return;
     const t = setTimeout(() => setI((n) => (n + 1) % reviews.length), ROTATE_MS);
     return () => clearTimeout(t);
-  }, [i, paused, reviews.length]);
+  }, [i, paused, many, reviews.length]);
 
   const user = stats?.ebay_username?.trim();
   const profile = user ? `https://www.ebay.com/fdbk/feedback_profile/${encodeURIComponent(user)}?filter=feedback_page:RECEIVED_AS_SELLER` : null;
   const pct = stats?.positive_pct;
   const count = stats?.feedback_count;
-  const proof = [pct != null && `${Number(pct) % 1 ? Number(pct).toFixed(1) : Number(pct)}% positive on eBay`, count != null && `${Number(count).toLocaleString()} ratings`].filter(Boolean).join(" · ");
 
   return (
-    <figure data-reveal="up" aria-roledescription="carousel" aria-label="What customers say"
-      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}
-      className="card relative overflow-hidden px-6 py-10 text-center sm:px-14 sm:py-14">
-      <span className="pointer-events-none absolute left-5 top-0 select-none font-serif text-[9rem] leading-none text-accent opacity-[.08] sm:left-10" aria-hidden>“</span>
-      <p className="eyebrow mb-6">People have great things to say</p>
-
-      {/* every review is laid out in the same spot; the tallest one sets the height so nothing jumps */}
-      <div className="grid" aria-live={paused ? "polite" : "off"}>
-        {reviews.map((r, n) => (
-          <div key={r.id} aria-hidden={n !== i} style={{ gridArea: "1 / 1" }}
-            className={`flex flex-col items-center justify-center transition-[opacity,transform] duration-700 ease-out ${n === i ? "opacity-100" : "pointer-events-none translate-y-2 opacity-0"}`}>
-            <blockquote className="mx-auto max-w-[40ch] text-[clamp(1.2rem,2.3vw,1.6rem)] leading-snug tracking-[-0.01em] text-ink">“{trim(r.comment)}”</blockquote>
-            <figcaption className="mt-5 text-[.85rem] text-muted">
-              {[r.buyer, SOURCE[r.source] ?? "Customer"].filter(Boolean).join(" · ")}
-              {r.item && <span className="mx-auto mt-0.5 block max-w-[46ch] truncate text-[.8rem] opacity-80">{r.item}</span>}
-            </figcaption>
-          </div>
-        ))}
+    <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+      <div data-reveal-group="blur">
+        <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Reviews</p>
+        <h2 className="text-[clamp(2rem,4.2vw,3.1rem)]">Here's what people <em className="grad-text">have to say.</em></h2>
+        {(pct != null || count != null) && (
+          <p className="mt-6 flex items-baseline gap-3 text-muted">
+            {pct != null && <span className="font-mono text-[2rem] leading-none tracking-[-0.03em] text-accent">{Number(pct) % 1 ? Number(pct).toFixed(1) : Number(pct)}%</span>}
+            <span className="text-[.92rem]">positive on eBay{count != null && <> · {Number(count).toLocaleString()} ratings</>}</span>
+          </p>
+        )}
+        {profile && (
+          <a href={profile} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 font-medium">
+            See all on eBay <Icon name="arrow" className="h-4 w-4" />
+          </a>
+        )}
       </div>
 
-      {reviews.length > 1 && (
-        <div className="mt-7 flex justify-center gap-2" role="group" aria-label="Choose a review">
+      <figure data-reveal="right" aria-roledescription="carousel" aria-label="What customers say"
+        onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}
+        className="card relative min-w-0 overflow-hidden p-7 sm:p-10">
+        <span className="pointer-events-none absolute right-6 top-0 select-none font-serif text-[9rem] leading-none text-accent opacity-[.08]" aria-hidden>”</span>
+
+        {/* every review sits in the same spot; the tallest one sets the height so nothing jumps */}
+        <div className="grid min-w-0 grid-cols-1" aria-live={paused ? "polite" : "off"}>
           {reviews.map((r, n) => (
-            <button key={r.id} type="button" onClick={() => setI(n)} aria-label={`Review ${n + 1} of ${reviews.length}`} aria-current={n === i}
-              className={`h-1.5 rounded-full transition-all duration-500 ${n === i ? "w-6 bg-accent" : "w-1.5 bg-line hover:bg-muted"}`} />
+            <div key={r.id} aria-hidden={n !== i} style={{ gridArea: "1 / 1" }}
+              className={`flex min-w-0 flex-col justify-center transition-[opacity,transform] duration-700 ease-out ${n === i ? "opacity-100" : "pointer-events-none translate-y-2 opacity-0"}`}>
+              <blockquote className="text-[clamp(1.15rem,2vw,1.45rem)] leading-snug tracking-[-0.01em] text-ink">“{trim(r.comment)}”</blockquote>
+              <figcaption className="mt-5 text-[.85rem] text-muted">
+                {[r.buyer, SOURCE[r.source] ?? "Customer"].filter(Boolean).join(" · ")}
+                {r.item && <span className="mt-0.5 block truncate text-[.8rem] opacity-80">{r.item}</span>}
+              </figcaption>
+            </div>
           ))}
         </div>
-      )}
 
-      {(proof || profile) && (
-        <p className="mt-7 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-line pt-6 text-[.88rem] text-muted">
-          {proof && <span className="inline-flex items-center gap-2"><Icon name="check" className="h-4 w-4 text-accent" />{proof}</span>}
-          {profile && <a href={profile} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-medium">See all on eBay <Icon name="arrow" className="h-3.5 w-3.5" /></a>}
-        </p>
-      )}
-    </figure>
+        {many && (
+          <div className="mt-7 flex items-center gap-4 border-t border-line pt-5">
+            <div className="flex gap-2">
+              {[{ step: -1, label: "Previous review" }, { step: 1, label: "Next review" }].map(({ step, label }) => (
+                <button key={step} type="button" onClick={() => go(step)} aria-label={label}
+                  className="grid h-10 w-10 place-items-center rounded-full border border-line text-ink transition-colors hover:border-accent hover:bg-accent hover:text-onaccent">
+                  <Icon name="arrow" className={`h-4 w-4 ${step < 0 ? "rotate-180" : ""}`} />
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-1 flex-wrap gap-1.5" role="group" aria-label="Choose a review">
+              {reviews.map((r, n) => (
+                <button key={r.id} type="button" onClick={() => setI(n)} aria-label={`Review ${n + 1} of ${reviews.length}`} aria-current={n === i}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${n === i ? "w-6 bg-accent" : "w-1.5 bg-line hover:bg-muted"}`} />
+              ))}
+            </div>
+            <span className="font-mono text-[.75rem] text-muted">{i + 1} / {reviews.length}</span>
+          </div>
+        )}
+      </figure>
+    </div>
   );
 }
