@@ -39,8 +39,6 @@ function PrefetchPages() {
   return null;
 }
 
-/** The admin portal is a separate download, so visitors never load it. */
-const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 /** Scrolls to top on page change, or to an element id passed as router state. */
 function ScrollManager() {
@@ -56,12 +54,11 @@ function ScrollManager() {
 
 export default function App() {
   const { pathname } = useLocation();
+  // The admin portal lives on its own page (admin.html) so it can be installed as an app.
+  // Old /#/admin links and bookmarks still land there.
   if (pathname === "/admin") {
-    return (
-      <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
-        <AdminApp />
-      </Suspense>
-    );
+    window.location.replace("./admin.html");
+    return <p className="p-8 text-muted">Opening the admin portal…</p>;
   }
   return (
     <>

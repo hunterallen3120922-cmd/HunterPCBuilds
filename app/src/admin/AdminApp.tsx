@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
 import BuildsTab from "./BuildsTab";
@@ -12,6 +11,7 @@ import QuotesTab from "./QuotesTab";
 import { ExpensesTab, InventoryTab, JobsTab, PrintsTab } from "./BusinessTabs";
 import Showcase from "./Showcase";
 import { Logo } from "../components/Nav";
+import { useInstall } from "./install";
 
 /**
  * The admin portal at /#/admin. Not linked anywhere on the site and not shown to search engines.
@@ -163,11 +163,35 @@ function Shell({ bar, children, wide }: { bar?: React.ReactNode; children: React
             <span className="eyebrow">Admin</span>
           </div>
           {bar}
-          <Link to="/" className="text-[.85rem] text-muted no-underline hover:text-ink">View site →</Link>
+          <div className="flex items-center gap-3">
+            <InstallButton />
+            <a href="./" target="_blank" rel="noopener" className="text-[.85rem] text-muted no-underline hover:text-ink">View site →</a>
+          </div>
         </div>
       </header>
       <main className={wide ? "mx-auto w-full max-w-[120rem] px-4 py-8 sm:px-6" : "wrap py-8"}>{children}</main>
     </div>
+  );
+}
+
+/** "Install app" in Chrome/Edge/Android (one click); on iPhone it shows the Share → Add to Home Screen steps. Hidden once installed. */
+function InstallButton() {
+  const { kind, install } = useInstall();
+  const [tip, setTip] = useState(false);
+  if (!kind) return null;
+  return (
+    <span className="relative">
+      <button type="button" onClick={() => (kind === "prompt" ? install() : setTip((t) => !t))}
+        title="Put the admin portal on your home screen or desktop like an app"
+        className="rounded-full border border-accent/60 px-3 py-1 text-[.85rem] text-accent hover:bg-accent hover:text-onaccent">
+        ⤓ Install app
+      </button>
+      {tip && (
+        <span role="status" className="card absolute left-0 top-full z-30 mt-2 block w-[min(16rem,calc(100vw-2rem))] p-3 sm:left-auto sm:right-0 text-[.85rem] text-ink">
+          In Safari, tap <b>Share</b> <span aria-hidden>(the square with an arrow)</span>, then <b>Add to Home Screen</b>.
+        </span>
+      )}
+    </span>
   );
 }
 
