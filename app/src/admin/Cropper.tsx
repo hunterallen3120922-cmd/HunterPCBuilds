@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { Crop } from "./resize";
+import CloseX from "../components/CloseX";
 
 /** Crop shapes to pick from. "Card" is the shape of the home carousel and Past builds cards. */
 const SHAPES: { label: string; ratio: number | null | "original" }[] = [
@@ -127,6 +128,7 @@ export default function Cropper({ img, name, onDone, onSkip }: {
     <dialog ref={dialog} onCancel={(e) => { e.preventDefault(); onSkip(); }}
       className="m-auto w-[min(96vw,60rem)] rounded-card border border-line bg-card p-0 text-ink">
       <div className="max-h-[94vh] overflow-y-auto p-5">
+        <CloseX label="Don't add this photo" onClick={onSkip} />
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-xl">Crop photo</h2>
           <span className="truncate text-[.8rem] text-muted">{name}</span>

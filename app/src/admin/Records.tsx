@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { supabase } from "./client";
+import CloseX, { okToDiscard } from "../components/CloseX";
 import { day, money, num } from "./money";
 
 type Row = { id: string } & Record<string, unknown>;
@@ -182,12 +183,17 @@ function Editor<T extends Row>({ draft, fields, noun, onCancel, onSave, onDelete
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const set = (k: string, v: unknown) => setD((cur) => ({ ...cur, [k]: v }));
+  const dirty = JSON.stringify(d) !== JSON.stringify({ ...draft });
+  // Clicking outside never closes it; Cancel, the X or Esc do, and ask first if anything changed
+  const cancel = () => { if (okToDiscard(dirty)) onCancel(); };
+  const cancelRef = useRef(cancel);
+  cancelRef.current = cancel;
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") cancelRef.current(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
+  }, []);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -197,9 +203,10 @@ function Editor<T extends Row>({ draft, fields, noun, onCancel, onSave, onDelete
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={onCancel}>
-      <form onSubmit={submit} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={`${d.id ? "Edit" : "Add"} ${noun}`}
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
+      <form onSubmit={submit} role="dialog" aria-modal="true" aria-label={`${d.id ? "Edit" : "Add"} ${noun}`}
         className={`card max-h-[92vh] w-full ${extra ? "max-w-4xl" : "max-w-2xl"} overflow-y-auto rounded-b-none p-6 sm:rounded-b-card`}>
+        <CloseX onClick={cancel} />
         <h2 className="text-xl">{d.id ? `Edit ${noun}` : `Add ${noun}`}</h2>
         <div className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
           {fields.map((f) => (
@@ -213,7 +220,7 @@ function Editor<T extends Row>({ draft, fields, noun, onCancel, onSave, onDelete
         {error && <p className="mt-4 text-[.9rem] text-danger" role="alert">{error}</p>}
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <button type="submit" className="btn !py-2" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
-          <button type="button" className="btn btn-ghost !py-2" onClick={onCancel}>Cancel</button>
+          <button type="button" className="btn btn-ghost !py-2" onClick={cancel}>Cancel</button>
           {onDelete && <button type="button" className="ml-auto text-[.85rem] text-muted underline hover:text-danger" onClick={onDelete}>Delete</button>}
         </div>
       </form>

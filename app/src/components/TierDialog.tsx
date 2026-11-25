@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import CloseX from "./CloseX";
 import type { BuildTier } from "../types";
 import Icon from "./Icon";
 import { BUILDER_MAX, BUILDER_MIN, BUILDER_STEP, customParts } from "../content/customParts";
@@ -50,17 +51,17 @@ export default function TierDialog({ tier, onClose, onBuild }: {
   };
 
   return (
-    <dialog ref={dialog} onClose={onClose} onClick={(e) => { if (e.target === dialog.current) onClose(); }}
+    <dialog ref={dialog} onClose={onClose}
       aria-label={tier ? `${tier.name} package` : undefined}
       className={`m-auto max-h-[92vh] overflow-y-auto rounded-card border border-line bg-card p-0 text-ink ${tier?.builder ? "w-[min(94vw,44rem)]" : "w-[min(94vw,36rem)]"}`}>
       {tier && (
         <div className="p-7 max-sm:p-5">
+          <CloseX onClick={onClose} />
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="eyebrow">{tier.name}</p>
               <p className="mt-2 font-heading text-[2rem] leading-tight">{tier.builder ? budgetLabel : tier.budget}</p>
             </div>
-            <button type="button" className="btn btn-ghost !px-3 !py-1" onClick={onClose} aria-label="Close">✕</button>
           </div>
           <p className="mt-1 text-[.95rem] text-accent2">{tier.bestFor}</p>
           <p className="mt-4 text-muted">{tier.description}</p>

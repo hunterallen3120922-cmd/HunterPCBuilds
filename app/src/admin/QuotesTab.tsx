@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import CloseX from "../components/CloseX";
 import { supabase } from "./client";
 import { Totals } from "./Records";
 import PartsGrid, { blankRow, newKey, norm, type GridItem, type PastPart } from "./PartsGrid";
@@ -183,8 +184,10 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
       )}
 
       {choosing && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4" onClick={() => setChoosing(false)}>
-          <div role="dialog" aria-modal="true" aria-label="What's this quote for?" className="card w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+          <div role="dialog" aria-modal="true" aria-label="What's this quote for?" className="card w-full max-w-lg p-6"
+            onKeyDown={(e) => { if (e.key === "Escape") setChoosing(false); }}>
+            <CloseX onClick={() => setChoosing(false)} />
             <h2 className="text-xl">What's this build for?</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {([

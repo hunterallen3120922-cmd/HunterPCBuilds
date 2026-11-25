@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import CloseX from "../components/CloseX";
 import { supabase } from "./client";
 import { cropToJpeg, loadPhoto, type Crop } from "./resize";
 import { formatPrice } from "../lib/useBuilds";
@@ -263,6 +264,7 @@ function BuildEditor({ draft, nextOrder, onClose }: { draft: Draft; nextOrder: n
     <dialog ref={dialog} onCancel={(e) => { e.preventDefault(); cancel(); }}
       className="m-auto w-[min(94vw,46rem)] rounded-card border border-line bg-card p-0 text-ink">
       <div className="max-h-[88vh] overflow-y-auto p-6">
+        <CloseX onClick={() => void cancel()} />
         <h2 className="text-2xl">{d.id ? "Edit build" : "Add a build"}</h2>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_10rem]">

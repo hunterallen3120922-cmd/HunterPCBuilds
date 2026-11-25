@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FieldValue, FormValues, PreferredWindow } from "../../types";
 import type { Errors, FormConfig } from "./types";
 import { validateStep } from "./validate";
@@ -15,6 +15,8 @@ interface Props {
   onClose?: () => void;
   /** Answers to start with (e.g. a package picked with "Build now") */
   prefill?: FormValues;
+  /** Told whenever the answers start or stop differing from the blank form (popups ask before discarding) */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 function display(v: FieldValue | undefined): string {
@@ -26,7 +28,7 @@ function display(v: FieldValue | undefined): string {
 }
 
 /** Generic multi-step request form. What it asks is defined in src/forms/. */
-export default function MultiStepForm({ config, onSubmit, bare = false, onClose, prefill }: Props) {
+export default function MultiStepForm({ config, onSubmit, bare = false, onClose, prefill, onDirtyChange }: Props) {
   const total = config.steps.length + 1; // + review step
   const initial = useMemo<FormValues>(() => {
     const v: FormValues = {};
@@ -44,6 +46,8 @@ export default function MultiStepForm({ config, onSubmit, bare = false, onClose,
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const honeypot = useRef<HTMLInputElement>(null);
+  const isDirty = !done && JSON.stringify(values) !== JSON.stringify(initial);
+  useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
   const top = useRef<HTMLDivElement>(null);
 
   const isReview = step === config.steps.length;
