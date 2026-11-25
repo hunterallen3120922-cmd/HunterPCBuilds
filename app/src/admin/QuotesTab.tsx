@@ -314,6 +314,7 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
 
   const run = async (label: string, fn: () => Promise<void>) => {
     setBusy(label);
+    setError("");
     try { await fn(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     setBusy("");
   };
