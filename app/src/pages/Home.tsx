@@ -4,6 +4,7 @@ import Carousel from "../components/Carousel";
 import { Photo } from "../components/Gallery";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
+import FlowSpine from "../components/FlowSpine";
 import FaqList from "../components/FaqList";
 import ReviewsRotator, { useReviews } from "../components/ReviewsSection";
 import Icon, { IconTile } from "../components/Icon";
@@ -80,6 +81,10 @@ export default function Home() {
     <>
       <HomeHero />
 
+      {/* One continuous backdrop and a line running down the left tie the sections into a single story (index.css "Home flow") */}
+      <div className="home-flow">
+      <FlowSpine />
+
       <section id="paths" className="section scroll-mt-20">
         <div className="wrap">
           <SectionHead eyebrow="Get started" title="What do you need?" />
@@ -106,7 +111,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section alt">
+      <section className="section">
         <div className="wrap">
           <SectionHead eyebrow="Process" title="How it works" sub={`Three steps from "it's broken" to "it works."`} />
           <div className="relative grid gap-10 md:grid-cols-3 md:gap-8">
@@ -125,14 +130,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" >
+      <section className="section">
         <div className="wrap">
-          <SectionHead center eyebrow="Featured" title="Recent work & the basics" sub="A few builds, popular repairs, and the quick facts." />
+          <SectionHead eyebrow="Featured" title="Recent work & the basics" sub="A few builds, popular repairs, and the quick facts." />
         </div>
         <div data-reveal="zoom"><Carousel key={featured.length} label="Featured builds and repairs" items={[<GlanceCard key="glance" />, ...featuredCards(featured)]} /></div>
       </section>
 
-      <section className="section alt">
+      <section className="section">
         <div className="wrap">
           <SectionHead eyebrow="Why me" title="Why people pick me" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -155,11 +160,13 @@ export default function Home() {
         </section>
       )}
 
-      <section className={`section ${reviews ? "alt" : ""}`}>
-        <div className="wrap max-w-[51.25rem]">
-          <SectionHead eyebrow="FAQ" title="Quick answers" />
-          <FaqList items={faq.filter((f) => f.preview)} />
-          <p data-reveal="up" className="mt-6"><Link to="/faq" className="inline-flex items-center gap-2 font-medium">All FAQ & terms <Icon name="arrow" className="h-4 w-4" /></Link></p>
+      <section className="section">
+        <div className="wrap">
+          <div className="max-w-[51.25rem]">
+            <SectionHead eyebrow="FAQ" title="Quick answers" />
+            <FaqList items={faq.filter((f) => f.preview)} />
+            <p data-reveal="up" className="mt-6"><Link to="/faq" className="inline-flex items-center gap-2 font-medium">All FAQ & terms <Icon name="arrow" className="h-4 w-4" /></Link></p>
+          </div>
         </div>
       </section>
 
@@ -179,6 +186,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </div>
     </>
   );
 }

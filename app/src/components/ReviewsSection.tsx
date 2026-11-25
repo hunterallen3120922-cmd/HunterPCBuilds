@@ -54,7 +54,7 @@ export default function ReviewsRotator({ data }: { data: Data }) {
   return (
     <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
       <div data-reveal-group="blur">
-        <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Reviews</p>
+        <p className="eyebrow flow-node mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Reviews</p>
         <h2 className="text-[clamp(2rem,4.2vw,3.1rem)]">Here's what people <em className="grad-text">have to say.</em></h2>
         {(pct != null || count != null) && (
           <p className="mt-6 flex items-baseline gap-3 text-muted">
