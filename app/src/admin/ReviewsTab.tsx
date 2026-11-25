@@ -113,10 +113,15 @@ function EbaySummary() {
 function PasteBox({ onAdded }: { onAdded: () => void }) {
   const [text, setText] = useState("");
   const [page, setPage] = useState<PastedPage | null>(null);
+  const [show, setShow] = useState<boolean[]>([]); // ticked = goes on the home page
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
-  const read = (t: string) => { setText(t); setMsg(""); setPage(t.trim() ? parseEbayFeedback(t) : null); };
+  const read = (t: string) => {
+    setText(t); setMsg("");
+    const p = t.trim() ? parseEbayFeedback(t) : null;
+    setPage(p); setShow(p?.reviews.map((r) => r.showGuess) ?? []);
+  };
 
   const add = async () => {
     if (!page) return;
@@ -124,9 +129,10 @@ function PasteBox({ onAdded }: { onAdded: () => void }) {
     const { data: have, error: e1 } = await supabase!.from("reviews").select("buyer, comment, item_number").limit(5000);
     if (e1) { setMsg(e1.message); setBusy(false); return; }
     const seen = new Set((have ?? []).map((r) => `${r.buyer}|${r.item_number ?? ""}|${r.comment}`));
-    const fresh = page.reviews.filter((r) => !seen.has(`${r.buyer}|${r.item_number ?? ""}|${r.comment}`));
+    const fresh = page.reviews.map((r, n) => ({ r, on: show[n] })).filter(({ r }) => !seen.has(`${r.buyer}|${r.item_number ?? ""}|${r.comment}`));
     if (fresh.length) {
-      const { error } = await supabase!.from("reviews").insert(fresh.map((r) => ({ ...r, source: "ebay", rating: "positive", published: true })));
+      const rows = fresh.map(({ r: { showGuess: _guess, ...r }, on }) => ({ ...r, source: "ebay", rating: "positive", published: on }));
+      const { error } = await supabase!.from("reviews").insert(rows);
       if (error) { setMsg(error.message); setBusy(false); return; }
     }
     const stats: Partial<Stats> = {};
@@ -138,7 +144,7 @@ function PasteBox({ onAdded }: { onAdded: () => void }) {
       window.dispatchEvent(new CustomEvent("review-stats", { detail: stats }));
     }
     const skipped = page.reviews.length - fresh.length;
-    setMsg(`Added ${fresh.length} review${fresh.length === 1 ? "" : "s"}${skipped ? `, skipped ${skipped} already here` : ""}. They come in as positive: change any neutral or negative ones below.`);
+    setMsg(`Added ${fresh.length} review${fresh.length === 1 ? "" : "s"}${skipped ? `, skipped ${skipped} already here` : ""}. Unticked ones are saved but hidden from the site.`);
     setText(""); setPage(null); setBusy(false);
     onAdded();
   };
@@ -164,12 +170,25 @@ function PasteBox({ onAdded }: { onAdded: () => void }) {
                 {page.feedbackCount !== null && <> · {page.feedbackCount.toLocaleString()} feedback</>}
                 {page.username && <> · {page.username}</>}
               </p>
-              <ul className="max-h-64 space-y-1.5 overflow-y-auto rounded-card border border-line bg-bg2 p-3 text-[.84rem]">
+              <p className="mb-2 text-[.82rem] text-muted">
+                Ticked ones show on the home page. I left out ones that aren't a computer sale or read like a complaint; tick or untick any.
+                Every review is still saved here either way.
+              </p>
+              <ul className="max-h-80 space-y-1 overflow-y-auto rounded-card border border-line bg-bg2 p-2 text-[.84rem]">
                 {page.reviews.map((r, i) => (
-                  <li key={i} className="truncate"><span className="text-muted">{r.buyer} · {day(r.reviewed_on)} ·</span> {r.comment}</li>
+                  <li key={i}>
+                    <label className={`flex cursor-pointer items-start gap-2.5 rounded-lg px-2 py-1.5 hover:bg-card ${show[i] ? "" : "opacity-60"}`}>
+                      <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-[var(--accent)]" checked={!!show[i]}
+                        onChange={(e) => setShow((cur) => cur.map((v, n) => (n === i ? e.target.checked : v)))} />
+                      <span className="min-w-0">
+                        <span className="block truncate">{r.comment}</span>
+                        <span className="block truncate text-[.76rem] text-muted">{r.buyer} · {day(r.reviewed_on)}{r.item ? ` · ${r.item}` : ""}</span>
+                      </span>
+                    </label>
+                  </li>
                 ))}
               </ul>
-              <button type="button" className="btn mt-3 !py-2" onClick={add} disabled={busy}>{busy ? "Adding…" : `Add ${page.reviews.length} review${page.reviews.length === 1 ? "" : "s"}`}</button>
+              <button type="button" className="btn mt-3 !py-2" onClick={add} disabled={busy}>{busy ? "Adding…" : `Add ${page.reviews.length} review${page.reviews.length === 1 ? "" : "s"} (${show.filter(Boolean).length} on the site)`}</button>
             </>
           )}
         </div>
