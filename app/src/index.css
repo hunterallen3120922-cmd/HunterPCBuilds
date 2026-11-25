@@ -419,12 +419,10 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
 
 /*
  * Home flow: everything below the opening reads as one continuous page instead of stacked bands.
- * One background runs the whole way down (soft glows drifting from side to side), a thin line (FlowSpine.tsx)
- * runs down the left and each section's eyebrow hangs off it as a node that lights up as you reach it.
+ * One background runs the whole way down (soft glows drifting from side to side) and the sections hand off
+ * to each other (see the notes in pages/Home.tsx).
  */
 .home-flow {
-  --g: 1.25rem;     /* the .wrap side padding */
-  --off: .7rem;     /* how far left of the content the line sits */
   position: relative;
   isolation: isolate;
   background:
@@ -434,43 +432,29 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
     radial-gradient(54rem 40rem at 100% 90%, color-mix(in srgb, var(--accent) 4%, transparent), transparent 70%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg2) 22%, var(--bg2) 78%, var(--bg) 100%);
 }
-@media (min-width: 640px) { .home-flow { --g: 2rem; --off: 1rem; } }
-@media (min-width: 1280px) { .home-flow { --off: 2.75rem; } }
 /* Even spacing between sections, a little tighter than other pages so one leads into the next */
-.home-flow .section { padding-block: 4rem; }
-@media (min-width: 640px) { .home-flow .section { padding-block: 5.5rem; } }
+.home-flow .section { padding-block: 3.25rem; }
+@media (min-width: 640px) { .home-flow .section { padding-block: 4.5rem; } }
 
-.flow-spine {
-  position: absolute; z-index: -1; top: 3rem; bottom: 9rem; width: 1px;
-  left: calc(max(0px, (100% - 72rem) / 2) + var(--g) - var(--off));
-  background: linear-gradient(180deg, transparent, var(--line) 6%, var(--line) 88%, transparent);
-  pointer-events: none;
+/* "Both paths lead here": a bracket from the middle of each path card joins into one stem */
+.merge { position: relative; height: 4.5rem; }
+.merge-bracket {
+  position: absolute; top: 0; left: 25%; right: 25%; height: 2.25rem;
+  border: 1px solid var(--line); border-top: 0; border-radius: 0 0 1.25rem 1.25rem;
 }
-.flow-spine-fill {
-  position: absolute; inset: 0; transform-origin: top; transform: scaleY(var(--fp, 0));
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 70%, transparent) 8%, var(--accent));
-  -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent); mask-image: linear-gradient(180deg, #000 88%, transparent);
-}
-.flow-spine-tip {
-  position: absolute; left: 50%; top: calc(var(--fp, 0) * 100%); width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
-  border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent), 0 0 18px var(--accent);
-  opacity: calc(var(--fp, 0) * 40); /* hidden until the fill starts */
-}
+.merge-stem { position: absolute; left: 50%; top: 2.25rem; bottom: 0; width: 1px; background: linear-gradient(var(--line), color-mix(in srgb, var(--accent) 60%, transparent)); }
+@media (max-width: 767px) { .merge-bracket { display: none; } .merge-stem { top: 0; } .merge { height: 3rem; } }
+#paths .pill { flex-wrap: wrap; justify-content: center; gap: .25rem .75rem; text-align: center; }
+@media (max-width: 639px) { #paths .pill { flex-direction: column; border-radius: 1rem; padding-block: .6rem; } }
 
-/* Section eyebrows become nodes on the line: a dot on the line and a short branch out to the label */
-.home-flow .flow-node { position: relative; }
-.home-flow .flow-node::before, .home-flow .flow-node::after { content: ""; position: absolute; top: 50%; pointer-events: none; }
-.home-flow .flow-node::after {
-  left: calc(-1 * var(--off)); width: calc(var(--off) - .75rem); height: 1px;
-  background: linear-gradient(90deg, var(--line), color-mix(in srgb, var(--accent2) 45%, transparent));
+/* Why me: one open row split by hairlines rather than four separate boxes */
+.trust-item { padding: 1.75rem 1.5rem; }
+@media (min-width: 640px) {
+  .trust-row { border-block: 1px solid var(--line); }
+  .trust-item + .trust-item { border-left: 1px solid var(--line); }
 }
-.home-flow .flow-node::before {
-  left: calc(-1 * var(--off) - 4px); width: 9px; height: 9px; margin-top: -4.5px; border-radius: 99px;
-  border: 1px solid var(--line); background: var(--bg2);
-  transition: background-color .6s var(--ease), border-color .6s var(--ease), box-shadow .6s var(--ease);
+@media (min-width: 640px) and (max-width: 1023px) {
+  .trust-item:nth-child(3) { border-left: 0; }
+  .trust-item:nth-child(n+3) { border-top: 1px solid var(--line); }
 }
-.home-flow .flow-node[data-rv="in"]::before, html:not(.rv-on) .home-flow .flow-node::before {
-  border-color: var(--accent); background: var(--accent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent), 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent);
-}
-@media (max-width: 639px) { .home-flow .flow-node::after { display: none; } }
+@media (max-width: 639px) { .trust-item { padding-inline: 0; } .trust-item + .trust-item { border-top: 1px solid var(--line); } }

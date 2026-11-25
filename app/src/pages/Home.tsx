@@ -4,7 +4,6 @@ import Carousel from "../components/Carousel";
 import { Photo } from "../components/Gallery";
 import SectionHead from "../components/SectionHead";
 import Reveal from "../components/Reveal";
-import FlowSpine from "../components/FlowSpine";
 import FaqList from "../components/FaqList";
 import ReviewsRotator, { useReviews } from "../components/ReviewsSection";
 import Icon, { IconTile } from "../components/Icon";
@@ -81,11 +80,16 @@ export default function Home() {
     <>
       <HomeHero />
 
-      {/* One continuous backdrop and a line running down the left tie the sections into a single story (index.css "Home flow") */}
+      {/*
+        One continuous story instead of separate blocks (backdrop: index.css "Home flow"):
+        1. pick your path -> both paths merge into the same three steps
+        2. step 3 "Fixed or built" leads straight into the recent work it produced
+        3. why people pick me, proven right underneath by the reviews
+        4. last questions answered beside the final call to action
+      */}
       <div className="home-flow">
-      <FlowSpine />
 
-      <section id="paths" className="section scroll-mt-20">
+      <section id="paths" className="section scroll-mt-20 !pb-0">
         <div className="wrap">
           <SectionHead eyebrow="Get started" title="What do you need?" />
           <div className="grid gap-5 md:grid-cols-2">
@@ -108,15 +112,16 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
-        </div>
-      </section>
 
-      <section className="section">
-        <div className="wrap">
-          <SectionHead eyebrow="Process" title="How it works" sub={`Three steps from "it's broken" to "it works."`} />
-          <div className="relative grid gap-10 md:grid-cols-3 md:gap-8">
+          {/* Both paths merge into the same process: a bracket from each card joins into "How it works" */}
+          <div className="merge" aria-hidden><span className="merge-bracket" /><span className="merge-stem" /></div>
+          <div data-reveal="up" className="text-center">
+            <p className="pill"><span className="text-accent">How it works</span><span className="text-muted">Three steps from "it's broken" to "it works."</span></p>
+          </div>
+
+          <div className="relative mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
             {/* the line the steps sit on */}
-            <div className="absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-accent/50 via-line to-transparent md:block" aria-hidden />
+            <div className="absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-accent/50 via-line to-accent/50 md:block" aria-hidden />
             {howItWorks.map((s, i) => (
               <Reveal key={s.title} delay={i * 120}>
                 <div className="relative">
@@ -130,6 +135,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Step 3 "Fixed or built" hands straight off to what's been fixed and built */}
       <section className="section">
         <div className="wrap">
           <SectionHead eyebrow="Featured" title="Recent work & the basics" sub="A few builds, popular repairs, and the quick facts." />
@@ -137,50 +143,56 @@ export default function Home() {
         <div data-reveal="zoom"><Carousel key={featured.length} label="Featured builds and repairs" items={[<GlanceCard key="glance" />, ...featuredCards(featured)]} /></div>
       </section>
 
+      {/* The reasons and the proof side by side: why people pick me, next to what they actually said */}
       <section className="section">
         <div className="wrap">
-          <SectionHead eyebrow="Why me" title="Why people pick me" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {trustPoints.map((t, i) => (
-              <Reveal key={t.title} delay={i * 90} className="h-full">
-                <div className="card lift h-full p-7">
-                  <IconTile name={t.icon} size="h-11 w-11" />
-                  <h3 className="mb-2 mt-6 text-[1.15rem]">{t.title}</h3>
-                  <p className="text-[.93rem] text-muted">{t.text}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          {reviews ? (
+            <ReviewsRotator data={reviews} intro={<>
+              <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Why me</p>
+              <h2 className="text-[clamp(2rem,4.2vw,3.1rem)]">Why people <em className="grad-text">pick me.</em></h2>
+              <ul className="mt-8 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                {trustPoints.map((t) => (
+                  <li key={t.title} className="flex gap-3">
+                    <Icon name={t.icon} className="mt-1 h-4 w-4 shrink-0 text-accent" />
+                    <span><span className="block font-medium text-ink">{t.title}</span><span className="text-[.88rem] text-muted">{t.text}</span></span>
+                  </li>
+                ))}
+              </ul>
+            </>} />
+          ) : (
+            <>
+              <SectionHead eyebrow="Why me" title="Why people pick me" />
+              <div className="trust-row grid sm:grid-cols-2 lg:grid-cols-4">
+                {trustPoints.map((t, i) => (
+                  <Reveal key={t.title} delay={i * 90} className="trust-item">
+                    <IconTile name={t.icon} size="h-11 w-11" />
+                    <h3 className="mb-2 mt-5 text-[1.15rem]">{t.title}</h3>
+                    <p className="text-[.93rem] text-muted">{t.text}</p>
+                  </Reveal>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
-      {reviews && (
-        <section className="section">
-          <div className="wrap"><ReviewsRotator data={reviews} /></div>
-        </section>
-      )}
-
+      {/* Last questions answered right beside the final call to action */}
       <section className="section">
-        <div className="wrap">
-          <div className="max-w-[51.25rem]">
+        <div className="wrap grid items-start gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+          <div>
             <SectionHead eyebrow="FAQ" title="Quick answers" />
             <FaqList items={faq.filter((f) => f.preview)} />
             <p data-reveal="up" className="mt-6"><Link to="/faq" className="inline-flex items-center gap-2 font-medium">All FAQ & terms <Icon name="arrow" className="h-4 w-4" /></Link></p>
           </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="wrap">
-          <div data-reveal="zoom" className="cta-panel relative overflow-hidden rounded-[1.75rem] border border-line px-6 py-16 text-center sm:py-24">
+          <div data-reveal="zoom" className="cta-panel relative overflow-hidden rounded-[1.75rem] border border-line px-6 py-14 text-center sm:px-10 lg:sticky lg:top-28 lg:mt-[7.5rem]">
             <div className="hero-grid pointer-events-none absolute inset-0 !opacity-40" aria-hidden />
             <div className="relative">
               <p className="pill mb-7"><span className="pill-dot" aria-hidden />{site.responseTime}</p>
-              <h2 className="text-[clamp(2.3rem,5.4vw,4rem)]">Ready when <em className="grad-text">you are.</em></h2>
-              <p className="mx-auto mb-9 mt-5 max-w-[44ch] text-[1.05rem] text-muted">Tell me what you need. You get a firm quote before any work starts.</p>
+              <h2 className="text-[clamp(2.2rem,4vw,3.2rem)]">Ready when <em className="grad-text">you are.</em></h2>
+              <p className="mx-auto mb-9 mt-5 max-w-[36ch] text-[1.05rem] text-muted">Tell me what you need. You get a firm quote before any work starts.</p>
               <div className="flex flex-wrap justify-center gap-3">
-                <Link to="/pc-builds" className="btn !px-8 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
-                <Link to="/tech-repair" className="btn btn-ghost !px-8 !py-3.5">Fix my device</Link>
+                <Link to="/pc-builds" className="btn !px-7 !py-3.5">Build me a PC <Icon name="arrow" className="h-4 w-4" /></Link>
+                <Link to="/tech-repair" className="btn btn-ghost !px-7 !py-3.5">Fix my device</Link>
               </div>
             </div>
           </div>
