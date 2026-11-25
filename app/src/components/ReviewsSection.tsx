@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getReviews, type ReviewRow, type ReviewStats } from "../lib/supabase";
 import Icon from "./Icon";
 
@@ -31,8 +31,9 @@ function trim(text: string, max = 200) {
  * Two columns: the heading, eBay numbers and link on one side, one review at a time on the other (stacked on phones).
  * Reviews fade to the next every few seconds; arrows and dots step through them. Pauses while hovered or focused,
  * and doesn't auto-advance for people who turned off motion.
+ * `intro` swaps out the heading on the left (the home page puts "Why people pick me" there, so the reasons sit beside the proof).
  */
-export default function ReviewsRotator({ data }: { data: Data }) {
+export default function ReviewsRotator({ data, intro }: { data: Data; intro?: ReactNode }) {
   const { reviews, stats } = data;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -54,8 +55,10 @@ export default function ReviewsRotator({ data }: { data: Data }) {
   return (
     <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
       <div data-reveal-group="blur">
-        <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Reviews</p>
-        <h2 className="text-[clamp(2rem,4.2vw,3.1rem)]">Here's what people <em className="grad-text">have to say.</em></h2>
+        {intro ?? <>
+          <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Reviews</p>
+          <h2 className="text-[clamp(2rem,4.2vw,3.1rem)]">Here's what people <em className="grad-text">have to say.</em></h2>
+        </>}
         {(pct != null || count != null) && (
           <p className="mt-6 flex items-baseline gap-3 text-muted">
             {pct != null && <span className="font-mono text-[2rem] leading-none tracking-[-0.03em] text-accent">{Number(pct) % 1 ? Number(pct).toFixed(1) : Number(pct)}%</span>}

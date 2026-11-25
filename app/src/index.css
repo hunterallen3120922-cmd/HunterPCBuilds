@@ -416,3 +416,34 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
 .pick-in { animation: pick-in .45s var(--ease) both; }
 @keyframes pick-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pick-in { animation: none; } }
+
+/*
+ * Home flow: everything below the opening reads as one continuous page instead of stacked bands.
+ * One background runs the whole way down (soft glows drifting from side to side) and the sections hand off
+ * to each other (see the notes in pages/Home.tsx).
+ */
+.home-flow {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(48rem 34rem at 0% 14%, color-mix(in srgb, var(--accent) 4.5%, transparent), transparent 70%),
+    radial-gradient(52rem 40rem at 100% 38%, color-mix(in srgb, var(--accent2) 3.5%, transparent), transparent 70%),
+    radial-gradient(50rem 38rem at 0% 64%, color-mix(in srgb, var(--accent) 4%, transparent), transparent 70%),
+    radial-gradient(54rem 40rem at 100% 90%, color-mix(in srgb, var(--accent) 4%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 22%, var(--bg2) 78%, var(--bg) 100%);
+}
+/* Even spacing between sections, a little tighter than other pages so one leads into the next */
+.home-flow .section { padding-block: 3.25rem; }
+@media (min-width: 640px) { .home-flow .section { padding-block: 4.5rem; } }
+
+/* Why me: one open row split by hairlines rather than four separate boxes */
+.trust-item { padding: 1.75rem 1.5rem; }
+@media (min-width: 640px) {
+  .trust-row { border-block: 1px solid var(--line); }
+  .trust-item + .trust-item { border-left: 1px solid var(--line); }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .trust-item:nth-child(3) { border-left: 0; }
+  .trust-item:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 639px) { .trust-item { padding-inline: 0; } .trust-item + .trust-item { border-top: 1px solid var(--line); } }
