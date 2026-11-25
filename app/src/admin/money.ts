@@ -207,6 +207,8 @@ export interface QuoteItemRow {
   source: string | null;
   link: string | null;
   optional: boolean;
+  /** You already bought this part (still in the customer's price). Needs SQL 10; missing before that. */
+  bought?: boolean;
   sort: number;
 }
 

@@ -1,6 +1,6 @@
 import { PART_CATEGORIES, day, num, quoteTotals, resaleTotals, today, type QuoteItemRow, type QuoteRow } from "./money";
 
-type Item = Pick<QuoteItemRow, "category" | "name" | "price" | "qty" | "source" | "link" | "optional">;
+type Item = Pick<QuoteItemRow, "category" | "name" | "price" | "qty" | "source" | "link" | "optional" | "bought">;
 type Quote = Pick<QuoteRow, "title" | "customer" | "contact" | "tax_rate" | "build_fee" | "extra_costs" | "show_prices" | "valid_until" | "customer_note" | "notes"> & Partial<Pick<QuoteRow, "purpose" | "platform" | "list_price" | "fee_pct" | "fee_fixed" | "shipping">>;
 
 const BLUE = "FF1D4ED8";
@@ -101,7 +101,7 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
       set("total", unit * qty, MONEY);
       if (num(i.price) === 0 && !upgrade && !internal) set("price", "Included");
     } else if (upgrade) set("amt", unit * qty, '"+$"#,##0.00');
-    set("from", i.source ?? "");
+    set("from", [i.source, i.bought ? "bought ✓" : ""].filter(Boolean).join(" · "));
     if (i.link && col("link")) { set("link", { text: i.link, hyperlink: i.link }); row.getCell(col("link")).font = { color: { argb: BLUE }, underline: true }; }
     for (let k = 1; k <= last; k++) row.getCell(k).border = { bottom: { style: "thin", color: { argb: LINE } } };
     for (const k of ["qty", "price", "total", "amt"] as const) if (col(k)) row.getCell(col(k)).alignment = { horizontal: "right" };

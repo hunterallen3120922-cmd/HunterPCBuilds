@@ -83,7 +83,7 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
     const { created_at: _c, ...rest } = q;
     setOpen({
       quote: { ...rest, customer: q.customer ?? "", contact: q.contact ?? "", customer_note: q.customer_note ?? "", notes: q.notes ?? "" },
-      items: (byQuote.get(q.id) ?? []).map((i) => ({ key: newKey(), category: i.category, name: i.name, price: num(i.price), qty: i.qty, source: i.source ?? "", link: i.link ?? "", optional: i.optional, auto: false })),
+      items: (byQuote.get(q.id) ?? []).map((i) => ({ key: newKey(), category: i.category, name: i.name, price: num(i.price), qty: i.qty, source: i.source ?? "", link: i.link ?? "", optional: i.optional, bought: !!i.bought, auto: false })),
     });
   };
 
@@ -318,10 +318,15 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     if (del.error) { setError(del.error.message); return null; }
     const rows = items.map((i, n) => ({
       quote_id: qid, category: i.category, name: i.name.trim().slice(0, 200), price: i.price, qty: Math.max(0, Math.round(i.qty)) || 1,
-      source: i.source.trim().slice(0, 80) || null, link: i.link.trim().slice(0, 500) || null, optional: i.optional, sort: (n + 1) * 10,
+      source: i.source.trim().slice(0, 80) || null, link: i.link.trim().slice(0, 500) || null, optional: i.optional, bought: i.bought, sort: (n + 1) * 10,
     }));
     if (rows.length) {
-      const ins = await supabase!.from("quote_items").insert(rows);
+      let ins = await supabase!.from("quote_items").insert(rows);
+      // Before SQL file 10 is run there's no "bought" column: save without the ticks and say so
+      if (ins.error && /bought/.test(ins.error.message)) {
+        ins = await supabase!.from("quote_items").insert(rows.map(({ bought: _b, ...r }) => r));
+        if (!ins.error && rows.some((r) => r.bought)) setError("Saved, but the Bought ticks weren't. Run 10-quote-bought.sql in Supabase once to keep them.");
+      }
       if (ins.error) { setError(ins.error.message); return null; }
     }
     setDirty(false);
@@ -373,7 +378,7 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     const parts = items.filter((i) => !i.optional).map((i, n) => ({
       job_id: jobId, category: i.category, name: i.name.trim().slice(0, 200), price: i.price, qty: Math.max(0, Math.round(i.qty)) || 1,
       source: i.source.trim().slice(0, 80) || null,
-      status: /^on hand$/i.test(i.source.trim()) ? "have" : /^customer'?s$/i.test(i.source.trim()) ? "customer's" : "needed",
+      status: i.bought ? "bought" : /^on hand$/i.test(i.source.trim()) ? "have" : /^customer'?s$/i.test(i.source.trim()) ? "customer's" : "needed",
       sort: (n + 1) * 10,
     }));
     if (parts.length) {
@@ -403,14 +408,14 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     onDuplicate({ quote: { ...q, id: undefined, title: `${q.title} (copy)`, status: "draft", job_id: null }, items: list.map((i) => ({ ...i, key: newKey() })) });
   };
   const copyBuild = (b: PastBuild, replace: boolean) => {
-    const rows = b.parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: num(p.price), qty: num(p.qty) || 1, source: p.source ?? "", link: "", optional: false, auto: false }));
+    const rows = b.parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: num(p.price), qty: num(p.qty) || 1, source: p.source ?? "", link: "", optional: false, bought: false, auto: false }));
     setList(replace ? rows : [...list.filter((i) => i.name.trim()), ...rows]);
     if (!q.title.trim()) set("title", b.job.title);
     setPicking("");
     flash(`${replace ? "Replaced the list with" : "Added"} ${rows.length} parts from “${b.job.title}”. Prices are what you paid then.`);
   };
   const copySheet = (parts: FoundPart[], replace: boolean, from: string) => {
-    const rows = parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: p.price, qty: 1, source: p.source, link: p.link, optional: false, auto: false }));
+    const rows = parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: p.price, qty: 1, source: p.source, link: p.link, optional: false, bought: false, auto: false }));
     setList(replace ? rows : [...list.filter((i) => i.name.trim()), ...rows]);
     setPicking("");
     flash(`${replace ? "Replaced the list with" : "Added"} ${rows.length} parts from ${from}.`);
