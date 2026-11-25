@@ -113,13 +113,13 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Both paths merge into the same process: a bracket from each card joins into "How it works" */}
-          <div className="merge" aria-hidden><span className="merge-bracket" /><span className="merge-stem" /></div>
-          <div data-reveal="up" className="text-center">
-            <p className="pill"><span className="text-accent">How it works</span><span className="text-muted">Three steps from "it's broken" to "it works."</span></p>
+          {/* Either path, same process: the steps follow straight on in the same section */}
+          <div data-reveal="up" className="mt-14 flex flex-wrap items-baseline gap-x-4 gap-y-1 sm:mt-16">
+            <h3 className="text-[1.6rem] tracking-[-0.02em]">How it works</h3>
+            <p className="text-muted">Three steps from "it's broken" to "it works."</p>
           </div>
 
-          <div className="relative mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+          <div className="relative mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
             {/* the line the steps sit on */}
             <div className="absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-accent/50 via-line to-accent/50 md:block" aria-hidden />
             {howItWorks.map((s, i) => (

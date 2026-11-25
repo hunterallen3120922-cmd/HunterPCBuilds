@@ -436,17 +436,6 @@ dialog[open] { animation: dialog-in .45s var(--ease) both; box-shadow: 0 40px 10
 .home-flow .section { padding-block: 3.25rem; }
 @media (min-width: 640px) { .home-flow .section { padding-block: 4.5rem; } }
 
-/* "Both paths lead here": a bracket from the middle of each path card joins into one stem */
-.merge { position: relative; height: 4.5rem; }
-.merge-bracket {
-  position: absolute; top: 0; left: 25%; right: 25%; height: 2.25rem;
-  border: 1px solid var(--line); border-top: 0; border-radius: 0 0 1.25rem 1.25rem;
-}
-.merge-stem { position: absolute; left: 50%; top: 2.25rem; bottom: 0; width: 1px; background: linear-gradient(var(--line), color-mix(in srgb, var(--accent) 60%, transparent)); }
-@media (max-width: 767px) { .merge-bracket { display: none; } .merge-stem { top: 0; } .merge { height: 3rem; } }
-#paths .pill { flex-wrap: wrap; justify-content: center; gap: .25rem .75rem; text-align: center; }
-@media (max-width: 639px) { #paths .pill { flex-direction: column; border-radius: 1rem; padding-block: .6rem; } }
-
 /* Why me: one open row split by hairlines rather than four separate boxes */
 .trust-item { padding: 1.75rem 1.5rem; }
 @media (min-width: 640px) {
