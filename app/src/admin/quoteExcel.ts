@@ -1,6 +1,6 @@
 import { PART_CATEGORIES, day, num, quoteTotals, resaleTotals, today, type QuoteItemRow, type QuoteRow } from "./money";
 
-type Item = Pick<QuoteItemRow, "category" | "name" | "price" | "qty" | "source" | "link" | "optional">;
+type Item = Pick<QuoteItemRow, "category" | "name" | "price" | "qty" | "source" | "link" | "optional" | "bought">;
 type Quote = Pick<QuoteRow, "title" | "customer" | "contact" | "tax_rate" | "build_fee" | "extra_costs" | "show_prices" | "valid_until" | "customer_note" | "notes"> & Partial<Pick<QuoteRow, "purpose" | "platform" | "list_price" | "fee_pct" | "fee_fixed" | "shipping">>;
 
 const BLUE = "FF1D4ED8";
@@ -101,13 +101,15 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
       set("total", unit * qty, MONEY);
       if (num(i.price) === 0 && !upgrade && !internal) set("price", "Included");
     } else if (upgrade) set("amt", unit * qty, '"+$"#,##0.00');
-    set("from", i.source ?? "");
+    set("from", [i.source, i.bought ? "bought ✓" : ""].filter(Boolean).join(" · "));
     if (i.link && col("link")) { set("link", { text: i.link, hyperlink: i.link }); row.getCell(col("link")).font = { color: { argb: BLUE }, underline: true }; }
     for (let k = 1; k <= last; k++) row.getCell(k).border = { bottom: { style: "thin", color: { argb: LINE } } };
     for (const k of ["qty", "price", "total", "amt"] as const) if (col(k)) row.getCell(col(k)).alignment = { horizontal: "right" };
     r++;
   };
   main.forEach((i) => line(i));
+  // A simple quote has no price breakdown, so list the Windows install with the parts
+  if (!prices && t.windowsName) line({ category: "Windows", name: `${t.windowsName} install and setup`, price: 0, qty: 1, source: "", link: "", optional: false });
   r++;
 
   // Totals
@@ -143,11 +145,12 @@ export async function downloadQuote(q: Quote, allItems: Item[], kind: "customer"
     if (prices) {
       total("Parts", t.parts);
       total(`Sales tax (${taxPct})`, t.tax);
-      if (t.fee) total("Build fee", t.fee);
-      total("Total", t.total, { bold: true, color: BLUE });
+      if (t.windowsName) total(`${t.windowsName} install`, t.windows);
+      if (t.fee) total("Build fee", t.fee, { note: t.custom ? "what's left of your price" : undefined });
+      total("Total", t.total, { bold: true, color: BLUE, note: t.custom ? "your custom price" : undefined });
     } else {
       // Simple quote: one price for the finished PC, no breakdown
-      total("Total (tax included)", t.total, { bold: true, color: BLUE });
+      total("Total (tax included)", t.total, { bold: true, color: BLUE, note: t.custom ? "your custom price" : undefined });
       ws.mergeCells(r, 1, r, last);
       ws.getCell(r, 1).value = "Includes every part listed, plus assembly, setup and testing.";
       ws.getCell(r, 1).font = { color: { argb: MUTED }, italic: true };

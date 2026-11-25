@@ -164,6 +164,7 @@ create table if not exists public.quote_items (
   source      text check (char_length(source) <= 80),
   link        text check (char_length(link) <= 500),
   optional    boolean not null default false,             -- an upgrade you offer, not in the total
+  bought      boolean not null default false,             -- you already bought it (still in the price)
   sort        integer not null default 0,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()

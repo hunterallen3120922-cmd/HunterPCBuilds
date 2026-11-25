@@ -11,6 +11,7 @@ export interface GridItem {
   source: string;
   link: string;
   optional: boolean;
+  bought: boolean;
   auto?: boolean;
 }
 /** A part you've bought before (from your jobs), for suggestions. */
@@ -18,7 +19,7 @@ export interface PastPart { name: string; category: string; n: number; avg: numb
 
 let next = 0;
 export const newKey = () => `r${++next}`;
-export const blankRow = (category = "Other", auto = true): GridItem => ({ key: newKey(), category, name: "", price: "", qty: 1, source: "", link: "", optional: false, auto });
+export const blankRow = (category = "Other", auto = true): GridItem => ({ key: newKey(), category, name: "", price: "", qty: 1, source: "", link: "", optional: false, bought: false, auto });
 
 export const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
 
@@ -97,7 +98,7 @@ export default function PartsGrid({ items, onChange, past, taxRate }: {
             <th className="w-[6.5rem] px-2 py-2 text-right font-normal">Total</th>
             <th className="w-[8.5rem] px-2 py-2 font-normal">From</th>
             <th className="w-[9rem] px-2 py-2 font-normal">Link</th>
-            <th className="w-[4.5rem] px-2 py-2 text-center font-normal" title="Optional upgrade: listed separately, not in the total">Extra</th>
+            <th className="w-[4.5rem] px-2 py-2 text-center font-normal" title="Tick parts you've already bought. They still count in the price.">Bought</th>
             <th className="w-8" />
           </tr>
         </thead>
@@ -140,8 +141,14 @@ export default function PartsGrid({ items, onChange, past, taxRate }: {
                   </span>
                 </td>
                 <td className="text-center">
-                  <input type="checkbox" className="h-4 w-4 accent-[var(--accent2)]" aria-label={`Row ${row + 1} is an optional upgrade`} checked={i.optional}
-                    onChange={(e) => update(i.key, { optional: e.target.checked })} />
+                  {i.optional ? (
+                    // Older quotes could mark a part as an optional upgrade (not in the total)
+                    <button type="button" className="rounded-full border border-accent2/50 px-1.5 text-[.68rem] text-accent2 hover:border-accent2"
+                      title="An optional upgrade from before (not in the total). Click to make it a normal part." onClick={() => update(i.key, { optional: false })}>upgrade ✕</button>
+                  ) : (
+                    <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" aria-label={`Row ${row + 1} already bought`} checked={i.bought}
+                      onChange={(e) => update(i.key, { bought: e.target.checked })} />
+                  )}
                 </td>
                 <td className="text-center">
                   <button type="button" aria-label={`Remove row ${row + 1}`} title="Remove row" tabIndex={-1}

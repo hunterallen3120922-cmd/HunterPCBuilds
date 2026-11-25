@@ -7,7 +7,7 @@ import TradeInEditor from "./TradeInEditor";
 import PrintRequestEditor from "./PrintRequestEditor";
 import { fetchSheet, findParts, readFile, type FoundPart } from "./sheetImport";
 import {
-  PART_CATEGORIES, PLATFORMS, PRINT_STATUS, STATUSES_FOR, TRADE_IN_STATUS, day, jobDay, money, num, pct, quoteTotals, resaleTotals, specLine, today,
+  NO_WINDOWS, PART_CATEGORIES, PLATFORMS, PRINT_STATUS, STATUSES_FOR, TRADE_IN_STATUS, day, jobDay, money, num, pct, quoteTotals, resaleTotals, specLine, today, WINDOWS,
   type JobRow, type PartRow, type QuoteItemRow, type QuoteRow,
 } from "./money";
 
@@ -29,8 +29,10 @@ const STATUS_STYLE: Record<QuoteRow["status"], string> = {
 const catAt = (c: string) => { const i = PART_CATEGORIES.indexOf(c as never); return i < 0 ? 99 : i; };
 
 const blankQuote = (purpose: Purpose): Draft => ({
-  title: "", customer: "", contact: "", status: "draft", purpose, platform: purpose === "resale" ? "eBay" : null,
-  list_price: 0, fee_pct: purpose === "resale" ? PLATFORMS[0].pct : 0, fee_fixed: purpose === "resale" ? PLATFORMS[0].fixed : 0, shipping: 0,
+  title: "", customer: "", contact: "", status: "draft", purpose,
+  // A customer quote always starts with a Windows install (edition in `platform`, fee in `fee_fixed`)
+  platform: purpose === "resale" ? "eBay" : WINDOWS[0].name,
+  list_price: 0, fee_pct: purpose === "resale" ? PLATFORMS[0].pct : 0, fee_fixed: purpose === "resale" ? PLATFORMS[0].fixed : WINDOWS[0].fee, shipping: 0,
   tax_rate: 0.06, build_fee: 0, extra_costs: 0, show_prices: false, valid_until: null, customer_note: "", notes: "", job_id: null,
 });
 /** A fresh parts list: one empty row for each main part, then type away. */
@@ -81,7 +83,7 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
     const { created_at: _c, ...rest } = q;
     setOpen({
       quote: { ...rest, customer: q.customer ?? "", contact: q.contact ?? "", customer_note: q.customer_note ?? "", notes: q.notes ?? "" },
-      items: (byQuote.get(q.id) ?? []).map((i) => ({ key: newKey(), category: i.category, name: i.name, price: num(i.price), qty: i.qty, source: i.source ?? "", link: i.link ?? "", optional: i.optional, auto: false })),
+      items: (byQuote.get(q.id) ?? []).map((i) => ({ key: newKey(), category: i.category, name: i.name, price: num(i.price), qty: i.qty, source: i.source ?? "", link: i.link ?? "", optional: i.optional, bought: !!i.bought, auto: false })),
     });
   };
 
@@ -266,14 +268,28 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     const fresh = blankQuote(p);
     setQ((c) => ({
       ...c, purpose: p, status: "draft",
-      ...(p === "resale" && !c.platform ? { platform: fresh.platform, fee_pct: fresh.fee_pct, fee_fixed: fresh.fee_fixed } : {}),
+      // The same columns hold the selling site (resale) or the Windows install (customer), so reset them
+      platform: fresh.platform, fee_pct: fresh.fee_pct, fee_fixed: fresh.fee_fixed, list_price: 0,
     }));
+    setCustomMode(false);
     setDirty(true);
   };
   const pickPlatform = (name: string) => {
     const p = PLATFORMS.find((x) => x.name === name);
     setQ((c) => ({ ...c, platform: name || null, ...(p ? { fee_pct: p.pct, fee_fixed: p.fixed } : {}) }));
     setDirty(true);
+  };
+
+  const pickWindows = (name: string) => {
+    const w = WINDOWS.find((x) => x.name === name);
+    setQ((c) => ({ ...c, platform: name, fee_fixed: w ? w.fee : 0 }));
+    setDirty(true);
+  };
+  // Custom price: you type what the customer pays (saved in list_price; 0 means use the build fee)
+  const [customMode, setCustomMode] = useState(!resale && num(initial.quote.list_price) > 0);
+  const pickCustom = (on: boolean) => {
+    setCustomMode(on);
+    set("list_price", on ? Math.ceil(ct.total / 5) * 5 : 0);
   };
 
   /** Saves the quote and its parts. Returns the quote's id, or null if it failed. */
@@ -302,10 +318,15 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     if (del.error) { setError(del.error.message); return null; }
     const rows = items.map((i, n) => ({
       quote_id: qid, category: i.category, name: i.name.trim().slice(0, 200), price: i.price, qty: Math.max(0, Math.round(i.qty)) || 1,
-      source: i.source.trim().slice(0, 80) || null, link: i.link.trim().slice(0, 500) || null, optional: i.optional, sort: (n + 1) * 10,
+      source: i.source.trim().slice(0, 80) || null, link: i.link.trim().slice(0, 500) || null, optional: i.optional, bought: i.bought, sort: (n + 1) * 10,
     }));
     if (rows.length) {
-      const ins = await supabase!.from("quote_items").insert(rows);
+      let ins = await supabase!.from("quote_items").insert(rows);
+      // Before SQL file 10 is run there's no "bought" column: save without the ticks and say so
+      if (ins.error && /bought/.test(ins.error.message)) {
+        ins = await supabase!.from("quote_items").insert(rows.map(({ bought: _b, ...r }) => r));
+        if (!ins.error && rows.some((r) => r.bought)) setError("Saved, but the Bought ticks weren't. Run 10-quote-bought.sql in Supabase once to keep them.");
+      }
       if (ins.error) { setError(ins.error.message); return null; }
     }
     setDirty(false);
@@ -350,14 +371,14 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     } : {
       title: q.title.trim(), customer: q.customer?.trim() || null, kind: "build", status: "in progress",
       revenue: ct.total, cost: ct.cost, started_on: today(),
-      notes: [`From quote: parts ${money(ct.parts)} + tax ${money(ct.tax)} + build fee ${money(ct.fee)}.`, q.notes?.trim()].filter(Boolean).join(" "),
+      notes: [`From quote: parts ${money(ct.parts)} + tax ${money(ct.tax)}${ct.windowsName ? ` + ${ct.windowsName} install ${money(ct.windows)}` : ""} + build fee ${money(ct.fee)}${ct.custom ? ` (custom price ${money(ct.custom)})` : ""}.`, q.notes?.trim()].filter(Boolean).join(" "),
     }).select("id").single();
     if (error || !data) { setError(error?.message ?? "Couldn't make the job."); return; }
     const jobId = (data as { id: string }).id;
     const parts = items.filter((i) => !i.optional).map((i, n) => ({
       job_id: jobId, category: i.category, name: i.name.trim().slice(0, 200), price: i.price, qty: Math.max(0, Math.round(i.qty)) || 1,
       source: i.source.trim().slice(0, 80) || null,
-      status: /^on hand$/i.test(i.source.trim()) ? "have" : /^customer'?s$/i.test(i.source.trim()) ? "customer's" : "needed",
+      status: i.bought ? "bought" : /^on hand$/i.test(i.source.trim()) ? "have" : /^customer'?s$/i.test(i.source.trim()) ? "customer's" : "needed",
       sort: (n + 1) * 10,
     }));
     if (parts.length) {
@@ -387,14 +408,14 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     onDuplicate({ quote: { ...q, id: undefined, title: `${q.title} (copy)`, status: "draft", job_id: null }, items: list.map((i) => ({ ...i, key: newKey() })) });
   };
   const copyBuild = (b: PastBuild, replace: boolean) => {
-    const rows = b.parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: num(p.price), qty: num(p.qty) || 1, source: p.source ?? "", link: "", optional: false, auto: false }));
+    const rows = b.parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: num(p.price), qty: num(p.qty) || 1, source: p.source ?? "", link: "", optional: false, bought: false, auto: false }));
     setList(replace ? rows : [...list.filter((i) => i.name.trim()), ...rows]);
     if (!q.title.trim()) set("title", b.job.title);
     setPicking("");
     flash(`${replace ? "Replaced the list with" : "Added"} ${rows.length} parts from “${b.job.title}”. Prices are what you paid then.`);
   };
   const copySheet = (parts: FoundPart[], replace: boolean, from: string) => {
-    const rows = parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: p.price, qty: 1, source: p.source, link: p.link, optional: false, auto: false }));
+    const rows = parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: p.price, qty: 1, source: p.source, link: p.link, optional: false, bought: false, auto: false }));
     setList(replace ? rows : [...list.filter((i) => i.name.trim()), ...rows]);
     setPicking("");
     flash(`${replace ? "Replaced the list with" : "Added"} ${rows.length} parts from ${from}.`);
@@ -501,17 +522,41 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
             <div className="card p-5">
               <h2 className="text-[1.05rem]">Price</h2>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                <L label="Build fee"><Money value={q.build_fee} onChange={(v) => set("build_fee", v)} /></L>
-                <L label="Tax %"><Num value={+(num(q.tax_rate) * 100).toFixed(2)} onChange={(v) => set("tax_rate", num(v) / 100)} /></L>
-                <L label="Your extra costs" wide><Money value={q.extra_costs} onChange={(v) => set("extra_costs", v)} /></L>
+                <L label="Windows 10 install">
+                  <select className="input" value={q.platform && (q.platform === NO_WINDOWS || WINDOWS.some((w) => w.name === q.platform)) ? q.platform : NO_WINDOWS}
+                    onChange={(e) => pickWindows(e.target.value)}>
+                    {WINDOWS.map((w) => <option key={w.name} value={w.name}>{w.name.replace("Windows 10 ", "")} · ${w.fee}</option>)}
+                    <option value={NO_WINDOWS}>None</option>
+                  </select>
+                </L>
+                {ct.windowsName ? <L label="Windows fee"><Money value={q.fee_fixed} onChange={(v) => set("fee_fixed", v)} /></L> : <span />}
               </div>
-              <p className="mt-1 text-[.72rem] text-muted">Extra costs are things the customer doesn't see, like shipping. They lower your profit.</p>
+              <div className="mt-3 grid grid-cols-2 gap-1 rounded-full border border-line p-1 text-[.82rem]" role="group" aria-label="How you price it">
+                {([[false, "Build fee"], [true, "Custom price"]] as const).map(([v, label]) => (
+                  <button key={label} type="button" aria-pressed={customMode === v} onClick={() => pickCustom(v)}
+                    className={`rounded-full px-3 py-1.5 ${customMode === v ? "bg-card text-ink" : "text-muted hover:text-ink"}`}>{label}</button>
+                ))}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                {customMode
+                  ? <L label="Customer pays" wide><Money value={q.list_price} onChange={(v) => set("list_price", v)} big /></L>
+                  : <L label="Build fee"><Money value={q.build_fee} onChange={(v) => set("build_fee", v)} /></L>}
+                <L label="Tax %"><Num value={+(num(q.tax_rate) * 100).toFixed(2)} onChange={(v) => set("tax_rate", num(v) / 100)} /></L>
+              </div>
+              <p className="mt-1 text-[.72rem] text-muted">{customMode
+                ? "Type the price you want. The build fee is whatever's left after parts, tax and Windows."
+                : "The customer pays parts + tax + Windows install + your build fee."}</p>
+              {customMode && ct.custom > 0 && ct.fee < 0 && (
+                <p className="mt-2 rounded-card border border-danger/50 p-2 text-[.8rem] text-danger">This price is {money(-ct.fee)} under what the parts, tax and Windows cost.</p>
+              )}
               <dl className="mt-4 space-y-1.5 text-[.9rem]">
                 <Row label="Parts" value={money(ct.parts)} />
                 <Row label={`Tax (${+(num(q.tax_rate) * 100).toFixed(2)}%)`} value={money(ct.tax)} />
-                <Row label="Build fee" value={money(ct.fee)} />
+                {ct.windowsName && <Row label={`${ct.windowsName} install`} value={money(ct.windows)} />}
+                <Row label={customMode ? "Build fee (what's left)" : "Build fee"} value={money(ct.fee)} />
                 <div className="border-t border-line pt-2"><Row label={<b>Customer pays</b>} value={<b className="text-[1.15rem] text-ink">{money(ct.total)}</b>} /></div>
                 <Row label="Your cost" value={money(ct.cost)} />
+                {num(q.extra_costs) > 0 && <Row label="(includes extra costs)" value={money(num(q.extra_costs))} />}
                 <Row label={<b>Your profit</b>} value={<b className={ct.profit < 0 ? "text-danger" : "text-accent"}>{money(ct.profit)}</b>} />
                 <Row label="Margin" value={ct.total ? pct(ct.profit / ct.total) : "–"} />
                 {ct.upgrades > 0 && <Row label="Optional upgrades" value={`+${money(ct.upgrades * (1 + num(q.tax_rate)))}`} />}
