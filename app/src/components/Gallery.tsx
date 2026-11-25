@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { GalleryItem } from "../types";
 import Icon from "./Icon";
+import CloseX from "./CloseX";
 
 /** File names are in public/gallery/; builds from the admin portal already have full web addresses. */
 const src = (photo: string) => (photo.includes("/") ? photo : `${import.meta.env.BASE_URL}gallery/${photo}`);
@@ -51,10 +52,10 @@ export default function Gallery({ items }: { items: GalleryItem[] }) {
         ))}
       </ul>
       <dialog ref={dialog} onClose={() => setActive(null)}
-        onClick={(e) => { if (e.target === dialog.current) setActive(null); }}
         className="m-auto w-[min(92vw,45rem)] rounded-card border border-line bg-card p-0 text-ink">
         {active && (
-          <div>
+          <div className="relative">
+            <CloseX over onClick={() => setActive(null)} />
             <Photo item={active} photo={active.photos?.[shown] ?? active.photo} className="h-[60vh] max-h-[36rem] w-full" />
             {(active.photos?.length ?? 0) > 1 && (
               <div className="flex gap-2 overflow-x-auto px-5 pt-4">
