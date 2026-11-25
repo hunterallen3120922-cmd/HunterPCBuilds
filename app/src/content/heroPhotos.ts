@@ -2,7 +2,7 @@
  * REAL PHOTOS AT THE TOP OF THE PC BUILDS PAGE.
  * After the page's opening animation finishes, the drawing fades into your real photos, which then slowly rotate.
  *
- * How to add one: put the photo in app/public/photos/ and add a line below, e.g.
+ * How to add one: put the photo in app/public/photos/, run app/tools/small-photos.py (makes its light copy), and add a line below, e.g.
  *   { photo: "red-gaming-pc.jpg", alt: "Finished red and black gaming PC", caption: "1440p gaming build" },
  * `alt` describes the photo for screen readers. `caption` is optional (a small label on the photo).
  * Landscape photos (wider than tall) look best.

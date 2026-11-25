@@ -1,6 +1,6 @@
 /**
  * COLORS, FONTS AND CORNERS. Change a value here and the whole site updates.
- * (If you change a font, also change the Google Fonts link in index.html.)
+ * (If you change a font, also update src/fonts.css, which holds the font files the site loads.)
  */
 export const theme = {
   colors: {

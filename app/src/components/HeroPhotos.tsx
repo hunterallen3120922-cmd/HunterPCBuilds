@@ -5,6 +5,17 @@ import type { HeroPhoto } from "../content/heroPhotos";
 export const photoSrc = (photo: string) => (photo.includes("/") ? photo : `${import.meta.env.BASE_URL}photos/${photo}`);
 
 /**
+ * A lighter copy of a photo from public/photos/, for places that show it small or blurred: public/photos/small/<name>.webp
+ * (600px on its short side). Make one for a new photo with app/tools/small-photos.py. If it's missing, the full photo is used.
+ */
+export const photoSmall = (photo: string) => (photo.includes("/") ? photo : `${import.meta.env.BASE_URL}photos/small/${photo.replace(/\.[a-z]+$/i, "")}.webp`);
+/** onError for an <img> showing photoSmall(photo): falls back to the full-size photo. */
+export const smallFallback = (photo: string) => (e: { currentTarget: HTMLImageElement }) => {
+  const img = e.currentTarget, full = photoSrc(photo);
+  if (!img.src.endsWith(full.replace(/^\.\//, ""))) img.src = full;
+};
+
+/**
  * Real photos that fade in over a page's opening drawing once it has finished (`ready`), after `delay` seconds,
  * then crossfade from one to the next every `interval` seconds with a slow zoom. Each photo is shown whole over a
  * blurred copy of itself. They load one at a time as needed; photos that fail to load are skipped, and if none
@@ -71,7 +82,7 @@ export default function HeroPhotos({ photos, ready, delay, interval, className, 
         {ok.map((p, i) => (
           <div key={p.photo} className={`absolute inset-0 transition-opacity duration-1000 ${i === index ? "opacity-100" : "opacity-0"}`} aria-hidden={i !== index}>
             {/* the same photo, blurred, filling the frame behind it, so tall photos are shown whole */}
-            <img src={photoSrc(p.photo)} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl" />
+            <img src={photoSmall(p.photo)} onError={smallFallback(p.photo)} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl" />
             <img src={photoSrc(p.photo)} alt={p.alt} className={`absolute inset-0 h-full w-full object-contain ${i === index ? "photo-zoom" : ""}`}
               style={{ animationDuration: `${interval + 1.5}s` }} />
           </div>

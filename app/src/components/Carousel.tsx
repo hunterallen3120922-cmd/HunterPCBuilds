@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Icon from "./Icon";
+import { useNearScreen } from "../lib/usePauseOffscreen";
 
 /** How long each card stays in the middle before the next one arrives (milliseconds). */
 const INTERVAL = 3500;
@@ -31,21 +32,23 @@ export default function Carousel({ label, items }: { label: string; items: React
   const hold = hovered === active || focused === active; // only the middle card pauses it
   const [bump, setBump] = useState(0); // changes on every interaction, restarting the timer
   const touchX = useRef<number | null>(null);
+  const box = useRef<HTMLElement>(null);
+  const near = useNearScreen(box); // no rotating while it's far off screen
 
   const step = useCallback((dir: 1 | -1) => setActive((a) => (a + dir + n) % n), [n]);
 
   useEffect(() => {
-    if (!playing || hold) return;
-    const id = window.setInterval(() => step(1), INTERVAL);
+    if (!playing || hold || !near) return;
+    const id = window.setInterval(() => { if (!document.hidden) step(1); }, INTERVAL);
     return () => window.clearInterval(id);
-  }, [playing, hold, bump, step]);
+  }, [playing, hold, near, bump, step]);
 
   const manual = (dir: 1 | -1) => { step(dir); setBump((b) => b + 1); };
   const goTo = (i: number) => { setActive(i); setBump((b) => b + 1); };
 
   const arrow = "grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-card text-ink transition duration-300 hover:-translate-y-0.5 hover:border-accent/60 hover:text-accent";
   return (
-    <section aria-roledescription="carousel" aria-label={label}
+    <section ref={box} aria-roledescription="carousel" aria-label={label}
       onKeyDown={(e) => { if (e.key === "ArrowLeft") manual(-1); if (e.key === "ArrowRight") manual(1); }}>
       {/* All cards share one grid cell and are slid left/right from the middle */}
       <div className="fade-edges grid overflow-hidden py-3 [--cw:min(82vw,21.25rem)]"
@@ -86,7 +89,8 @@ export default function Carousel({ label, items }: { label: string; items: React
       <div className="wrap mt-8 flex max-w-[40rem] items-center gap-4">
         <button type="button" className={arrow} onClick={() => manual(-1)} aria-label="Previous card"><Icon name="arrow" className="h-4 w-4 rotate-180" /></button>
         <div className="h-px flex-1 bg-line" aria-hidden>
-          <div className="h-[2px] -translate-y-px rounded-full bg-accent transition-[width] duration-500" style={{ width: `${((active % items.length) + 1) / items.length * 100}%` }} />
+          {/* grows with transform rather than width, so moving it never re-measures the page */}
+          <div className="h-[2px] origin-left -translate-y-px rounded-full bg-accent transition-transform duration-500" style={{ transform: `scaleX(${((active % items.length) + 1) / items.length})` }} />
         </div>
         <button type="button" className={arrow} onClick={() => manual(1)} aria-label="Next card"><Icon name="arrow" className="h-4 w-4" /></button>
       </div>

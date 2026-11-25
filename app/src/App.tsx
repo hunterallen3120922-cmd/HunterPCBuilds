@@ -5,14 +5,39 @@ import Footer from "./components/Footer";
 import ScrollMotion from "./components/ScrollMotion";
 import Polish from "./components/Polish";
 import Home from "./pages/Home";
-import PcBuilds from "./pages/PcBuilds";
-import TechRepair from "./pages/TechRepair";
-import Faq from "./pages/Faq";
-import Privacy from "./pages/Privacy";
-import About from "./pages/About";
-import TradeIn from "./pages/TradeIn";
-import Shop from "./pages/Shop";
-import Prints from "./pages/Prints";
+
+/**
+ * Every page but Home is its own small download, so the first visit only loads what it shows.
+ * They are all fetched quietly in the background right after the first page settles, so moving
+ * between pages stays instant.
+ */
+const pages = {
+  PcBuilds: () => import("./pages/PcBuilds"),
+  TechRepair: () => import("./pages/TechRepair"),
+  Faq: () => import("./pages/Faq"),
+  Privacy: () => import("./pages/Privacy"),
+  About: () => import("./pages/About"),
+  TradeIn: () => import("./pages/TradeIn"),
+  Shop: () => import("./pages/Shop"),
+  Prints: () => import("./pages/Prints"),
+};
+const PcBuilds = lazy(pages.PcBuilds);
+const TechRepair = lazy(pages.TechRepair);
+const Faq = lazy(pages.Faq);
+const Privacy = lazy(pages.Privacy);
+const About = lazy(pages.About);
+const TradeIn = lazy(pages.TradeIn);
+const Shop = lazy(pages.Shop);
+const Prints = lazy(pages.Prints);
+
+function PrefetchPages() {
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
+    const t = window.setTimeout(() => idle(() => { for (const load of Object.values(pages)) load().catch(() => {}); }), 2500);
+    return () => clearTimeout(t);
+  }, []);
+  return null;
+}
 
 /** The admin portal is a separate download, so visitors never load it. */
 const AdminApp = lazy(() => import("./admin/AdminApp"));
@@ -45,11 +70,14 @@ export default function App() {
         Skip to content
       </a>
       <ScrollManager />
+      <PrefetchPages />
       <ScrollMotion />
       <Polish />
       <Nav />
       {/* key = the page eases in again on every page change */}
       <main id="main" tabIndex={-1} key={pathname} className="page-in outline-none">
+        {/* min-h keeps the footer from jumping up while a page's file arrives (only on a slow first visit) */}
+        <Suspense fallback={<div className="min-h-[100svh]" />}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pc-builds" element={<PcBuilds />} />
@@ -62,6 +90,7 @@ export default function App() {
           <Route path="/3d-prints" element={<Prints />} />
           <Route path="*" element={<Home />} />
         </Routes>
+        </Suspense>
       </main>
       <Footer />
     </>

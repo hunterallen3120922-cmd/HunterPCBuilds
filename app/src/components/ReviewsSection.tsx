@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getReviews, type ReviewRow, type ReviewStats } from "../lib/supabase";
 import Icon from "./Icon";
+import { useNearScreen } from "../lib/usePauseOffscreen";
 
 type Data = { reviews: ReviewRow[]; stats: ReviewStats | null };
 let cache: Promise<Data | null> | null = null;
@@ -39,13 +40,15 @@ export default function ReviewsRotator({ data, intro }: { data: Data; intro?: Re
   const [paused, setPaused] = useState(false);
   const still = useRef(typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const many = reviews.length > 1;
+  const box = useRef<HTMLDivElement>(null);
+  const near = useNearScreen(box); // no rotating while it's far off screen
   const go = (step: number) => setI((n) => (n + step + reviews.length) % reviews.length);
 
   useEffect(() => {
-    if (paused || still.current || !many) return;
+    if (paused || still.current || !many || !near) return;
     const t = setTimeout(() => setI((n) => (n + 1) % reviews.length), ROTATE_MS);
     return () => clearTimeout(t);
-  }, [i, paused, many, reviews.length]);
+  }, [i, paused, many, near, reviews.length]);
 
   const user = stats?.ebay_username?.trim();
   const profile = user ? `https://www.ebay.com/fdbk/feedback_profile/${encodeURIComponent(user)}?filter=feedback_page:RECEIVED_AS_SELLER` : null;
@@ -53,7 +56,7 @@ export default function ReviewsRotator({ data, intro }: { data: Data; intro?: Re
   const count = stats?.feedback_count;
 
   return (
-    <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+    <div ref={box} className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
       <div data-reveal-group="blur">
         {intro ?? <>
           <p className="eyebrow mb-4 flex items-center gap-3"><span className="h-px w-7 bg-accent2/60" aria-hidden />Reviews</p>

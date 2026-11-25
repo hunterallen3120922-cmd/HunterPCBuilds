@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { heroPhotos } from "../content/heroPhotos";
-import { photoSrc } from "./HeroPhotos";
+import { photoSmall, photoSrc, smallFallback } from "./HeroPhotos";
 
 /** Where each of the three cards sits in the stack: left / top as % of the stack, a slight tilt, and its depth. */
 const slots = [
@@ -33,10 +33,14 @@ export default function BuildStack() {
       const card = turn % slots.length, photo = next % photos.length;
       turn++; next++;
       const img = new Image();
-      img.onload = () => {
+      const show = () => {
         if (alive) setCards((cur) => cur.map((c, i) => (i === card ? { under: c.over, over: photo } : c)));
       };
-      img.src = photoSrc(photos[photo].photo);
+      // The cards are small, so they use the light copy of each photo (or the full one if there isn't one)
+      img.onload = show;
+      img.onerror = () => { img.onerror = null; img.src = photoSrc(photos[photo].photo); };
+      img.decoding = "async";
+      img.src = photoSmall(photos[photo].photo);
     }, SWAP_EVERY * 1000);
     return () => { alive = false; clearInterval(timer); };
   }, [photos]);
@@ -55,11 +59,12 @@ export default function BuildStack() {
           >
             <div className="relative aspect-[5/6]">
               {c.under >= 0 && (
-                <img key={`u${c.under}`} src={photoSrc(photos[c.under].photo)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <img key={`u${c.under}`} src={photoSmall(photos[c.under].photo)} onError={smallFallback(photos[c.under].photo)} alt="" className="absolute inset-0 h-full w-full object-cover" />
               )}
               <img
                 key={`o${c.over}`}
-                src={photoSrc(photos[c.over].photo)}
+                src={photoSmall(photos[c.over].photo)}
+                onError={smallFallback(photos[c.over].photo)}
                 alt={photos[c.over].alt}
                 className={`absolute inset-0 h-full w-full object-cover${c.under >= 0 ? " build-card-in" : ""}`}
               />
