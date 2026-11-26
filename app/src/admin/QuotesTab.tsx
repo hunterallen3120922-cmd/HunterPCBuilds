@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import CloseX from "../components/CloseX";
+import { useUnsaved } from "./unsaved";
 import { supabase } from "./client";
 import { Totals } from "./Records";
 import PartsGrid, { blankRow, newKey, norm, type GridItem, type PastPart } from "./PartsGrid";
@@ -16,6 +17,17 @@ type Draft = Omit<QuoteRow, "id" | "created_at"> & { id?: string };
 type Opened = { quote: Draft; items: GridItem[] };
 type PastJob = Pick<JobRow, "id" | "title" | "customer" | "status" | "kind" | "date" | "started_on">;
 type PastBuild = { job: PastJob; parts: PartRow[]; spec: string; cost: number };
+type Show = "all" | Purpose | "archived";
+
+const ARCHIVE_SQL_MSG = "Archiving needs a small database update first. Run 11-quote-archive.sql in Supabase once (SQL Editor → New query → paste → Run).";
+const archiveError = (m: string) => (/archived_at/.test(m) ? ARCHIVE_SQL_MSG : m);
+
+/** Fully finished: nothing left to do, so it can go in Archived. */
+const isFinished = (q: QuoteRow, jobStatus: Map<string, string>) => {
+  if (q.status === "declined" || q.status === "sold") return true;
+  if (q.job_id) { const s = jobStatus.get(q.job_id); return s === "done" || s === "cancelled"; }
+  return q.purpose === "trade_in" && q.status === "accepted";
+};
 
 const STATUS_STYLE: Record<QuoteRow["status"], string> = {
   draft: "border-line text-muted",
@@ -46,7 +58,9 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
   const [quotes, setQuotes] = useState<QuoteRow[] | null>(null);
   const [items, setItems] = useState<QuoteItemRow[]>([]);
   const [error, setError] = useState("");
-  const [show, setShow] = useState<"all" | Purpose>("all");
+  const [show, setShow] = useState<Show>("all");
+  const [jobStatus, setJobStatus] = useState<Map<string, string>>(new Map());
+  const [archiving, setArchiving] = useState(false);
   const [open, setOpenRaw] = useState<(Opened & { n: number }) | null>(null);
   const [choosing, setChoosing] = useState(false);
   const [tradeIn, setTradeIn] = useState<QuoteRow | null>(null);
@@ -54,10 +68,12 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
   const setOpen = (o: Opened | null) => setOpenRaw((cur) => o && { ...o, n: (cur?.n ?? 0) + 1 });
 
   const load = useCallback(async () => {
-    const [q, i] = await Promise.all([
+    const [q, i, j] = await Promise.all([
       supabase!.from("quotes").select("*").order("created_at", { ascending: false }).limit(2000),
       supabase!.from("quote_items").select("*").order("sort").limit(20000),
+      supabase!.from("jobs").select("id, status").limit(5000),
     ]);
+    setJobStatus(new Map(((j.data ?? []) as Pick<JobRow, "id" | "status">[]).map((x) => [x.id, x.status])));
     const err = q.error ?? i.error;
     if (err) {
       setError(err.code === "PGRST205" || err.code === "42703" || err.message.includes("does not exist")
@@ -87,10 +103,22 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
     });
   };
 
+  /** Put quotes away in Archived (when) or bring them back (null). */
+  const setArchived = async (ids: string[], when: string | null) => {
+    if (!ids.length) return;
+    setArchiving(true);
+    const { error } = await supabase!.from("quotes").update({ archived_at: when }).in("id", ids);
+    setArchiving(false);
+    if (error) { setError(archiveError(error.message)); return; }
+    setError("");
+    setQuotes((cur) => cur && cur.map((x) => (ids.includes(x.id) ? { ...x, archived_at: when } : x)));
+  };
+
   if (printReq) return <PrintRequestEditor quote={printReq} onClose={() => { setPrintReq(null); load(); }} />;
   if (tradeIn) return <TradeInEditor quote={tradeIn} onClose={() => { setTradeIn(null); load(); }} />;
   if (open) {
-    return <QuoteEditor key={open.n} initial={open} onClose={() => { setOpen(null); load(); }} onJobMade={onJobMade} onDuplicate={setOpen} />;
+    return <QuoteEditor key={open.n} initial={open} onClose={() => { setOpen(null); load(); }} onJobMade={onJobMade} onDuplicate={setOpen}
+      finished={!!open.quote.id && isFinished({ ...open.quote, created_at: "" } as QuoteRow, jobStatus)} />;
   }
 
   const money2 = (q: QuoteRow) => {
@@ -100,10 +128,17 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
     const t = quoteTotals(q, its);
     return { price: t.total, profit: t.profit };
   };
-  const all = quotes ?? [];
-  const rows = all.filter((q) => show === "all" || q.purpose === show);
+  const everything = quotes ?? [];
+  const archived = everything.filter((q) => q.archived_at);
+  // Archived quotes only show in the Archived view, and don't count in the totals
+  const all = everything.filter((q) => !q.archived_at);
+  const rows = show === "archived"
+    ? [...archived].sort((a, b) => (b.archived_at ?? "").localeCompare(a.archived_at ?? ""))
+    : all.filter((q) => show === "all" || q.purpose === show);
+  const finished = all.filter((q) => isFinished(q, jobStatus));
   const openCustomer = all.filter((q) => q.purpose === "customer" && (q.status === "draft" || q.status === "sent"));
-  const decided = all.filter((q) => q.purpose === "customer" && (q.status === "accepted" || q.status === "declined"));
+  // The win rate keeps counting archived quotes
+  const decided = everything.filter((q) => q.purpose === "customer" && (q.status === "accepted" || q.status === "declined"));
   const won = decided.filter((q) => q.status === "accepted").length;
   const forSale = all.filter((q) => q.purpose === "resale" && q.status !== "sold");
   const newTradeIns = all.filter((q) => q.purpose === "trade_in" && q.status === "draft").length;
@@ -143,22 +178,34 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
               {newPrints} new 3D print request{newPrints === 1 ? "" : "s"} from the site. Show them →
             </button>
           )}
+          {finished.length > 0 && show !== "archived" && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-card border border-line bg-bg2 px-4 py-2.5 text-[.9rem]">
+              <span className="mr-auto text-muted">
+                {finished.length} quote{finished.length === 1 ? " is" : "s are"} fully finished (job done, sold or declined).
+              </span>
+              <button type="button" className="btn btn-ghost !px-3 !py-1 !text-[.8rem]" disabled={archiving}
+                onClick={() => { if (confirm(`Move ${finished.length} finished quote${finished.length === 1 ? "" : "s"} to Archived? You can bring them back any time.`)) setArchived(finished.map((q) => q.id), new Date().toISOString()); }}>
+                {archiving ? "Archiving…" : "Archive them"}
+              </button>
+            </div>
+          )}
           <div className="mb-4 mt-4 flex flex-wrap gap-2">
-            {([["all", "All"], ["customer", "For customers"], ["resale", "To sell"], ["trade_in", "Trade-ins"], ["print", "3D prints"]] as const).map(([o, label]) => (
+            {([["all", "All"], ["customer", "For customers"], ["resale", "To sell"], ["trade_in", "Trade-ins"], ["print", "3D prints"], ["archived", "Archived"]] as const).map(([o, label]) => (
               <button key={o} type="button" onClick={() => setShow(o)} aria-pressed={show === o}
-                className={`rounded-full border px-3 py-1 text-[.8rem] ${show === o ? "border-ink/60 bg-card text-ink" : "border-line text-muted hover:text-ink"}`}>
-                {label} <span className="font-mono text-[.72rem] opacity-70">{o === "all" ? all.length : all.filter((q) => q.purpose === o).length}</span>
+                className={`rounded-full border px-3 py-1 text-[.8rem] ${o === "archived" ? "sm:ml-auto" : ""} ${show === o ? "border-ink/60 bg-card text-ink" : "border-line text-muted hover:text-ink"}`}>
+                {o === "archived" && <span aria-hidden>🗄 </span>}{label} <span className="font-mono text-[.72rem] opacity-70">{o === "all" ? all.length : o === "archived" ? archived.length : all.filter((q) => q.purpose === o).length}</span>
               </button>
             ))}
           </div>
+          {show === "archived" && rows.length > 0 && <p className="mb-3 text-[.85rem] text-muted">Finished quotes you put away. They're left out of the open totals above. Open one to look at it, or press Unarchive to bring it back.</p>}
           <ul className="space-y-2">
-            {rows.length === 0 && <li className="card p-6 text-center text-muted">{all.length ? "Nothing here." : "No quotes yet. Press “+ New quote” to start one."}</li>}
+            {rows.length === 0 && <li className="card p-6 text-center text-muted">{show === "archived" ? "Nothing archived yet. When a quote's job is done (or it's sold or declined), archive it to tidy up this list." : all.length ? "Nothing here." : "No quotes yet. Press “+ New quote” to start one."}</li>}
             {rows.map((q) => {
               const m = money2(q);
               const spec = specLine(byQuote.get(q.id) ?? []);
               return (
-                <li key={q.id}>
-                  <button type="button" onClick={() => openQuote(q)} className="card flex w-full items-center gap-3 p-3.5 text-left text-ink hover:border-ink/40">
+                <li key={q.id} className="flex items-stretch gap-2">
+                  <button type="button" onClick={() => openQuote(q)} className={`card flex min-w-0 flex-1 items-center gap-3 p-3.5 text-left text-ink hover:border-ink/40 ${q.archived_at ? "opacity-80" : ""}`}>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="truncate font-medium">{q.title}</span>
@@ -178,6 +225,13 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
                         : <span className={`block font-mono text-[.75rem] ${m.profit < 0 ? "text-danger" : "text-muted"}`}>{money(m.profit)} profit</span>}
                     </span>
                   </button>
+                  {(q.archived_at || isFinished(q, jobStatus)) && (
+                    <button type="button" disabled={archiving} onClick={() => setArchived([q.id], q.archived_at ? null : new Date().toISOString())}
+                      title={q.archived_at ? `Archived ${day(q.archived_at.slice(0, 10))}. Bring it back to the main list.` : "Done with this one? Move it to Archived."}
+                      className="card shrink-0 px-3 text-[.78rem] text-muted hover:border-accent hover:text-ink disabled:opacity-60">
+                      {q.archived_at ? "Unarchive" : "Archive"}
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -212,8 +266,8 @@ export default function QuotesTab({ onJobMade }: { onJobMade?: () => void }) {
 }
 
 /** One quote, full page: details, the parts grid, the money, and what to do with it next. */
-function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
-  initial: Opened; onClose: () => void; onDuplicate: (d: Opened) => void; onJobMade?: () => void;
+function QuoteEditor({ initial, onClose, onDuplicate, onJobMade, finished }: {
+  initial: Opened; onClose: () => void; onDuplicate: (d: Opened) => void; onJobMade?: () => void; finished?: boolean;
 }) {
   const [q, setQ] = useState<Draft>(initial.quote);
   const [list, setListRaw] = useState<GridItem[]>(initial.items.length ? initial.items : [blankRow()]);
@@ -225,6 +279,9 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
   const [builds, setBuilds] = useState<PastBuild[]>([]);
   const [picking, setPicking] = useState<"" | "build" | "sheet">("");
   const resale = q.purpose === "resale";
+  // A brand-new quote counts as unsaved once anything's typed (an untouched blank one is fine to leave)
+  const hasWork = !!q.id || !!q.title.trim() || list.some((i) => i.name.trim());
+  useUnsaved("quote-editor", dirty && hasWork);
 
   // Everything you've bought before: for part suggestions and "copy from a past build"
   useEffect(() => {
@@ -402,10 +459,19 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
     onClose();
   });
 
-  const close = () => { if (!dirty || confirm("You have unsaved changes. Leave without saving?")) onClose(); };
+  const close = () => { if (!dirty || !hasWork || confirm("This quote has unsaved changes. Leave without saving? Your work will be lost.")) onClose(); };
+  const archive = () => run("archive", async () => {
+    const archiving = !q.archived_at;
+    if (archiving && dirty && !(await save())) return;
+    const when = archiving ? new Date().toISOString() : null;
+    const { error } = await supabase!.from("quotes").update({ archived_at: when }).eq("id", q.id!);
+    if (error) { setError(archiveError(error.message)); return; }
+    setQ((c) => ({ ...c, archived_at: when }));
+    if (archiving) onClose(); else flash("Back in the main quotes list.");
+  });
   const duplicate = () => {
     if (dirty && !confirm("You have unsaved changes. Copy it without saving them?")) return;
-    onDuplicate({ quote: { ...q, id: undefined, title: `${q.title} (copy)`, status: "draft", job_id: null }, items: list.map((i) => ({ ...i, key: newKey() })) });
+    onDuplicate({ quote: { ...q, id: undefined, title: `${q.title} (copy)`, status: "draft", job_id: null, archived_at: null }, items: list.map((i) => ({ ...i, key: newKey() })) });
   };
   const copyBuild = (b: PastBuild, replace: boolean) => {
     const rows = b.parts.map((p) => ({ key: newKey(), category: p.category, name: p.name, price: num(p.price), qty: num(p.qty) || 1, source: p.source ?? "", link: "", optional: false, bought: false, auto: false }));
@@ -574,6 +640,9 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
           )}
 
           <div className="card space-y-2 p-5">
+            {q.archived_at && (
+              <p className="rounded-card border border-line bg-bg2 p-2.5 text-center text-[.82rem] text-muted">Archived {day(q.archived_at.slice(0, 10))}. It's out of the main list.</p>
+            )}
             <button type="button" className="btn w-full !py-2" disabled={!!busy || (!dirty && !!q.id)} onClick={() => run("save", async () => { if (await save()) flash("Saved."); })}>
               {busy === "save" ? "Saving…" : "Save"}
             </button>
@@ -597,6 +666,9 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade }: {
             {error && <p className="text-[.85rem] text-danger" role="alert">{error}</p>}
             <div className="flex justify-between pt-2 text-[.82rem]">
               <button type="button" className="text-muted underline hover:text-ink" onClick={duplicate}>Make a copy</button>
+              {q.id && (q.archived_at || finished || q.status === "declined" || q.status === "sold") && (
+                <button type="button" className="text-muted underline hover:text-ink" disabled={!!busy} onClick={archive}>{q.archived_at ? "Unarchive" : "Archive"}</button>
+              )}
               <button type="button" className="text-muted underline hover:text-danger" onClick={remove}>Delete</button>
             </div>
           </div>

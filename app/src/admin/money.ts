@@ -194,6 +194,8 @@ export interface QuoteRow {
   trade_in?: TradeInDetails | null;
   print_job?: PrintJobDetails | null;
   offer?: number | null;
+  /** Set when a finished quote is put away in Archived (needs SQL file 11) */
+  archived_at?: string | null;
   created_at: string;
 }
 
