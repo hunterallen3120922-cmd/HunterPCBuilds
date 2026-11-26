@@ -373,8 +373,11 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade, finished }: {
     }
     const del = await supabase!.from("quote_items").delete().eq("quote_id", qid);
     if (del.error) { setError(del.error.message); return null; }
-    const rows = items.map((i, n) => ({
-      quote_id: qid, category: i.category, name: i.name.trim().slice(0, 200), price: i.price, qty: Math.max(0, Math.round(i.qty)) || 1,
+    // Keep the rows you haven't filled in yet (like an empty GPU line) so they're still there next time
+    // (the grid's own spare row at the bottom is skipped)
+    const keep = list.filter((i) => i.name.trim() || !i.auto);
+    const rows = keep.map((i, n) => ({
+      quote_id: qid, category: i.category || "Other", name: i.name.trim().slice(0, 200), price: num(i.price), qty: Math.max(0, Math.round(num(i.qty))) || 1,
       source: i.source.trim().slice(0, 80) || null, link: i.link.trim().slice(0, 500) || null, optional: i.optional, bought: i.bought, sort: (n + 1) * 10,
     }));
     if (rows.length) {
@@ -384,7 +387,14 @@ function QuoteEditor({ initial, onClose, onDuplicate, onJobMade, finished }: {
         ins = await supabase!.from("quote_items").insert(rows.map(({ bought: _b, ...r }) => r));
         if (!ins.error && rows.some((r) => r.bought)) setError("Saved, but the Bought ticks weren't. Run 10-quote-bought.sql in Supabase once to keep them.");
       }
-      if (ins.error) { setError(ins.error.message); return null; }
+      // Before SQL file 11 is run, a part needs a name: save the filled-in ones and say so
+      let err = ins.error;
+      if (err && /name_check/.test(err.message)) {
+        const filled = rows.filter((r) => r.name);
+        err = filled.length ? (await supabase!.from("quote_items").insert(filled)).error : null;
+        if (!err) setError("Saved, but the empty part rows weren't. Run 11-quote-archive.sql in Supabase once to keep them.");
+      }
+      if (err) { setError(err.message); return null; }
     }
     setDirty(false);
     return qid!;

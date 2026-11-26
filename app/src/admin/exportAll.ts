@@ -45,7 +45,7 @@ type Column<T> = [head: string, get: (r: T) => unknown, kind?: Kind, width?: num
  */
 export async function downloadEverything() {
   const [jobs, parts, quotes, quoteItems, expenses, prints, printers, inventory, requests, builds] = await Promise.all([
-    all<JobRow>("jobs"), all<PartRow>("job_parts"), all<QuoteRow>("quotes"), all<QuoteItemRow>("quote_items"),
+    all<JobRow>("jobs"), all<PartRow>("job_parts"), all<QuoteRow>("quotes"), all<QuoteItemRow>("quote_items").then((l) => l.filter((i) => i.name?.trim())),
     all<ExpenseRow>("expenses"), all<PrintRow>("prints"), all<PrinterRow>("printers"), all<InventoryRow>("inventory"),
     all<RequestRow>("requests"), all<SiteBuild>("builds"),
   ]);
