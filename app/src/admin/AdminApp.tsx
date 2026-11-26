@@ -12,6 +12,7 @@ import { ExpensesTab, InventoryTab, JobsTab, PrintsTab } from "./BusinessTabs";
 import Showcase from "./Showcase";
 import { Logo } from "../components/Nav";
 import { useInstall } from "./install";
+import { leaveOk } from "./unsaved";
 
 /**
  * The admin portal at /#/admin. Not linked anywhere on the site and not shown to search engines.
@@ -98,7 +99,7 @@ export default function AdminApp() {
         <>
           <nav className="order-last flex w-full gap-1 overflow-x-auto rounded-full border border-line bg-bg2 p-1" aria-label="Admin sections">
             {TABS.map(({ id: t, label }) => (
-              <button key={t} type="button" onClick={() => setTab(t)} aria-current={tab === t ? "page" : undefined}
+              <button key={t} type="button" onClick={() => { if (t !== tab && leaveOk()) setTab(t); }} aria-current={tab === t ? "page" : undefined}
                 className={`shrink-0 rounded-full px-3.5 py-1.5 text-[.88rem] ${tab === t ? "bg-card text-ink" : "text-muted hover:text-ink"}`}>
                 {label}
                 {t === "requests" && newCount > 0 && (
@@ -117,11 +118,11 @@ export default function AdminApp() {
               {exporting ? "Exporting…" : "⬇ Export all (Excel)"}
             </button>
             <span className="hidden sm:inline">{session.user.email}</span>
-            <button type="button" className="underline hover:text-ink" onClick={() => supabase!.auth.signOut()}>Sign out</button>
+            <button type="button" className="underline hover:text-ink" onClick={() => { if (leaveOk()) supabase!.auth.signOut(); }}>Sign out</button>
           </div>
         </>
       }>
-      {tab === "dashboard" && <DashboardTab go={setTab} />}
+      {tab === "dashboard" && <DashboardTab go={(t) => { if (leaveOk()) setTab(t); }} />}
       {tab === "jobs" && <JobsTab />}
       {tab === "parts" && <PartsTab />}
       {tab === "quotes" && <QuotesTab />}
